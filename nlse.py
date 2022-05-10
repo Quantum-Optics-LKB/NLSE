@@ -38,7 +38,7 @@ except ImportError:
         for i in numba.prange(A.shape[0]):
             for j in range(A.shape[1]):
                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                  V[i, j] + 1j*g*abs(A[i, j])**2))
+                                      V[i, j] + 1j*g*abs(A[i, j])**2))
 
 
 class NLSE:
@@ -290,7 +290,21 @@ def normalize(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 
-def flatTop_tur(sx, sy, length=150, width=60, k_counter=81, N_steps=81):
+def flatTop_tur(sx: int, sy: int, length: int = 150, width: int = 60,
+                k_counter: int = 81, N_steps: int = 81) -> np.ndarray:
+    """Generates the phase mask to create two counterstreaming colliding components 
+
+    Args:
+        sx (int): x Dimension of the mask : slm dimensions.
+        sy (int): y Dimension of the mask : slm dimensions.
+        length (int, optional): Length of the pattern. Defaults to 150.
+        width (int, optional): Width of the pattern. Defaults to 60.
+        k_counter (int, optional): Frequency of the blazed grating. Defaults to 81.
+        N_steps (int, optional): Frequency of the vertical grating. Defaults to 81.
+
+    Returns:
+        _type_: _description_
+    """
     output = np.zeros((sy, sx))
     Y, X = np.indices(output.shape)
     output[abs(X-output.shape[1]//2) < length/2] = 1
@@ -312,7 +326,21 @@ def flatTop_tur(sx, sy, length=150, width=60, k_counter=81, N_steps=81):
     return grating_axe
 
 
-def flatTop_super(sx, sy, length=150, width=60, k_counter=81, N_steps=81):
+def flatTop_super(sx: int, sy: int, length: int = 150, width: int = 60,
+                  k_counter: int = 81, N_steps: int = 81) -> np.ndarray:
+    """Generates the phase mask to create two counterstreaming shearing components 
+
+    Args:
+        sx (int): x Dimension of the mask : slm dimensions.
+        sy (int): y Dimension of the mask : slm dimensions.
+        length (int, optional): Length of the pattern. Defaults to 150.
+        width (int, optional): Width of the pattern. Defaults to 60.
+        k_counter (int, optional): Frequency of the blazed grating. Defaults to 81.
+        N_steps (int, optional): Frequency of the vertical grating. Defaults to 81.
+
+    Returns:
+        _type_: _description_
+    """
     output = np.zeros((sy, sx))
     Y, X = np.indices(output.shape)
     output[abs(X-output.shape[1]//2) < length/2] = 1
@@ -344,12 +372,12 @@ if __name__ == "__main__":
     dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
+    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
     phase_slm = 2*np.pi * \
         flatTop_super(1272, 1024, length=1000, width=600)
     phase_slm = simu.slm(phase_slm, 6.25e-6)
     E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
         np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
-    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
     E_in_0 *= np.exp(1j*phase_slm)
     E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10

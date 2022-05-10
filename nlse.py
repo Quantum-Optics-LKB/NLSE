@@ -201,7 +201,7 @@ class NLSE:
                 # fft normalization
                 A /= np.prod(A.shape)
                 nl_prop(A, delta_Z, self.alpha, self.k/2 *
-                        self.V, self.k*self.n2*c*epsilon_0)
+                        self.V, self.k/2*self.n2*c*epsilon_0)
                 if precision == "double":
                     plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                     # linear step in Fourier domain (shifted)
@@ -236,7 +236,7 @@ class NLSE:
                 A *= propagator  # linear step in Fourier domain (shifted)
                 plan_ifft(A)
                 nl_prop(A, delta_Z, self.alpha, self.k/2 *
-                        self.V, self.k*self.n2*c*epsilon_0)
+                        self.V, self.k/2*self.n2*c*epsilon_0)
                 if precision == "double":
                     plan_fft(A)
                     A *= propagator  # linear step in Fourier domain (shifted)

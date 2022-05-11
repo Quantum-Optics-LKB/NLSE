@@ -79,12 +79,15 @@ class NLSE:
         self.L = L  # length of the non linear medium
         self.alpha = -np.log(trans)/self.L
         intens = 2*puiss/(np.pi*waist**2)
+        self.Dn = self.n2*intens
         self.E_00 = np.sqrt(2*intens/(c*epsilon_0))
 
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.NY = NY
         self.window = window
+        z_nl = 1/(self.k*abs(self.Dn))
+        self.delta_z = min(1e-5*self.z_r, 2.5e-2*z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -197,9 +200,7 @@ class NLSE:
             np.ndarray: Propagated field in proper units V/m
         """
 
-        # normalized longitudinal coordinate
-        delta_Z = 1e-5*self.z_r
-        Z = np.arange(0, z, step=delta_Z, dtype=np.float32)
+        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
         # define fft plan
         if BACKEND == "GPU":
             A = np.empty((self.NX, self.NY), dtype=np.complex64)
@@ -230,10 +231,10 @@ class NLSE:
         Kxx, Kyy = np.meshgrid(Kx, Ky)
         if precision == "double":
             propagator = np.exp(-1j * 0.25 * (Kxx**2 + Kyy**2) /
-                                self.k * delta_Z)  # symetrized
+                                self.k * self.delta_z)  # symetrized
         else:
             propagator = np.exp(-1j * 0.5 * (Kxx**2 + Kyy**2) /
-                                self.k * delta_Z)
+                                self.k * self.delta_z)
         if BACKEND == "GPU":
             propagator_cp = cp.asarray(propagator)
             self.V = cp.asarray(self.V)
@@ -241,12 +242,16 @@ class NLSE:
             def split_step_cp(A):
                 """computes one propagation step"""
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+                plan_fft.fft(self.V, self.V, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
                 cp.multiply(A, propagator_cp, out=A)
+                cp.multiply(self.V, propagator_cp, out=self.V)
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+                plan_fft.fft(self.V, self.V, cp.cuda.cufft.CUFFT_INVERSE)
                 # fft normalization
                 A /= np.prod(A.shape)
-                nl_prop(A, delta_Z, self.alpha, self.k/2 *
+                self.V /= np.prod(self.V.shape)
+                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
                         self.V, self.k/2*self.n2*c*epsilon_0)
                 if precision == "double":
                     plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
@@ -282,7 +287,7 @@ class NLSE:
                 # linear step in Fourier domain (shifted)
                 np.multiply(A, propagator, out=A)
                 plan_ifft(A)
-                nl_prop(A, delta_Z, self.alpha, self.k/2 *
+                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
                         self.V, self.k/2*self.n2*c*epsilon_0)
                 if precision == "double":
                     plan_fft(A)
@@ -325,7 +330,7 @@ class NLSE:
                          r'$\mathcal{TF}(|E_{out}|^2)$', cmap='viridis', label=r'$K_y$', vmax=np.max(np.log10(im_fft)))
 
             a4 = fig.add_subplot(224)
-            self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_x (mm^{-1})$', np.mean(im_fft[len_fft//2-10:len_fft//2+10, len_fft//2+1:], axis=0),
+            self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_y (mm^{-1})$', np.mean(im_fft[len_fft//2+1:, len_fft//2-10:len_fft//2+10], axis=1),
                              r'$\mathcal{TF}(|E_{out}|^2)$', np.fft.fftshift(Kx_2)[len_fft//2+1]*1e-3, np.fft.fftshift(Kx_2)[-1]*1e-3, color='b')
             a4.set_yscale('log')
             a4.set_xscale('log')

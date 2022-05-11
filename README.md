@@ -58,7 +58,7 @@ The `out_field` method is the main function of the code that propagates the fiel
 - (Optional : Applying the first three steps again)
 
 The `precision` argument allows to switch between applicating the laplacian in a single multiplication (`"single"`), or applying a "half" laplacian before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{%5Cmathcal%7BO%7D(dz)}"> in the first case and <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{%5Cmathcal%7BO%7D(dz%5E3)}"> in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
-The propagation step <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{dz}"> is chosen to be `1e-5` the Rayleigh length of the beam, but this can be hand tuned to reach desired speed or precision.
+The propagation step <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{dz}"> is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $\bbox[white]{z_{NL}=\frac{1}{k_0 n_2 I}}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
 
 #### Simulation of phase or intensity masks
 

@@ -14,67 +14,45 @@ import pyfftw
 from scipy.constants import c, epsilon_0, hbar, mu_0
 from scipy.ndimage import zoom
 
-BACKEND = "CPU"
-# try:
-#     import cupy as cp
-#     import cupyx.scipy.fftpack as fftpack
-#     BACKEND = "GPU"
+try:
+    import cupy as cp
+    import cupyx.scipy.fftpack as fftpack
+    BACKEND = "GPU"
 
-#     @cp.fuse(kernel_name="nl_prop")
-#     def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
-#         """A fused kernel to apply real space terms
+    @cp.fuse(kernel_name="nl_prop")
+    def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
+        """A fused kernel to apply real space terms
 
-#         Args:
-#             A (cp.ndarray): The field to propagate
-#             dz (float): Propagation step in m
-#             alpha (float): Losses
-#             V (cp.ndarray): Potential
-#             g (float): Interactions
-#         """
-#         A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
+        Args:
+            A (cp.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (cp.ndarray): Potential
+            g (float): Interactions
+        """
+        A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
 
-# except ImportError:
-#     print("CuPy not available, falling back to CPU backend ...")
-#     import numba
-#     import pyfftw
-#     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-#     BACKEND = "CPU"
+except ImportError:
+    print("CuPy not available, falling back to CPU backend ...")
+    import numba
+    import pyfftw
+    pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
+    BACKEND = "CPU"
 
-#     @numba.njit(parallel=True, fastmath=True)
-#     def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
-#         """A compiled parallel implementation to apply real space terms
+    @numba.njit(parallel=True, fastmath=True)
+    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+        """A compiled parallel implementation to apply real space terms
 
-#         Args:
-#             A (cp.ndarray): The field to propagate
-#             dz (float): Propagation step in m
-#             alpha (float): Losses
-#             V (cp.ndarray): Potential
-#             g (float): Interactions
-#         """
-#         for i in numba.prange(A.shape[0]):
-#             for j in range(A.shape[1]):
-#                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-#                                       V[i, j] + 1j*g*abs(A[i, j])**2))
-
-
-@numba.njit(parallel=True, fastmath=True)
-def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
-    """A compiled parallel implementation to apply real space terms
-
-    Args:
-        A (cp.ndarray): The field to propagate
-        dz (float): Propagation step in m
-        alpha (float): Losses
-        V (cp.ndarray): Potential
-        g (float): Interactions
-    """
-    # for i in numba.prange(A.shape[0]):
-    #     for j in numba.prange(A.shape[1]):
-    #         A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-    #                               V[i, j] + 1j*g*abs(A[i, j])**2))
-    for i in numba.prange(len(A)):
-        A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                           V[i] + 1j*g*abs(A[i])**2))
+        Args:
+            A (cp.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (cp.ndarray): Potential
+            g (float): Interactions
+        """
+        for i in numba.prange(len(A)):
+            A[i] *= np.exp(dz*(-alpha/2 + 1j *
+                               V[i] + 1j*g*abs(A[i])**2))
 
 
 class NLSE:

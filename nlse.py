@@ -1,40 +1,53 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# @author: Taladjidi
 
-"""
-@author: Taladjidi
-Solves NLS equation with spectral operator splitting scheme
-dA/dZ = i d^2A/dX^2 + i V(X,Z) A - i |A|^2 A
-for given A(Z=0) for 0<Z<L
-"""
-import numba
-import pyfftw
-from scipy.ndimage import zoom
-from scipy.constants import c, epsilon_0, hbar, mu_0
-import numpy as np
-import matplotlib.pyplot as plt
 import multiprocessing
 import pickle
-import time
 import sys
-BACKEND = "CPU"
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.constants import c, epsilon_0, hbar, mu_0
+from scipy.ndimage import zoom
+
 try:
     import cupy as cp
     import cupyx.scipy.fftpack as fftpack
     BACKEND = "GPU"
 
     @cp.fuse(kernel_name="nl_prop")
-    def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float):
+    def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
+        """A fused kernel to apply real space terms
+
+        Args:
+            A (cp.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (cp.ndarray): Potential
+            g (float): Interactions
+        """
         A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
+
 except ImportError:
     print("CuPy not available, falling back to CPU backend ...")
-    import pyfftw
     import numba
+    import pyfftw
     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
     BACKEND = "CPU"
 
     @numba.njit(parallel=True, fastmath=True)
-    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float):
+    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+        """A compiled parallel implementation to apply real space terms
+
+        Args:
+            A (cp.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (cp.ndarray): Potential
+            g (float): Interactions
+        """
         for i in numba.prange(A.shape[0]):
             for j in range(A.shape[1]):
                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
@@ -42,7 +55,7 @@ except ImportError:
 
 
 class NLSE:
-    """Non linear Schrödinger Equation simulation class
+    """A class to solve NLSE
     """
 
     def __init__(self, trans: float, puiss: float, waist: float, window: float, n2: float, V: np.ndarray, L: float, NX: int = 1024, NY: int = 1024) -> None:
@@ -62,7 +75,6 @@ class NLSE:
         self.wl = 780e-9
         self.z_r = self.waist**2 * np.pi/self.wl
         self.k = 2 * np.pi / self.wl
-        m = hbar * self.k/c
         self.L = L  # length of the non linear medium
         self.alpha = -np.log(trans)/self.L
         intens = 2*puiss/(np.pi*waist**2)
@@ -80,19 +92,41 @@ class NLSE:
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
 
-    # plot 2D amplitude on equidistant ZxX grid
-    def plot_2D(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)', vmax=1):
+    def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)', vmax=1):
+        """Plots a 2d amplitude on an equidistant Z * X grid.
+
+        Args:
+            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
+            Z (np.ndarray): the X axis values
+            X (np.ndarray): the Y axis values
+            AMP (np.ndarray): The 2D field to plot
+            title (str): Title of the plot
+            cmap (str, optional): Colormap. Defaults to 'viridis'.
+            label (str, optional): Label for the x axis. Defaults to r'$ (mm)'.
+            vmax (int, optional): Maximum value for cmap normalization. Defaults to 1.
+        """
         im = ax.imshow(AMP, aspect='equal', origin='lower', extent=(
             Z[0], Z[-1], X[0], X[-1]), cmap=cmap, vmax=vmax)
         ax.set_xlabel(label)
         ax.set_ylabel(r'$Y$ (mm)')
         ax.set_title(title)
         plt.colorbar(im)
-
         return
 
-    # plot 1D amplitude and phase
-    def plot_1D(self, ax, T, labelT, AMP, labelAMP, PHASE, labelPHASE, Tmin, Tmax):
+    def plot_1d(self, ax, T, labelT, AMP, labelAMP, PHASE, labelPHASE, Tmin, Tmax) -> None:
+        """Plots a 1D slice of a 2D field with amplitude and phase
+
+        Args:
+            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
+            T (np.ndarray): The x axis
+            labelT (str):  x axis label
+            AMP (np.ndarray): The field slice
+            labelAMP (str): y axis label
+            PHASE (np.ndarray): The corresponding phase for the slice
+            labelPHASE (str): y axis label for the phase
+            Tmin (float): x axis left limit
+            Tmax (float): x axis right limit
+        """
         ax.plot(T, AMP, 'b')
         ax.set_xlim([Tmin, Tmax])
         ax.set_xlabel(labelT)
@@ -105,9 +139,19 @@ class NLSE:
 
         return
 
-    # plot 1D amplitude and phase
+    def plot_1d_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax, color='b') -> None:
+        """Plots a 1D slice of a 2D field
 
-    def plot_1D_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax, color='b', label=''):
+        Args:
+            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
+            T (np.ndarray): The x axis
+            labelT (str):  x axis label
+            AMP (np.ndarray): The field slice
+            labelAMP (str): y axis label
+            Tmin (float): x axis left limit
+            Tmax (float): x axis right limit
+            color (float): The color of the label
+        """
         ax.plot(T, AMP, color)
         ax.set_xlim([Tmin, Tmax])
         ax.set_xlabel(labelT)
@@ -139,7 +183,7 @@ class NLSE:
               x_center:x_center+phase_zoomed.shape[1]] = phase_zoomed
         return phase
 
-    def E_out(self, E_in: np.ndarray, z: float, plot=False, precision: str = "single") -> np.ndarray:
+    def out_field(self, E_in: np.ndarray, z: float, plot=False, precision: str = "single") -> np.ndarray:
         """Propagates the field at a distance z
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
@@ -259,11 +303,11 @@ class NLSE:
 
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
-            self.plot_2D(a1, self.X*1e3, self.Y*1e3, np.abs(A)**2,
+            self.plot_2d(a1, self.X*1e3, self.Y*1e3, np.abs(A)**2,
                          r'$|\psi|^2$', vmax=np.max(np.abs(A)**2))
 
             a2 = fig.add_subplot(222)
-            self.plot_2D(a2, self.X*1e3, self.Y*1e3,
+            self.plot_2d(a2, self.X*1e3, self.Y*1e3,
                          np.angle(A), r'arg$(\psi)$', cmap='twilight', vmax=np.pi)
 
             a3 = fig.add_subplot(223)
@@ -272,11 +316,11 @@ class NLSE:
                 np.fft.fft2(np.abs(A[lim:-lim, lim:-lim])**2)))
             Kx_2 = 2 * np.pi * np.fft.fftfreq(self.NX-2*lim, d=self.delta_X)
             len_fft = len(im_fft[0, :])
-            self.plot_2D(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), np.log10(im_fft),
+            self.plot_2d(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), np.log10(im_fft),
                          r'$\mathcal{TF}(|E_{out}|^2)$', cmap='viridis', label=r'$K_y$', vmax=np.max(np.log10(im_fft)))
 
             a4 = fig.add_subplot(224)
-            self.plot_1D_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_x (mm^{-1})$', np.mean(im_fft[len_fft//2-10:len_fft//2+10, len_fft//2+1:], axis=0),
+            self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_x (mm^{-1})$', np.mean(im_fft[len_fft//2-10:len_fft//2+10, len_fft//2+1:], axis=0),
                              r'$\mathcal{TF}(|E_{out}|^2)$', np.fft.fftshift(Kx_2)[len_fft//2+1]*1e-3, np.fft.fftshift(Kx_2)[-1]*1e-3, color='b')
             a4.set_yscale('log')
             a4.set_xscale('log')
@@ -292,7 +336,7 @@ def normalize(data):
 
 def flatTop_tur(sx: int, sy: int, length: int = 150, width: int = 60,
                 k_counter: int = 81, N_steps: int = 81) -> np.ndarray:
-    """Generates the phase mask to create two counterstreaming colliding components 
+    """Generates the phase mask to create two counterstreaming colliding components
 
     Args:
         sx (int): x Dimension of the mask : slm dimensions.
@@ -328,7 +372,7 @@ def flatTop_tur(sx: int, sy: int, length: int = 150, width: int = 60,
 
 def flatTop_super(sx: int, sy: int, length: int = 150, width: int = 60,
                   k_counter: int = 81, N_steps: int = 81) -> np.ndarray:
-    """Generates the phase mask to create two counterstreaming shearing components 
+    """Generates the phase mask to create two counterstreaming shearing components
 
     Args:
         sx (int): x Dimension of the mask : slm dimensions.
@@ -374,7 +418,7 @@ if __name__ == "__main__":
                 L, NX=2048, NY=2048)
     simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
     phase_slm = 2*np.pi * \
-        flatTop_super(1272, 1024, length=1000, width=600)
+        flatTop_tur(1272, 1024, length=1000, width=600)
     phase_slm = simu.slm(phase_slm, 6.25e-6)
     E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
         np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
@@ -383,4 +427,4 @@ if __name__ == "__main__":
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A = simu.E_out(E_in_0, L, plot=True)
+    A = simu.out_field(E_in_0, L, plot=True)

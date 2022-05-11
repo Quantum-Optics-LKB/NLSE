@@ -49,7 +49,7 @@ The physical parameters listed above are defined at the instantiation of the `NL
 
 #### Propagation
 
-The `E_out` method is the main function of the code that propagates the field for an arbitrary distance from an initial state `E_0` from z=0 (assumed to be the begining of the non linear medium) up to a specified distance z. This function simply works by iterating the spectral solver scheme i.e :
+The `out_field` method is the main function of the code that propagates the field for an arbitrary distance from an initial state `E_in` from z=0 (assumed to be the begining of the non linear medium) up to a specified distance z. This function simply works by iterating the spectral solver scheme i.e :
 - Fourier transforming the field
 - Applying the laplacian operator (multiplication by a constant matrix)
 - Inverse Fourier transforming the field
@@ -116,7 +116,7 @@ Here we simulate two shearing components that will generate a line of vortices. 
 Finally we propagate to the output of the non linear medium (in our case a hot rubidium vapour):
 
 ```python
-A = simu.E_out(E_in_0, L, plot=True)
+A = simu.out_field(E_in_0, L, plot=True)
 ```
 
 This yields the following plot and output :

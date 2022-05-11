@@ -8,50 +8,73 @@ import sys
 import time
 
 import matplotlib.pyplot as plt
+import numba
 import numpy as np
+import pyfftw
 from scipy.constants import c, epsilon_0, hbar, mu_0
 from scipy.ndimage import zoom
 
-try:
-    import cupy as cp
-    import cupyx.scipy.fftpack as fftpack
-    BACKEND = "GPU"
+BACKEND = "CPU"
+# try:
+#     import cupy as cp
+#     import cupyx.scipy.fftpack as fftpack
+#     BACKEND = "GPU"
 
-    @cp.fuse(kernel_name="nl_prop")
-    def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
-        """A fused kernel to apply real space terms
+#     @cp.fuse(kernel_name="nl_prop")
+#     def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
+#         """A fused kernel to apply real space terms
 
-        Args:
-            A (cp.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (cp.ndarray): Potential
-            g (float): Interactions
-        """
-        A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
+#         Args:
+#             A (cp.ndarray): The field to propagate
+#             dz (float): Propagation step in m
+#             alpha (float): Losses
+#             V (cp.ndarray): Potential
+#             g (float): Interactions
+#         """
+#         A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
 
-except ImportError:
-    print("CuPy not available, falling back to CPU backend ...")
-    import numba
-    import pyfftw
-    pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-    BACKEND = "CPU"
+# except ImportError:
+#     print("CuPy not available, falling back to CPU backend ...")
+#     import numba
+#     import pyfftw
+#     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
+#     BACKEND = "CPU"
 
-    @numba.njit(parallel=True, fastmath=True)
-    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
-        """A compiled parallel implementation to apply real space terms
+#     @numba.njit(parallel=True, fastmath=True)
+#     def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+#         """A compiled parallel implementation to apply real space terms
 
-        Args:
-            A (cp.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (cp.ndarray): Potential
-            g (float): Interactions
-        """
-        for i in numba.prange(A.shape[0]):
-            for j in range(A.shape[1]):
-                A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                      V[i, j] + 1j*g*abs(A[i, j])**2))
+#         Args:
+#             A (cp.ndarray): The field to propagate
+#             dz (float): Propagation step in m
+#             alpha (float): Losses
+#             V (cp.ndarray): Potential
+#             g (float): Interactions
+#         """
+#         for i in numba.prange(A.shape[0]):
+#             for j in range(A.shape[1]):
+#                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
+#                                       V[i, j] + 1j*g*abs(A[i, j])**2))
+
+
+@numba.njit(parallel=True, fastmath=True)
+def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+    """A compiled parallel implementation to apply real space terms
+
+    Args:
+        A (cp.ndarray): The field to propagate
+        dz (float): Propagation step in m
+        alpha (float): Losses
+        V (cp.ndarray): Potential
+        g (float): Interactions
+    """
+    # for i in numba.prange(A.shape[0]):
+    #     for j in numba.prange(A.shape[1]):
+    #         A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
+    #                               V[i, j] + 1j*g*abs(A[i, j])**2))
+    for i in numba.prange(len(A)):
+        A[i] *= np.exp(dz*(-alpha/2 + 1j *
+                           V[i] + 1j*g*abs(A[i])**2))
 
 
 class NLSE:
@@ -240,7 +263,8 @@ class NLSE:
             def split_step_cp(A):
                 """computes one propagation step"""
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                A *= propagator_cp  # linear step in Fourier domain (shifted)
+                # linear step in Fourier domain (shifted)
+                cp.multiply(A, propagator_cp, out=A)
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
                 # fft normalization
                 A /= np.prod(A.shape)
@@ -249,7 +273,7 @@ class NLSE:
                 if precision == "double":
                     plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                     # linear step in Fourier domain (shifted)
-                    A *= propagator_cp
+                    cp.multiply(A, propagator_cp, out=A)
                     plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
                     A /= np.prod(A.shape)
                 return A
@@ -277,13 +301,15 @@ class NLSE:
             def split_step(A):
                 """computes one propagation step"""
                 plan_fft(A)
-                A *= propagator  # linear step in Fourier domain (shifted)
+                # linear step in Fourier domain (shifted)
+                np.multiply(A, propagator, out=A)
                 plan_ifft(A)
                 nl_prop(A, delta_Z, self.alpha, self.k/2 *
                         self.V, self.k/2*self.n2*c*epsilon_0)
                 if precision == "double":
                     plan_fft(A)
-                    A *= propagator  # linear step in Fourier domain (shifted)
+                    # linear step in Fourier domain (shifted)
+                    np.multiply(A, propagator, out=A)
                     plan_ifft(A)
                 return A
             t0 = time.perf_counter()
@@ -295,6 +321,7 @@ class NLSE:
                 A[:, :] = split_step(A)
             print(
                 f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+
             with open("fft.wisdom", "wb") as file:
                 wisdom = pyfftw.export_wisdom()
                 pickle.dump(wisdom, file)
@@ -427,4 +454,4 @@ if __name__ == "__main__":
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A = simu.out_field(E_in_0, L, plot=True)
+    A = simu.out_field(E_in_0, 0.1*L, plot=True)

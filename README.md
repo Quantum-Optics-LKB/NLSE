@@ -13,6 +13,7 @@ For optimal speed, this code uses your GPU (graphics card). For this, you need s
 If the code does not find Cupy, it will fall back to a CPU based implementation that uses the CPU : [PyFFTW](https://pyfftw.readthedocs.io/en/latest/). To make the best out of your computer, this library is multithreaded. By default it will use all available threads. If this is not what you want, you can disable this by setting the variable `pyfftw.config.NUM_THREADS` to a number of your choosing.
 
 Other than this, the code relies on these libraries :
+- `numba` : for best CPU performance on Intel CPU's, with `icc_rt` 
 - `pickle`
 - `numpy`
 - `scipy`

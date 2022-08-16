@@ -218,8 +218,8 @@ class NLSE:
             np.ndarray: Resized pattern.
         """
         phase = np.zeros((self.NY, self.NX))
-        zoom_x = d_slm/self.delta_X
-        zoom_y = d_slm/self.delta_Y
+        zoom_x = self.delta_X/d_slm
+        zoom_y = self.delta_Y/d_slm
         phase_zoomed = zoom(pattern, (zoom_y, zoom_x), order=0)
         # compute center offset
         x_center = (self.NX - phase_zoomed.shape[1]) // 2

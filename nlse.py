@@ -32,6 +32,23 @@ try:
         """
         A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
 
+    @cp.fuse(kernel_name='vortex_cp')
+    def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
+        """Generates a vortex of charge l at a position (i,j) on the image im.
+
+        Args:
+            im (np.ndarray): Image
+            i (int): position row of the vortex
+            j (int): position column of the vortex
+            ii (int): meshgrid position row (coordinates of the image)
+            jj (int): meshgrid position column (coordinates of the image)
+            l (int): vortex charge
+
+        Returns:
+            None
+        """
+        im += cp.angle(((ii-i)+1j*(jj-j))**l)
+
 except ImportError:
     print("CuPy not available, falling back to CPU backend ...")
     import numba
@@ -53,6 +70,24 @@ except ImportError:
         for i in numba.prange(len(A)):
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
                                V[i] + 1j*g*abs(A[i])**2))
+
+    @numba.njit(parallel=True, fastmath=True)
+    def vortex(im: np.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
+        """Generates a vortex of charge l at a position (i,j) on the image im.
+
+        Args:
+            im (np.ndarray): Image
+            i (int): position row of the vortex
+            j (int): position column of the vortex
+            ii (int): meshgrid position row (coordinates of the image)
+            jj (int): meshgrid position column (coordinates of the image)
+            l (int): vortex charge
+
+        Returns:
+            None
+        """
+        for i in numba.prange(len(A)):
+            im[i] += cp.angle(((ii[i]-i)+1j*(jj[i]-j))**l)
 
 
 class NLSE:
@@ -177,7 +212,7 @@ class NLSE:
         phase = np.zeros((self.NY, self.NX))
         zoom_x = d_slm/self.delta_X
         zoom_y = d_slm/self.delta_Y
-        phase_zoomed = zoom(pattern, (zoom_y, zoom_x))
+        phase_zoomed = zoom(pattern, (zoom_y, zoom_x), order=0)
         # compute center offset
         x_center = (self.NX - phase_zoomed.shape[1]) // 2
         y_center = (self.NY - phase_zoomed.shape[0]) // 2
@@ -199,7 +234,7 @@ class NLSE:
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
-
+        assert E_in.shape[0] == self.NY and E_in.shape[1] == self.NX
         Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
         # define fft plan
         if BACKEND == "GPU":

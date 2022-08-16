@@ -113,9 +113,7 @@ class NLSE:
         self.k = 2 * np.pi / self.wl
         self.L = L  # length of the non linear medium
         self.alpha = -np.log(trans)/self.L
-        intens = 2*puiss/(np.pi*waist**2)
-        self.Dn = self.n2*intens
-        self.E_00 = np.sqrt(2*intens/(c*epsilon_0))
+        self.puiss = puiss
 
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
@@ -130,6 +128,16 @@ class NLSE:
                                            endpoint=False, retstep=True, dtype=np.float32)
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
+
+    @property
+    def E_00(self):
+        intens = 2*self.puiss/(np.pi*self.waist**2)
+        return np.sqrt(2*intens/(c*epsilon_0))
+    
+    @property
+    def Dn(self):
+        intens = 2*self.puiss/(np.pi*self.waist**2)
+        return self.n2*intens
 
     def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)', vmax=1):
         """Plots a 2d amplitude on an equidistant Z * X grid.

@@ -14,55 +14,95 @@ import pyfftw
 from scipy.constants import c, epsilon_0, hbar, mu_0
 from scipy.ndimage import zoom
 
-try:
-    import cupy as cp
-    import cupyx.scipy.fftpack as fftpack
-    BACKEND = "GPU"
+BACKEND = 'GPU'
 
-    @cp.fuse(kernel_name="nl_prop")
-    def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
-        """A fused kernel to apply real space terms
+if BACKEND == 'GPU':
+    try:
+        import cupy as cp
+        import cupyx.scipy.fftpack as fftpack
+        BACKEND = "GPU"
 
-        Args:
-            A (cp.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (cp.ndarray): Potential
-            g (float): Interactions
-        """
-        A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
+        @cp.fuse(kernel_name="nl_prop")
+        def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
+            """A fused kernel to apply real space terms
 
-    @cp.fuse(kernel_name='vortex_cp')
-    def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
-        """Generates a vortex of charge l at a position (i,j) on the image im.
+            Args:
+                A (cp.ndarray): The field to propagate
+                dz (float): Propagation step in m
+                alpha (float): Losses
+                V (cp.ndarray): Potential
+                g (float): Interactions
+            """
+            A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
 
-        Args:
-            im (np.ndarray): Image
-            i (int): position row of the vortex
-            j (int): position column of the vortex
-            ii (int): meshgrid position row (coordinates of the image)
-            jj (int): meshgrid position column (coordinates of the image)
-            l (int): vortex charge
+        @cp.fuse(kernel_name='vortex_cp')
+        def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
+            """Generates a vortex of charge l at a position (i,j) on the image im.
 
-        Returns:
-            None
-        """
-        im += cp.angle(((ii-i)+1j*(jj-j))**l)
+            Args:
+                im (np.ndarray): Image
+                i (int): position row of the vortex
+                j (int): position column of the vortex
+                ii (int): meshgrid position row (coordinates of the image)
+                jj (int): meshgrid position column (coordinates of the image)
+                l (int): vortex charge
 
-except ImportError:
-    print("CuPy not available, falling back to CPU backend ...")
+            Returns:
+                None
+            """
+            im += cp.angle(((ii-i)+1j*(jj-j))**l)
+
+    except ImportError:
+        print("CuPy not available, falling back to CPU backend ...")
+        pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
+        BACKEND = "CPU"
+
+        @numba.njit(parallel=True, fastmath=True)
+        def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+            """A compiled parallel implementation to apply real space terms
+
+            Args:
+                A (np.ndarray): The field to propagate
+                dz (float): Propagation step in m
+                alpha (float): Losses
+                V (np.ndarray): Potential
+                g (float): Interactions
+            """
+            for i in numba.prange(A.shape[0]):
+                for j in numba.prange(A.shape[1]):
+                    A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
+                                          V[i, j] + 1j*g*abs(A[i, j])**2))
+
+        @numba.njit(parallel=True, fastmath=True)
+        def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
+            """Generates a vortex of charge l at a position (i,j) on the image im.
+
+            Args:
+                im (np.ndarray): Image
+                i (int): position row of the vortex
+                j (int): position column of the vortex
+                ii (int): meshgrid position row (coordinates of the image)
+                jj (int): meshgrid position column (coordinates of the image)
+                l (int): vortex charge
+
+            Returns:
+                None
+            """
+            for i in numba.prange(A.shape[0]):
+                for j in numba.prange(A.shape[1]):
+                    im[i, j] += np.angle(((ii[i, j]-i)+1j*(jj[i, j]-j))**l)
+else:
     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-    BACKEND = "CPU"
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
         Args:
-            A (cp.ndarray): The field to propagate
+            A (np.ndarray): The field to propagate
             dz (float): Propagation step in m
             alpha (float): Losses
-            V (cp.ndarray): Potential
+            V (np.ndarray): Potential
             g (float): Interactions
         """
         for i in numba.prange(A.shape[0]):
@@ -120,8 +160,7 @@ class NLSE:
         self.NY = NY
         self.window = window
         z_nl = 1/(self.k*abs(self.Dn))
-        self.delta_z = min(1e-5*self.z_r, 2.5e-2*z_nl)
-        # self.delta_z = 1.2187500000000003e-05
+        self.delta_z = min(1e-4*self.z_r, 5e-2*z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -247,7 +286,12 @@ class NLSE:
         Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
         # define fft plan
         if BACKEND == "GPU":
-            A = np.empty((self.NX, self.NY), dtype=np.complex64)
+            if type(E_in) == np.ndarray:
+                A = np.empty((self.NX, self.NY), dtype=np.complex64)
+                return_np_array = True
+            elif type(E_in) == cp.ndarray:
+                A = cp.empty((self.NX, self.NY), dtype=np.complex64)
+                return_np_array = False
             plan_fft = fftpack.get_fft_plan(
                 A, shape=A.shape, axes=(0, 1), value_type='C2C')
         else:
@@ -284,20 +328,21 @@ class NLSE:
                                 self.k * self.delta_z)
         if BACKEND == "GPU":
             propagator_cp = cp.asarray(propagator)
-            self.V = cp.asarray(self.V)
+            if type(self.V) != cp.ndarray:
+                self.V = cp.asarray(self.V)
 
             def split_step_cp(A):
                 """computes one propagation step"""
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                plan_fft.fft(self.V, self.V, cp.cuda.cufft.CUFFT_FORWARD)
+                # plan_fft.fft(self.V, self.V, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
                 cp.multiply(A, propagator_cp, out=A)
-                cp.multiply(self.V, propagator_cp, out=self.V)
+                # cp.multiply(self.V, propagator_cp, out=self.V)
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                plan_fft.fft(self.V, self.V, cp.cuda.cufft.CUFFT_INVERSE)
+                # plan_fft.fft(self.V, self.V, cp.cuda.cufft.CUFFT_INVERSE)
                 # fft normalization
                 A /= np.prod(A.shape)
-                self.V /= np.prod(self.V.shape)
+                # self.V /= np.prod(self.V.shape)
                 nl_prop(A, self.delta_z, self.alpha, self.k/2 *
                         self.V, self.k/2*self.n2*c*epsilon_0)
                 if precision == "double":
@@ -310,7 +355,8 @@ class NLSE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
-            A = cp.asarray(A)
+            if type(A) != cp.ndarray:
+                A = cp.asarray(A)
             t0 = time.perf_counter()
             n2_old = self.n2
             for i, z in enumerate(Z):
@@ -324,7 +370,8 @@ class NLSE:
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
             self.n2 = n2_old
-            A = cp.asnumpy(A)
+            if return_np_array:
+                A = cp.asnumpy(A)
             print(
                 f"Time spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)")
         else:
@@ -369,8 +416,8 @@ class NLSE:
                 np.fft.fft2(np.abs(A[lim:-lim, lim:-lim])**2)))
             Kx_2 = 2 * np.pi * np.fft.fftfreq(self.NX-2*lim, d=self.delta_X)
             len_fft = len(im_fft[0, :])
-            self.plot_2d(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), np.log10(1+im_fft),
-                         r'$\mathcal{TF}(|E_{out}|^2)$', cmap='viridis', label=r'$K_y$', vmax=np.max(np.log10(1+im_fft)))
+            self.plot_2d(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), np.log10(im_fft),
+                         r'$\mathcal{TF}(|E_{out}|^2)$', cmap='viridis', label=r'$K_y$', vmax=np.max(np.log10(im_fft)))
 
             a4 = fig.add_subplot(224)
             self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_y (mm^{-1})$', im_fft[len_fft//2, len_fft//2+1:],
@@ -464,7 +511,7 @@ if __name__ == "__main__":
     n2 = -4e-10
     waist = 1e-3
     window = 2048*5.5e-6
-    puiss = 500e-3
+    puiss = 10e-3
     L = 5e-2
     dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
     simu = NLSE(trans, puiss, waist, window, n2, dn,
@@ -480,4 +527,4 @@ if __name__ == "__main__":
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A = simu.out_field(E_in_0, 0.1*L, plot=True)
+    A = simu.out_field(E_in_0, L, plot=True)

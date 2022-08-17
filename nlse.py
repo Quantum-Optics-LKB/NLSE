@@ -14,118 +14,80 @@ import pyfftw
 from scipy.constants import c, epsilon_0, hbar, mu_0
 from scipy.ndimage import zoom
 
-# try:
-#     import cupy as cp
-#     import cupyx.scipy.fftpack as fftpack
-#     BACKEND = "GPU"
+try:
+    import cupy as cp
+    import cupyx.scipy.fftpack as fftpack
+    BACKEND = "GPU"
 
-#     @cp.fuse(kernel_name="nl_prop")
-#     def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
-#         """A fused kernel to apply real space terms
+    @cp.fuse(kernel_name="nl_prop")
+    def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
+        """A fused kernel to apply real space terms
 
-#         Args:
-#             A (cp.ndarray): The field to propagate
-#             dz (float): Propagation step in m
-#             alpha (float): Losses
-#             V (cp.ndarray): Potential
-#             g (float): Interactions
-#         """
-#         A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
+        Args:
+            A (cp.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (cp.ndarray): Potential
+            g (float): Interactions
+        """
+        A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
 
-#     @cp.fuse(kernel_name='vortex_cp')
-#     def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
-#         """Generates a vortex of charge l at a position (i,j) on the image im.
+    @cp.fuse(kernel_name='vortex_cp')
+    def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
+        """Generates a vortex of charge l at a position (i,j) on the image im.
 
-#         Args:
-#             im (np.ndarray): Image
-#             i (int): position row of the vortex
-#             j (int): position column of the vortex
-#             ii (int): meshgrid position row (coordinates of the image)
-#             jj (int): meshgrid position column (coordinates of the image)
-#             l (int): vortex charge
+        Args:
+            im (np.ndarray): Image
+            i (int): position row of the vortex
+            j (int): position column of the vortex
+            ii (int): meshgrid position row (coordinates of the image)
+            jj (int): meshgrid position column (coordinates of the image)
+            l (int): vortex charge
 
-#         Returns:
-#             None
-#         """
-#         im += cp.angle(((ii-i)+1j*(jj-j))**l)
+        Returns:
+            None
+        """
+        im += cp.angle(((ii-i)+1j*(jj-j))**l)
 
-# except ImportError:
-#     print("CuPy not available, falling back to CPU backend ...")
-#     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-#     BACKEND = "CPU"
+except ImportError:
+    print("CuPy not available, falling back to CPU backend ...")
+    pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
+    BACKEND = "CPU"
 
-#     @numba.njit(parallel=True, fastmath=True)
-#     def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
-#         """A compiled parallel implementation to apply real space terms
+    @numba.njit(parallel=True, fastmath=True)
+    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+        """A compiled parallel implementation to apply real space terms
 
-#         Args:
-#             A (cp.ndarray): The field to propagate
-#             dz (float): Propagation step in m
-#             alpha (float): Losses
-#             V (cp.ndarray): Potential
-#             g (float): Interactions
-#         """
-#         for i in numba.prange(len(A)):
-#             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-#                                V[i] + 1j*g*abs(A[i])**2))
+        Args:
+            A (cp.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (cp.ndarray): Potential
+            g (float): Interactions
+        """
+        for i in numba.prange(A.shape[0]):
+            for j in numba.prange(A.shape[1]):
+                A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
+                                      V[i, j] + 1j*g*abs(A[i, j])**2))
 
-#     @numba.njit(parallel=True, fastmath=True)
-#     def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
-#         """Generates a vortex of charge l at a position (i,j) on the image im.
+    @numba.njit(parallel=True, fastmath=True)
+    def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
+        """Generates a vortex of charge l at a position (i,j) on the image im.
 
-#         Args:
-#             im (np.ndarray): Image
-#             i (int): position row of the vortex
-#             j (int): position column of the vortex
-#             ii (int): meshgrid position row (coordinates of the image)
-#             jj (int): meshgrid position column (coordinates of the image)
-#             l (int): vortex charge
+        Args:
+            im (np.ndarray): Image
+            i (int): position row of the vortex
+            j (int): position column of the vortex
+            ii (int): meshgrid position row (coordinates of the image)
+            jj (int): meshgrid position column (coordinates of the image)
+            l (int): vortex charge
 
-#         Returns:
-#             None
-#         """
-#         for i in numba.prange(len(A)):
-#             im[i] += np.angle(((ii[i]-i)+1j*(jj[i]-j))**l)
-
-pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-BACKEND = "CPU"
-
-
-@numba.njit(parallel=True, fastmath=True)
-def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
-    """A compiled parallel implementation to apply real space terms
-
-    Args:
-        A (np.ndarray): The field to propagate
-        dz (float): Propagation step in m
-        alpha (float): Losses
-        V (np.ndarray): Potential
-        g (float): Interactions
-    """
-    for i in numba.prange(A.shape[0]):
-        for j in numba.prange(A.shape[1]):
-            A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                  V[i, j] + 1j*g*abs(A[i, j])**2))
-
-
-@numba.njit(parallel=True, fastmath=True)
-def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
-    """Generates a vortex of charge l at a position (i,j) on the image im.
-
-    Args:
-        im (np.ndarray): Image
-        i (int): position row of the vortex
-        j (int): position column of the vortex
-        ii (int): meshgrid position row (coordinates of the image)
-        jj (int): meshgrid position column (coordinates of the image)
-        l (int): vortex charge
-
-    Returns:
-        None
-    """
-    for i in numba.prange(A.size):
-        for j in numba.prange(A.shape[1]):
-            im[i, j] += np.angle(((ii[i, j]-i)+1j*(jj[i, j]-j))**l)
+        Returns:
+            None
+        """
+        for i in numba.prange(A.shape[0]):
+            for j in numba.prange(A.shape[1]):
+                im[i, j] += np.angle(((ii[i, j]-i)+1j*(jj[i, j]-j))**l)
 
 
 class NLSE:

@@ -14,7 +14,7 @@ import pyfftw
 from scipy.constants import c, epsilon_0, hbar, mu_0
 from scipy.ndimage import zoom
 
-BACKEND = 'CPU'
+BACKEND = 'GPU'
 
 if BACKEND == 'GPU':
     try:
@@ -313,35 +313,40 @@ class NLSE:
         phase[y_center:y_center+phase_zoomed.shape[0],
               x_center:x_center+phase_zoomed.shape[1]] = phase_zoomed
         return phase
+    
+    def build_propagator(self, precision: str = "single") -> np.ndarray:
+        """Builds the linear propagation matrix
 
-    def out_field(self, E_in: np.ndarray, z: float, plot=False, precision: str = "single", verbose: bool = True) -> np.ndarray:
-        """Propagates the field at a distance z
         Args:
-            E_in (np.ndarray): Normalized input field (between 0 and 1)
-            z (float): propagation distance in m
-            plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): "single" or "double" application of the propagator.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
         Returns:
-            np.ndarray: Propagated field in proper units V/m
+            propagator (np.ndarray): the propagator matrix
         """
-        assert E_in.shape[0] == self.NY and E_in.shape[1] == self.NX
-        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
-        # define fft plan
+        if precision == "double":
+            propagator = np.exp(-1j * 0.25 * (self.Kxx**2 + self.Kyy**2) /
+                                self.k * self.delta_z)  
+        else:
+            propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) /
+                                self.k * self.delta_z)
         if BACKEND == "GPU":
-            if type(E_in) == np.ndarray:
-                A = np.empty((self.NX, self.NY), dtype=np.complex64)
-                return_np_array = True
-            elif type(E_in) == cp.ndarray:
-                A = cp.empty((self.NX, self.NY), dtype=np.complex64)
-                return_np_array = False
+            return cp.asarray(propagator)
+        else:
+            return propagator
+
+    def build_fft_plan(self, A:np.ndarray) -> list:
+        """Builds the FFT plan objects for propagation
+
+        Args:
+            A (np.ndarray): Array to transform.
+        Returns:
+            list: A list containing the FFT plans
+        """
+        if BACKEND == "GPU":
             plan_fft = fftpack.get_fft_plan(
                 A, shape=A.shape, axes=(0, 1), value_type='C2C')
+            return [plan_fft]
         else:
-            return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
             # try to load previous fftw wisdom
             try:
                 with open("fft.wisdom", "rb") as file:
@@ -360,81 +365,100 @@ class NLSE:
             with open("fft.wisdom", "wb") as file:
                 wisdom = pyfftw.export_wisdom()
                 pickle.dump(wisdom, file)
-        A[:, :] = self.E_00*E_in
+            return [plan_fft, plan_ifft]
+    
+    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray, plans: list, precision:str="single"):
+        """Split step function for one propagation step
 
-        if precision == "double":
-            propagator = np.exp(-1j * 0.25 * (self.Kxx**2 + self.Kyy**2) /
-                                self.k * self.delta_z)  # symetrized
-        else:
-            propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) /
-                                self.k * self.delta_z)
+        Args:
+            A (np.ndarray): Field to propagate
+            V (np.ndarray): Potential field (can be None).
+            propagator (np.ndarray): Propagator matrix.
+            plans (list): List of FFT plan objects. Either a single FFT plan for both directions
+            (GPU case) or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of the linear propagation step.
+            Defaults to "single".
+        """
         if BACKEND == "GPU":
-            propagator_cp = cp.asarray(propagator)
-            if type(self.V) != cp.ndarray and self.V is not None:
-                self.V = cp.asarray(self.V)
-
-            def split_step(A):
-                """computes one propagation step"""
-                V = self.V
+            # on GPU, only one plan for both FFT directions
+            plan_fft = plans[0]
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+            # linear step in Fourier domain (shifted)
+            cp.multiply(A, propagator, out=A)
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+            # fft normalization
+            A /= np.prod(A.shape)
+            if V is None:
+                nl_prop_without_V(A, self.delta_z, self.alpha,
+                                    self.k/2*self.n2*c*epsilon_0)
+            else:
+                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
+                        V, self.k/2*self.n2*c*epsilon_0)
+            if precision == "double":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                if V is not None:
-                    plan_fft.fft(V, V, cp.cuda.cufft.CUFFT_FORWARD)
-                    cp.multiply(V, propagator_cp, out=V)
-                    plan_fft.fft(V, V, cp.cuda.cufft.CUFFT_INVERSE)
-                    V /= np.prod(V.shape)
                 # linear step in Fourier domain (shifted)
-                cp.multiply(A, propagator_cp, out=A)
+                cp.multiply(A, propagator, out=A)
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                # fft normalization
                 A /= np.prod(A.shape)
-                if V is None:
-                    nl_prop_without_V(A, self.delta_z, self.alpha,
-                                      self.k/2*self.n2*c*epsilon_0)
-                else:
-                    nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                            V, self.k/2*self.n2*c*epsilon_0)
-                if precision == "double":
-                    if V is not None:
-                        plan_fft.fft(V, V,
-                                     cp.cuda.cufft.CUFFT_FORWARD)
-                        cp.multiply(V, propagator_cp, out=V)
-                        plan_fft.fft(V, V,
-                                     cp.cuda.cufft.CUFFT_INVERSE)
-                        V /= np.prod(V.shape)
-                    plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                    # linear step in Fourier domain (shifted)
-                    cp.multiply(A, propagator_cp, out=A)
-                    plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                    A /= np.prod(A.shape)
-                return A
+        else:
+            plan_fft, plan_ifft = plans
+            plan_fft(input_array=A, output_array=A)
+            np.multiply(A, propagator, out=A)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+            if V is None:
+                nl_prop_without_V(A, self.delta_z, self.alpha,
+                                    self.k/2*self.n2*c*epsilon_0)
+            else:
+                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
+                        V, self.k/2*self.n2*c*epsilon_0)
+            if precision == "double":
+                plan_fft(input_array=A, output_array=A)
+                np.multiply(A, propagator, out=A)
+                plan_ifft(input_array=A, output_array=A, normalise_idft=False)
+
+    def out_field(self, E_in: np.ndarray, z: float, plot=False, precision: str = "single", verbose: bool = True) -> np.ndarray:
+        """Propagates the field at a distance z
+        Args:
+            E_in (np.ndarray): Normalized input field (between 0 and 1)
+            z (float): propagation distance in m
+            plot (bool, optional): Plots the results. Defaults to False.
+            precision (str, optional): Does a "double" or a "single" application
+            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            Defaults to "single".
+            verbose (bool, optional): Prints progress and time. Defaults to True.
+        Returns:
+            np.ndarray: Propagated field in proper units V/m
+        """
+        assert E_in.shape[0] == self.NY and E_in.shape[1] == self.NX
+        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
+        if BACKEND == "GPU":
+            if type(E_in) == np.ndarray:
+                A = np.empty((self.NX, self.NY), dtype=np.complex64)
+                return_np_array = True
+            elif type(E_in) == cp.ndarray:
+                A = cp.empty((self.NX, self.NY), dtype=np.complex64)
+                return_np_array = False
+        else:
+            return_np_array = True
+            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
+        plans = self.build_fft_plan(A)
+        A[:, :] = self.E_00*E_in
+        propagator = self.build_propagator(precision)
+        if BACKEND == "GPU":
+            if type(self.V) == np.ndarray:
+                V = cp.asarray(self.V)
+            elif type(self.V) == cp.ndarray:
+                V = self.V.copy()
+            if self.V is None:
+                V = self.V
             if type(A) != cp.ndarray:
                 A = cp.asarray(A)
         else:
-            def split_step(A):
-                """computes one propagation step"""
+            if self.V is None:
                 V = self.V
-                if self.V is not None:
-                    plan_fft(V)
-                    np.multiply(V, propagator, out=V)
-                    plan_ifft(V)
-                plan_fft(A)
-                np.multiply(A, propagator, out=A)
-                plan_ifft(A)
-                if V is None:
-                    nl_prop_without_V(A, self.delta_z, self.alpha,
-                                      self.k/2*self.n2*c*epsilon_0)
-                else:
-                    nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                            V, self.k/2*self.n2*c*epsilon_0)
-                if precision == "double":
-                    if self.V is not None:
-                        plan_fft(V)
-                        np.multiply(V, propagator, out=V)
-                        plan_ifft(V)
-                    plan_fft(A)
-                    np.multiply(A, propagator, out=A)
-                    plan_ifft(A)
-                return A
+            else:
+                V = self.V.copy()
+
         if BACKEND == "GPU":
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
@@ -446,7 +470,8 @@ class NLSE:
                 self.n2 = 0
             if verbose:
                 sys.stdout.write(f"\rIteration {i+1}/{len(Z)}")
-            A[:, :] = split_step(A)
+            self.split_step(A, V, propagator, plans, precision)
+
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()

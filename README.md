@@ -75,7 +75,7 @@ A small example is defined in the `main` function of [`nlse.py`](nlse.py).\
 We first create a `NLSE` instance for our simulation with the physical parameters of our experiment :
 ```python
 trans = 0.5
-n2 = -4e-10
+n2 = -1.9e-9
 waist = 1e-3
 window = 2048*5.5e-6
 puiss = 500e-3
@@ -122,8 +122,8 @@ A = simu.out_field(E_in_0, L, plot=True)
 
 This yields the following plot and output :
 ```bash
-Iteration 1242/1242
-Time spent to solve : 5.6169067382812505 s (GPU) / 5.613498663005885 s (CPU)
+Iteration 2052/2052
+Time spent to solve : 9.573697265625 s (GPU) / 9.576363077998394 s (CPU)
 ```
 ![output](img/output.png)
 We see that the line of vortices is being pulled into the attractive potential located at the center of the top left image. The other plots allow to visualize the phase or the Fourier spectrum of the image. 

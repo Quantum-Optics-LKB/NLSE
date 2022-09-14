@@ -200,7 +200,7 @@ class NLSE:
         self.NY = NY
         self.window = window
         z_nl = 1/(self.k*abs(self.Dn))
-        self.delta_z = min(1e-4*self.z_r, 5e-2*z_nl)
+        self.delta_z = min(2e-5*self.z_r, 5e-2*z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -313,7 +313,7 @@ class NLSE:
         phase[y_center:y_center+phase_zoomed.shape[0],
               x_center:x_center+phase_zoomed.shape[1]] = phase_zoomed
         return phase
-    
+
     def build_propagator(self, precision: str = "single") -> np.ndarray:
         """Builds the linear propagation matrix
 
@@ -325,7 +325,7 @@ class NLSE:
         """
         if precision == "double":
             propagator = np.exp(-1j * 0.25 * (self.Kxx**2 + self.Kyy**2) /
-                                self.k * self.delta_z)  
+                                self.k * self.delta_z)
         else:
             propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) /
                                 self.k * self.delta_z)
@@ -334,7 +334,7 @@ class NLSE:
         else:
             return propagator
 
-    def build_fft_plan(self, A:np.ndarray) -> list:
+    def build_fft_plan(self, A: np.ndarray) -> list:
         """Builds the FFT plan objects for propagation
 
         Args:
@@ -366,8 +366,8 @@ class NLSE:
                 wisdom = pyfftw.export_wisdom()
                 pickle.dump(wisdom, file)
             return [plan_fft, plan_ifft]
-    
-    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray, plans: list, precision:str="single"):
+
+    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray, plans: list, precision: str = "single"):
         """Split step function for one propagation step
 
         Args:
@@ -390,7 +390,7 @@ class NLSE:
             A /= np.prod(A.shape)
             if V is None:
                 nl_prop_without_V(A, self.delta_z, self.alpha,
-                                    self.k/2*self.n2*c*epsilon_0)
+                                  self.k/2*self.n2*c*epsilon_0)
             else:
                 nl_prop(A, self.delta_z, self.alpha, self.k/2 *
                         V, self.k/2*self.n2*c*epsilon_0)
@@ -407,7 +407,7 @@ class NLSE:
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
             if V is None:
                 nl_prop_without_V(A, self.delta_z, self.alpha,
-                                    self.k/2*self.n2*c*epsilon_0)
+                                  self.k/2*self.n2*c*epsilon_0)
             else:
                 nl_prop(A, self.delta_z, self.alpha, self.k/2 *
                         V, self.k/2*self.n2*c*epsilon_0)
@@ -601,23 +601,23 @@ def flatTop_super(sx: int, sy: int, length: int = 150, width: int = 60,
 
 if __name__ == "__main__":
     trans = 0.5
-    n2 = -4e-10
+    n2 = -1.6e-9
     waist = 1e-3
     window = 2048*5.5e-6
-    puiss = 10e-3
+    puiss = 500e-3
     L = 5e-2
     dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
-    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
     phase_slm = 2*np.pi * \
-        flatTop_tur(1272, 1024, length=1000, width=600)
+        flatTop_super(1272, 1024, length=1000, width=600)
     phase_slm = simu.slm(phase_slm, 6.25e-6)
     E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
         np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
+    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
     E_in_0 *= np.exp(1j*phase_slm)
     E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A = simu.out_field(E_in_0, L, plot=True)
+    A = simu.out_field(E_in_0, L, plot=True, precision='double')

@@ -23,7 +23,7 @@ if BACKEND == 'GPU':
         BACKEND = "GPU"
 
         @cp.fuse(kernel_name="nl_prop")
-        def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float) -> None:
+        def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float, Isat: float) -> None:
             """A fused kernel to apply real space terms
 
             Args:
@@ -33,10 +33,12 @@ if BACKEND == 'GPU':
                 V (cp.ndarray): Potential
                 g (float): Interactions
             """
-            A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g*cp.abs(A)**2))
+            A_sq = cp.abs(A)**2
+            A *= cp.exp(dz*(-alpha/2 + 1j * V + 1j*g *
+                        A_sq/(1+A_sq/Isat)))
 
         @cp.fuse(kernel_name="nl_prop_without_V")
-        def nl_prop_without_V(A: cp.ndarray, dz: float, alpha: float, g: float) -> None:
+        def nl_prop_without_V(A: cp.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
             """A fused kernel to apply real space terms
 
             Args:
@@ -45,7 +47,9 @@ if BACKEND == 'GPU':
                 alpha (float): Losses
                 g (float): Interactions
             """
-            A *= cp.exp(dz*(-alpha/2 + 1j*g*cp.abs(A)**2))
+            A_sq = cp.abs(A)**2
+            A *= cp.exp(dz*(-alpha/2 + 1j*g *
+                        A_sq/(1+A_sq/Isat)))
 
         @cp.fuse(kernel_name='vortex_cp')
         def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, l: int) -> None:
@@ -194,6 +198,7 @@ class NLSE:
         self.L = L  # length of the non linear medium
         self.alpha = -np.log(trans)/self.L
         self.puiss = puiss
+        self.I_sat = np.inf
 
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
@@ -390,10 +395,10 @@ class NLSE:
             A /= np.prod(A.shape)
             if V is None:
                 nl_prop_without_V(A, self.delta_z, self.alpha,
-                                  self.k/2*self.n2*c*epsilon_0)
+                                  self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
             else:
                 nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                        V, self.k/2*self.n2*c*epsilon_0)
+                        V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
             if precision == "double":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
@@ -407,14 +412,14 @@ class NLSE:
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
             if V is None:
                 nl_prop_without_V(A, self.delta_z, self.alpha,
-                                  self.k/2*self.n2*c*epsilon_0)
+                                  self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
             else:
                 nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                        V, self.k/2*self.n2*c*epsilon_0)
+                        V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
             if precision == "double":
                 plan_fft(input_array=A, output_array=A)
                 np.multiply(A, propagator, out=A)
-                plan_ifft(input_array=A, output_array=A, normalise_idft=False)
+                plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(self, E_in: np.ndarray, z: float, plot=False, precision: str = "single", verbose: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
@@ -488,7 +493,7 @@ class NLSE:
             A = cp.asnumpy(A)
 
         if plot == True:
-            if not(return_np_array):
+            if not (return_np_array):
                 A_plot = cp.asnumpy(A)
             elif return_np_array or BACKEND == 'CPU':
                 A_plot = A.copy()
@@ -496,8 +501,8 @@ class NLSE:
 
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
-            self.plot_2d(a1, self.X*1e3, self.Y*1e3, np.abs(A_plot)**2,
-                         r'$|\psi|^2$', vmax=np.max(np.abs(A_plot)**2))
+            self.plot_2d(a1, self.X*1e3, self.Y*1e3, np.abs(A_plot),
+                         r'$|\psi|$', vmax=np.max(np.abs(A_plot)))
 
             a2 = fig.add_subplot(222)
             self.plot_2d(a2, self.X*1e3, self.Y*1e3,
@@ -605,10 +610,12 @@ if __name__ == "__main__":
     waist = 1e-3
     window = 2048*5.5e-6
     puiss = 500e-3
+    Isat = 10e4  # saturation intensity in W/m^2
     L = 5e-2
     dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
+    simu.I_sat = Isat
     phase_slm = 2*np.pi * \
         flatTop_super(1272, 1024, length=1000, width=600)
     phase_slm = simu.slm(phase_slm, 6.25e-6)
@@ -620,4 +627,4 @@ if __name__ == "__main__":
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A = simu.out_field(E_in_0, L, plot=True, precision='double')
+    A = simu.out_field(E_in_0, L, plot=True)

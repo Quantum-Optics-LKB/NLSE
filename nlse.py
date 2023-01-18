@@ -160,7 +160,7 @@ else:
     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
 
     @numba.njit(parallel=True, fastmath=True)
-    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
+    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, Isat: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
         Args:
@@ -172,27 +172,28 @@ else:
         """
         for i in numba.prange(A.shape[0]):
             for j in numba.prange(A.shape[1]):
+                A_sq = np.abs(A[i, j])**2
                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                      V[i, j] + 1j*g*abs(A[i, j])**2))
+                                        V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, Isat: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
-            Args:
-                A (np.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                V (np.ndarray): Potential
-                g (float): Interactions
-            """
+        Args:
+            A (np.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            V (np.ndarray): Potential
+            g (float): Interactions
+        """
         for i in numba.prange(A.shape[0]):
             A_sq = np.abs(A[i])**2
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                               V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
+                                V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
-    def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float) -> None:
+    def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
         Args:
@@ -203,22 +204,24 @@ else:
         """
         for i in numba.prange(A.shape[0]):
             for j in numba.prange(A.shape[1]):
-                A[i, j] *= np.exp(dz*(-alpha/2 + 1j*g*abs(A[i, j])**2))
+                A_sq = np.abs(A[i, j])**2
+                A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
+                                    g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
-            Args:
-                A (np.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                g (float): Interactions
-            """
+        Args:
+            A (np.ndarray): The field to propagate
+            dz (float): Propagation step in m
+            alpha (float): Losses
+            g (float): Interactions
+        """
         for i in numba.prange(A.shape[0]):
             A_sq = np.abs(A[i])**2
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                               g*A_sq/(1+A_sq/Isat)))
+                                g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
@@ -920,7 +923,12 @@ if __name__ == "__main__":
     dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
+    simu_1d = NLSE_1d(trans, puiss, waist, window, n2, dn[1024, :],
+                L, NX=2048)
+    simu.delta_z = 0.1e-3
+    simu_1d.delta_z = 0.1e-3
     simu.I_sat = Isat
+    simu_1d.I_sat = Isat
     phase_slm = 2*np.pi * \
         flatTop_super(1272, 1024, length=1000, width=600)
     phase_slm = simu.slm(phase_slm, 6.25e-6)
@@ -933,3 +941,4 @@ if __name__ == "__main__":
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
     A = simu.out_field(E_in_0, L, plot=True)
+    A_1d = simu_1d.out_field(E_in_0[1024, :], L, plot=True)

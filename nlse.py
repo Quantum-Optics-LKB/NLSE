@@ -5,7 +5,8 @@
 import multiprocessing
 import pickle
 import time
-import progressbar
+import sys
+# import progressbar
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
@@ -160,7 +161,7 @@ else:
     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
 
     @numba.njit(parallel=True, fastmath=True)
-    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, Isat: float) -> None:
+    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
         Args:
@@ -172,28 +173,27 @@ else:
         """
         for i in numba.prange(A.shape[0]):
             for j in numba.prange(A.shape[1]):
-                A_sq = np.abs(A[i, j])**2
                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                        V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
+                                      V[i, j] + 1j*g*abs(A[i, j])**2))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, Isat: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
-        Args:
-            A (np.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (np.ndarray): Potential
-            g (float): Interactions
-        """
+            Args:
+                A (np.ndarray): The field to propagate
+                dz (float): Propagation step in m
+                alpha (float): Losses
+                V (np.ndarray): Potential
+                g (float): Interactions
+            """
         for i in numba.prange(A.shape[0]):
             A_sq = np.abs(A[i])**2
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                                V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
+                               V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
-    def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
+    def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
         Args:
@@ -204,24 +204,22 @@ else:
         """
         for i in numba.prange(A.shape[0]):
             for j in numba.prange(A.shape[1]):
-                A_sq = np.abs(A[i, j])**2
-                A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                    g*A_sq/(1+A_sq/Isat)))
+                A[i, j] *= np.exp(dz*(-alpha/2 + 1j*g*abs(A[i, j])**2))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
         """A compiled parallel implementation to apply real space terms
 
-        Args:
-            A (np.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            g (float): Interactions
-        """
+            Args:
+                A (np.ndarray): The field to propagate
+                dz (float): Propagation step in m
+                alpha (float): Losses
+                g (float): Interactions
+            """
         for i in numba.prange(A.shape[0]):
             A_sq = np.abs(A[i])**2
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                                g*A_sq/(1+A_sq/Isat)))
+                               g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
@@ -273,8 +271,14 @@ class NLSE:
         self.NX = NX
         self.NY = NY
         self.window = window
-        z_nl = 1/(self.k*abs(self.Dn))
-        self.delta_z = min(0.1e-5*self.z_r, z_nl)
+        # z_nl = 1/(self.k*abs(self.Dn))
+        # self.delta_z = min(0.1e-5*self.z_r, z_nl)
+
+        self.delta_z = 1e-4*self.z_r
+        if self.n2 !=0:
+            z_nl = 1/(self.k*abs(self.Dn))
+            self.delta_z = min(1e-4*self.z_r, 5e-2*z_nl)
+
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -289,12 +293,12 @@ class NLSE:
 
     @property
     def E_00(self):
-        intens = 2*self.puiss/(np.pi*self.waist**2)
+        intens = self.puiss/(np.pi*self.waist**2)
         return np.sqrt(2*intens/(c*epsilon_0))
 
     @property
     def Dn(self):
-        intens = 2*self.puiss/(np.pi*self.waist**2)
+        intens = self.puiss/(np.pi*self.waist**2)
         return self.n2*intens
 
     def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)', vmax=1):
@@ -539,13 +543,15 @@ class NLSE:
             start_gpu.record()
         t0 = time.perf_counter()
         n2_old = self.n2
-        if verbose:
-            pbar = progressbar.ProgressBar(max_value=len(Z))
+        # if verbose:
+        #     pbar = progressbar.ProgressBar(max_value=len(Z))
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
+            # if verbose:
+                # pbar.update(i+1)
             if verbose:
-                pbar.update(i+1)
+                sys.stdout.write(f"\rIteration {i+1}/{len(Z)}")
             self.split_step(A, V, propagator, plans, precision)
 
         if BACKEND == "GPU":
@@ -628,8 +634,14 @@ class NLSE_1d:
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.window = window
-        z_nl = 1/(self.k*abs(self.Dn))
-        self.delta_z = min(0.1e-5*self.z_r, z_nl)
+        # z_nl = 1/(self.k*abs(self.Dn))
+        # self.delta_z = min(0.1e-5*self.z_r, z_nl)
+
+        self.delta_z = 1e-4*self.z_r
+        if self.n2 !=0:
+            z_nl = 1/(self.k*abs(self.Dn))
+            self.delta_z = min(1e-4*self.z_r, 5e-2*z_nl)
+
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -797,13 +809,15 @@ class NLSE_1d:
             start_gpu.record()
         t0 = time.perf_counter()
         n2_old = self.n2
-        if verbose:
-            pbar = progressbar.ProgressBar(max_value=len(Z))
+        # if verbose:
+        #     pbar = progressbar.ProgressBar(max_value=len(Z))
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
+            # if verbose:
+            #     pbar.update(i+1)
             if verbose:
-                pbar.update(i+1)
+                sys.stdout.write(f"\rIteration {i+1}/{len(Z)}")
             self.split_step(A, V, propagator, plans, precision)
 
         if BACKEND == "GPU":
@@ -913,32 +927,46 @@ def flatTop_super(sx: int, sy: int, length: int = 150, width: int = 60,
 
 
 if __name__ == "__main__":
-    trans = 0.5
-    n2 = -1.6e-9
+    trans = 1 #0.5
+    alpha = 0
+    n2 = -4e-10
     waist = 1e-3
     window = 2048*5.5e-6
     puiss = 500e-3
     Isat = 10e4  # saturation intensity in W/m^2
-    L = 5e-2
-    dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
+    L = 5e-3
+    dn = None  #2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
+
+
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
-    simu_1d = NLSE_1d(trans, puiss, waist, window, n2, dn[1024, :],
-                L, NX=2048)
-    simu.delta_z = 0.1e-3
-    simu_1d.delta_z = 0.1e-3
     simu.I_sat = Isat
-    simu_1d.I_sat = Isat
-    phase_slm = 2*np.pi * \
-        flatTop_super(1272, 1024, length=1000, width=600)
-    phase_slm = simu.slm(phase_slm, 6.25e-6)
-    E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
+    # phase_slm = 2*np.pi * \
+        # flatTop_super(1272, 1024, length=1000, width=600)
+    # phase_slm = simu.slm(phase_slm, 6.25e-6)
+    E2D_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
         np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
-    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
-    E_in_0 *= np.exp(1j*phase_slm)
-    E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
-    E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
-    E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
-    E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A = simu.out_field(E_in_0, L, plot=True)
-    A_1d = simu_1d.out_field(E_in_0[1024, :], L, plot=True)
+    # simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
+    # E_in_0 *= np.exp(1j*phase_slm)
+    # E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
+    # E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
+    # E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
+    # E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
+    A2D = simu.out_field(E2D_in_0, L, plot=False, verbose=True)
+    print(simu.delta_z)
+    simu = NLSE_1d(alpha, puiss, waist, window, n2, dn,
+                L, NX=2048)
+    simu.I_sat = Isat
+    E1D_in_0 = np.ones((simu.NX,), dtype=np.complex64) * \
+        np.exp(-(simu.X**2)/(2*simu.waist**2))
+    A1D = simu.out_field(E1D_in_0, L, plot=True, verbose=True)
+    print(simu.delta_z)
+
+    plt.figure()
+    plt.plot(simu.X,np.abs(A1D)**2,label='1D')
+    plt.plot(simu.X,np.abs(A2D[:,1024])**2,label='2D')
+    plt.xlabel('X')
+    plt.ylabel('|E|^2')
+    plt.legend()
+    # plt.show()
+    plt.savefig('./nlse_1d2d_GPU.png',format='png')

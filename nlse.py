@@ -5,8 +5,7 @@
 import multiprocessing
 import pickle
 import time
-import sys
-# import progressbar
+import progressbar
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
@@ -271,14 +270,8 @@ class NLSE:
         self.NX = NX
         self.NY = NY
         self.window = window
-        # z_nl = 1/(self.k*abs(self.Dn))
-        # self.delta_z = min(0.1e-5*self.z_r, z_nl)
-
-        self.delta_z = 1e-4*self.z_r
-        if self.n2 !=0:
-            z_nl = 1/(self.k*abs(self.Dn))
-            self.delta_z = min(1e-4*self.z_r, 5e-2*z_nl)
-
+        z_nl = 1/(self.k*abs(self.Dn))
+        self.delta_z = min(0.1e-5*self.z_r, z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -543,15 +536,13 @@ class NLSE:
             start_gpu.record()
         t0 = time.perf_counter()
         n2_old = self.n2
-        # if verbose:
-        #     pbar = progressbar.ProgressBar(max_value=len(Z))
+        if verbose:
+            pbar = progressbar.ProgressBar(max_value=len(Z))
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
-            # if verbose:
-                # pbar.update(i+1)
             if verbose:
-                sys.stdout.write(f"\rIteration {i+1}/{len(Z)}")
+                pbar.update(i+1)
             self.split_step(A, V, propagator, plans, precision)
 
         if BACKEND == "GPU":
@@ -634,14 +625,8 @@ class NLSE_1d:
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.window = window
-        # z_nl = 1/(self.k*abs(self.Dn))
-        # self.delta_z = min(0.1e-5*self.z_r, z_nl)
-
-        self.delta_z = 1e-4*self.z_r
-        if self.n2 !=0:
-            z_nl = 1/(self.k*abs(self.Dn))
-            self.delta_z = min(1e-4*self.z_r, 5e-2*z_nl)
-
+        z_nl = 1/(self.k*abs(self.Dn))
+        self.delta_z = min(0.1e-5*self.z_r, z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
                                            endpoint=False, retstep=True, dtype=np.float32)
@@ -809,15 +794,13 @@ class NLSE_1d:
             start_gpu.record()
         t0 = time.perf_counter()
         n2_old = self.n2
-        # if verbose:
-        #     pbar = progressbar.ProgressBar(max_value=len(Z))
+        if verbose:
+            pbar = progressbar.ProgressBar(max_value=len(Z))
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
-            # if verbose:
-            #     pbar.update(i+1)
             if verbose:
-                sys.stdout.write(f"\rIteration {i+1}/{len(Z)}")
+                pbar.update(i+1)
             self.split_step(A, V, propagator, plans, precision)
 
         if BACKEND == "GPU":
@@ -927,46 +910,26 @@ def flatTop_super(sx: int, sy: int, length: int = 150, width: int = 60,
 
 
 if __name__ == "__main__":
-    trans = 1 #0.5
-    alpha = 0
-    n2 = -4e-10
+    trans = 0.5
+    n2 = -1.6e-9
     waist = 1e-3
     window = 2048*5.5e-6
     puiss = 500e-3
     Isat = 10e4  # saturation intensity in W/m^2
-    L = 5e-3
-    dn = None  #2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
-
-
+    L = 5e-2
+    dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
     simu.I_sat = Isat
-    # phase_slm = 2*np.pi * \
-        # flatTop_super(1272, 1024, length=1000, width=600)
-    # phase_slm = simu.slm(phase_slm, 6.25e-6)
-    E2D_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
+    phase_slm = 2*np.pi * \
+        flatTop_super(1272, 1024, length=1000, width=600)
+    phase_slm = simu.slm(phase_slm, 6.25e-6)
+    E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
         np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
-    # simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
-    # E_in_0 *= np.exp(1j*phase_slm)
-    # E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
-    # E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
-    # E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
-    # E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A2D = simu.out_field(E2D_in_0, L, plot=False, verbose=True)
-    print(simu.delta_z)
-    simu = NLSE_1d(alpha, puiss, waist, window, n2, dn,
-                L, NX=2048)
-    simu.I_sat = Isat
-    E1D_in_0 = np.ones((simu.NX,), dtype=np.complex64) * \
-        np.exp(-(simu.X**2)/(2*simu.waist**2))
-    A1D = simu.out_field(E1D_in_0, L, plot=True, verbose=True)
-    print(simu.delta_z)
-
-    plt.figure()
-    plt.plot(simu.X,np.abs(A1D)**2,label='1D')
-    plt.plot(simu.X,np.abs(A2D[:,1024])**2,label='2D')
-    plt.xlabel('X')
-    plt.ylabel('|E|^2')
-    plt.legend()
-    # plt.show()
-    plt.savefig('./nlse_1d2d_GPU.png',format='png')
+    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
+    E_in_0 *= np.exp(1j*phase_slm)
+    E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
+    E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
+    E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
+    E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
+    A = simu.out_field(E_in_0, L, plot=True)

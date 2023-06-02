@@ -6,6 +6,7 @@ import multiprocessing
 import pickle
 import time
 import progressbar
+import tqdm
 import matplotlib.pyplot as plt
 import numba
 import numpy as np
@@ -174,7 +175,7 @@ else:
             for j in numba.prange(A.shape[1]):
                 A_sq = np.abs(A[i, j])**2
                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                        V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
+                                      V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, Isat: float) -> None:
@@ -190,7 +191,7 @@ else:
         for i in numba.prange(A.shape[0]):
             A_sq = np.abs(A[i])**2
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                                V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
+                               V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
@@ -206,7 +207,7 @@ else:
             for j in numba.prange(A.shape[1]):
                 A_sq = np.abs(A[i, j])**2
                 A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                    g*A_sq/(1+A_sq/Isat)))
+                                      g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float, Isat: float) -> None:
@@ -221,7 +222,7 @@ else:
         for i in numba.prange(A.shape[0]):
             A_sq = np.abs(A[i])**2
             A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                                g*A_sq/(1+A_sq/Isat)))
+                               g*A_sq/(1+A_sq/Isat)))
 
     @numba.njit(parallel=True, fastmath=True)
     def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, l: int) -> None:
@@ -297,7 +298,7 @@ class NLSE:
         intens = 2*self.puiss/(np.pi*self.waist**2)
         return self.n2*intens
 
-    def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)', vmax=1):
+    def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)'):
         """Plots a 2d amplitude on an equidistant Z * X grid.
 
         Args:
@@ -311,7 +312,7 @@ class NLSE:
             vmax (int, optional): Maximum value for cmap normalization. Defaults to 1.
         """
         im = ax.imshow(AMP, aspect='equal', origin='lower', extent=(
-            Z[0], Z[-1], X[0], X[-1]), cmap=cmap, vmax=vmax)
+            Z[0], Z[-1], X[0], X[-1]), cmap=cmap)
         ax.set_xlabel(label)
         ax.set_ylabel(r'$Y$ (mm)')
         ax.set_title(title)
@@ -417,8 +418,10 @@ class NLSE:
             list: A list containing the FFT plans
         """
         if BACKEND == "GPU":
+            # plan_fft = fftpack.get_fft_plan(
+            #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
-                A, shape=A.shape, axes=(0, 1), value_type='C2C')
+                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1), value_type='C2C')
             return [plan_fft]
         else:
             # try to load previous fftw wisdom
@@ -431,11 +434,11 @@ class NLSE:
             plan_fft = pyfftw.FFTW(A, A, direction="FFTW_FORWARD",
                                    flags=("FFTW_PATIENT",),
                                    threads=multiprocessing.cpu_count(),
-                                   axes=(0, 1))
+                                   axes=(-2, -1))
             plan_ifft = pyfftw.FFTW(A, A, direction="FFTW_BACKWARD",
                                     flags=("FFTW_PATIENT",),
                                     threads=multiprocessing.cpu_count(),
-                                    axes=(0, 1))
+                                    axes=(-2, -1))
             with open("fft.wisdom", "wb") as file:
                 wisdom = pyfftw.export_wisdom()
                 pickle.dump(wisdom, file)
@@ -461,7 +464,7 @@ class NLSE:
             cp.multiply(A, propagator, out=A)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
-            A /= np.prod(A.shape)
+            A /= A.shape[-2]*A.shape[-1]
             if V is None:
                 nl_prop_without_V(A, self.delta_z, self.alpha,
                                   self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
@@ -473,7 +476,7 @@ class NLSE:
                 # linear step in Fourier domain (shifted)
                 cp.multiply(A, propagator, out=A)
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                A /= np.prod(A.shape)
+                A /= A.shape[-2]*A.shape[-1]
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)
@@ -503,26 +506,29 @@ class NLSE:
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
-        assert E_in.shape[0] == self.NY and E_in.shape[1] == self.NX
+        assert E_in.shape[-2] == self.NY and E_in.shape[-1] == self.NX
         Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
-                A = np.empty((self.NX, self.NY), dtype=np.complex64)
+                # A = np.empty((self.NX, self.NY), dtype=np.complex64)
+                A = np.empty(E_in.shape, dtype=np.complex64)
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
-                A = cp.empty((self.NX, self.NY), dtype=np.complex64)
+                # A = cp.empty((self.NX, self.NY), dtype=np.complex64)
+                A = cp.empty(E_in.shape, dtype=np.complex64)
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
         plans = self.build_fft_plan(A)
-        A[:, :] = self.E_00*E_in
+        A[:] = self.E_00*E_in
         propagator = self.build_propagator(precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) == cp.ndarray:
-                V = self.V.copy()
+                # V = self.V.copy()
+                V = self.V
             if self.V is None:
                 V = self.V
             if type(A) != cp.ndarray:
@@ -540,13 +546,15 @@ class NLSE:
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = progressbar.ProgressBar(max_value=len(Z))
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc='Iteration', leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
             if verbose:
-                pbar.update(i+1)
+                pbar.update(1)
             self.split_step(A, V, propagator, plans, precision)
+        if verbose:
+            pbar.close()
 
         if BACKEND == "GPU":
             end_gpu.record()
@@ -563,7 +571,7 @@ class NLSE:
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
 
-        if plot == True:
+        if plot:
             if not (return_np_array):
                 A_plot = cp.asnumpy(A)
             elif return_np_array or BACKEND == 'CPU':
@@ -585,8 +593,8 @@ class NLSE:
                 np.fft.fft2(A_plot[lim:-lim, lim:-lim])))
             Kx_2 = 2 * np.pi * np.fft.fftfreq(self.NX-2*lim, d=self.delta_X)
             len_fft = len(im_fft[0, :])
-            self.plot_2d(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), np.log10(im_fft),
-                         r'$|\mathcal{TF}(E_{out})|^2$', cmap='viridis', label=r'$K_y$', vmax=np.max(np.log10(im_fft)))
+            self.plot_2d(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), im_fft,
+                         r'$|\mathcal{TF}(E_{out})|^2$', cmap='nipy_spectral', label=r'$K_y$')
 
             a4 = fig.add_subplot(224)
             self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_y (mm^{-1})$', im_fft[len_fft//2, len_fft//2+1:],
@@ -689,11 +697,11 @@ class NLSE_1d:
             plan_fft = pyfftw.FFTW(A, A, direction="FFTW_FORWARD",
                                    flags=("FFTW_PATIENT",),
                                    threads=multiprocessing.cpu_count(),
-                                   axes=-1)
+                                   axes=(-1,))
             plan_ifft = pyfftw.FFTW(A, A, direction="FFTW_BACKWARD",
                                     flags=("FFTW_PATIENT",),
                                     threads=multiprocessing.cpu_count(),
-                                    axes=-1)
+                                    axes=(-1,))
             with open("fft.wisdom", "wb") as file:
                 wisdom = pyfftw.export_wisdom()
                 pickle.dump(wisdom, file)
@@ -827,9 +835,14 @@ class NLSE_1d:
             elif return_np_array or BACKEND == 'CPU':
                 A_plot = A.copy()
             fig, ax = plt.subplots(1, 2)
-            for i in range(A.shape[0]):
-                ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
-                ax[1].plot(self.X, 1e-4*c/2*epsilon_0*np.abs(A_plot[i, :])**2)
+            if A.ndim == 2:
+                for i in range(A.shape[0]):
+                    ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
+                    ax[1].plot(self.X, 1e-4*c/2*epsilon_0 *
+                               np.abs(A_plot[i, :])**2)
+            elif A.ndim == 1:
+                ax[0].plot(self.X, np.unwrap(np.angle(A_plot)))
+                ax[1].plot(self.X, 1e-4*c/2*epsilon_0*np.abs(A_plot)**2)
             ax[0].set_title("Phase")
             ax[1].set_title(r"Intensity in $W/cm^2$")
             plt.tight_layout()
@@ -925,7 +938,7 @@ if __name__ == "__main__":
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
     simu_1d = NLSE_1d(trans, puiss, waist, window, n2, dn[1024, :],
-                L, NX=2048)
+                      L, NX=2048)
     simu.delta_z = 0.1e-3
     simu_1d.delta_z = 0.1e-3
     simu.I_sat = Isat

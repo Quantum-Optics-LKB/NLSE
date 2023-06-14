@@ -11,7 +11,7 @@ import numba
 import progressbar
 import numpy as np
 import pyfftw
-from scipy.constants import c, epsilon_0, hbar, mu_0
+from scipy.constants import c, epsilon_0
 from scipy.ndimage import zoom
 
 BACKEND = 'GPU'
@@ -601,7 +601,7 @@ class CNLSE:
             A_p = cp.asnumpy(A_p)
             A_m = cp.asnumpy(A_m)
 
-        if plot == True:
+        if plot:
             if not(return_np_array):
                 A_p_plot = cp.asnumpy(A_p)
                 A_m_plot = cp.asnumpy(A_m)

@@ -127,3 +127,12 @@ Time spent to solve : 9.573697265625 s (GPU) / 9.576363077998394 s (CPU)
 ```
 ![output](img/output.png)
 We see that the line of vortices is being pulled into the attractive potential located at the center of the top left image. The other plots allow to visualize the phase or the Fourier spectrum of the image. 
+
+### The `CNLSE` and `NLSE_1d` classes
+
+There are two subclasses of the `NLSE` main class.
+The `NLSE_1d` class is a specialization of the `NLSE` class to 1d problems. It allows vectorized calculations i.e evolving in parallel an arbitrary tensor of fields of shape `(N1, N2, ...., NX)`.
+The `CNLSE` class is a coupled non-linear Schrödinger equation allowing to solve the following equation:
+$$
+i\frac{\partial\psi_f}{\partial z}
+$$

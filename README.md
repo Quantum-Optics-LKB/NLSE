@@ -133,6 +133,9 @@ We see that the line of vortices is being pulled into the attractive potential l
 There are two subclasses of the `NLSE` main class.
 The `NLSE_1d` class is a specialization of the `NLSE` class to 1d problems. It allows vectorized calculations i.e evolving in parallel an arbitrary tensor of fields of shape `(N1, N2, ...., NX)`.
 The `CNLSE` class is a coupled non-linear Schrödinger equation allowing to solve the following equation:
-$$
-i\frac{\partial\psi_f}{\partial z}
-$$
+```math
+\begin{split}
+i\frac{\partial\psi_f}{\partial z} &= -\frac{1}{2k_f}\nabla^2\psi_f -\frac{1}{2}n_2^f k_f c\epsilon_0|\psi_f|^2\psi_f + k_f n_2^{fd}c\epsilon_0|\psi_d|^2\psi_f-\frac{i\alpha_f}{2}\psi_f  \\
+i\frac{\partial\psi_d}{\partial z} &= -\frac{1}{2k_d}\nabla^2\psi_d -\frac{1}{2}n_2^d k_d c\epsilon_0|\psi_d|^2\psi_d + k_d n_2^{fd}c\epsilon_0|\psi_f|^2\psi_d-\frac{i\alpha_f}{2}\psi_d
+\end{split}
+```

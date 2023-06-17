@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# @author: Taladjidi / Clara
+# @author: Tangui Aladjidi / Clara Piekarski
 
 import multiprocessing
 import pickle
 import time
-import progressbar
 import tqdm
 import matplotlib.pyplot as plt
-import numba
 import numpy as np
 import pyfftw
 from scipy.constants import c, epsilon_0
@@ -21,403 +19,35 @@ if BACKEND == 'GPU':
         import cupy as cp
         import cupyx.scipy.fftpack as fftpack
         BACKEND = "GPU"
-
-        @cp.fuse(kernel_name="nl_prop")
-        def nl_prop(A: cp.ndarray, dz: float, alpha: float, V: cp.ndarray, g: float, Isat: float) -> None:
-            """A fused kernel to apply real space terms
-
-            Args:
-                A (cp.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                V (cp.ndarray): Potential
-                g (float): Interactions
-                Isat (float): Saturation 
-            """
-            A_sq = cp.abs(A)**2
-            A *= cp.exp(dz*(-alpha/(2*(1+A_sq/Isat)) + 1j * V + 1j*g *
-                        A_sq/(1+A_sq/Isat)))
-
-        @cp.fuse(kernel_name="nl_prop_without_V")
-        def nl_prop_without_V(A: cp.ndarray, dz: float, alpha: float, g: float,
-                              Isat: float) -> None:
-            """A fused kernel to apply real space terms
-
-            Args:
-                A (cp.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                g (float): Interactions
-                Isat (float): Saturation 
-            """
-            A_sq = cp.abs(A)**2
-            A *= cp.exp(dz*(-alpha/(2*(1+A_sq/Isat)) + 1j*g *
-                        A_sq/(1+A_sq/Isat)))
-            
-        @cp.fuse(kernel_name="nl_prop_c")
-        def nl_prop_c(A1: cp.ndarray, A2: cp.ndarray, dz: float, alpha: float,
-                      V: cp.ndarray, g11: float, g12: float,
-                      Isat: float) -> None:
-            """A fused kernel to apply real space terms
-            Args:
-                A1 (cp.ndarray): The field to propagate (1st component)
-                A2 (cp.ndarray): 2nd component
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                V (cp.ndarray): Potential
-                g11 (float): Intra-component interactions
-                g12 (float): Inter-component interactions
-                Isat (float): Saturation parameter of intra-component interaction
-            """
-            A_sq_1 = cp.abs(A1)**2
-            A_sq_2 = cp.abs(A2)**2
-            # Losses
-            A1 *= cp.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-            # Potential
-            A1 *= cp.exp(dz*(1j * V))
-            # Interactions
-            A1 *= cp.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-                        
-
-        @cp.fuse(kernel_name="nl_prop_without_V_c")
-        def nl_prop_without_V_c(A1: cp.ndarray, A2: cp.ndarray, dz: float, alpha: float,
-                                g11: float, g12: float,
-                                Isat: float) -> None:
-            """A fused kernel to apply real space terms
-            Args:
-                A1 (cp.ndarray): The field to propagate (1st component)
-                A2 (cp.ndarray): 2nd component
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                g11 (float): Intra-component interactions
-                g12 (float): Inter-component interactions
-                Isat (float): Saturation parameter of intra-component interaction
-            """
-            
-            A_sq_1 = cp.abs(A1)**2
-            A_sq_2 = cp.abs(A2)**2
-            # Losses
-            A1 *= cp.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-            # Interactions
-            A1 *= cp.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-
-        @cp.fuse(kernel_name='vortex_cp')
-        def vortex_cp(im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray,
-                      ll: int) -> None:
-            """Generates a vortex of charge l at a position (i,j) on the image im.
-
-            Args:
-                im (np.ndarray): Image
-                i (int): position row of the vortex
-                j (int): position column of the vortex
-                ii (int): meshgrid position row (coordinates of the image)
-                jj (int): meshgrid position column (coordinates of the image)
-                l (int): vortex charge
-
-            Returns:
-                None
-            """
-            im += cp.angle(((ii-i)+1j*(jj-j))**ll)
+        import kernels_gpu as kernels
 
     except ImportError:
         print("CuPy not available, falling back to CPU backend ...")
         pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
         BACKEND = "CPU"
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def nl_prop_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
-                      V: np.ndarray, g11: float, g12: float,
-                      Isat: float) -> None:
-            """A fused kernel to apply real space terms
-            Args:
-                A1 (cp.ndarray): The field to propagate (1st component)
-                A2 (cp.ndarray): 2nd component
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                V (cp.ndarray): Potential
-                g11 (float): Intra-component interactions
-                g12 (float): Inter-component interactions
-                Isat (float): Saturation parameter of intra-component interaction
-            """
-            for i in numba.prange(A.shape[0]):
-                for j in numba.prange(A.shape[1]):
-                    A_sq_1 = np.abs(A1[i, j])**2
-                    A_sq_2 = np.abs(A2[i, j])**2
-                    # Losses
-                    A1[i, j] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-                    # Potential
-                    A1[i, j] *= np.exp(dz*(1j * V[i, j]))
-                    # Interactions
-                    A1[i, j] *= np.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-                        
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def nl_prop_without_V_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
-                                g11: float, g12: float,
-                                Isat: float) -> None:
-            """A fused kernel to apply real space terms
-            Args:
-                A1 (np.ndarray): The field to propagate (1st component)
-                A2 (np.ndarray): 2nd component
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                g11 (float): Intra-component interactions
-                g12 (float): Inter-component interactions
-                Isat (float): Saturation parameter of intra-component interaction
-            """
-            for i in numba.prange(A.shape[0]):
-                for j in numba.prange(A.shape[1]):
-                    A_sq_1 = np.abs(A1[i, j])**2
-                    A_sq_2 = np.abs(A2[i, j])**2
-                    # Losses
-                    A1[i, j] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-                    # Interactions
-                    A1[i, j] *= np.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
-                    Isat: float) -> None:
-            """A compiled parallel implementation to apply real space terms
-
-            Args:
-                A (np.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                V (np.ndarray): Potential
-                g (float): Interactions
-            """
-            for i in numba.prange(A.shape[0]):
-                for j in numba.prange(A.shape[1]):
-                    A_sq = np.abs(A[i, j])**2
-                    A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                          V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, 
-                       Isat: float) -> None:
-            """A compiled parallel implementation to apply real space terms
-
-            Args:
-                A (np.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                V (np.ndarray): Potential
-                g (float): Interactions
-            """
-            for i in numba.prange(A.shape[0]):
-                A_sq = np.abs(A[i])**2
-                A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                                   V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float,
-                              Isat: float) -> None:
-            """A compiled parallel implementation to apply real space terms
-
-            Args:
-                A (np.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                g (float): Interactions
-            """
-            for i in numba.prange(A.shape[0]):
-                for j in numba.prange(A.shape[1]):
-                    A_sq = np.abs(A[i, j])**2
-                    A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                      g*A_sq/(1+A_sq/Isat)))
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float,
-                                 Isat: float) -> None:
-            """A compiled parallel implementation to apply real space terms
-
-            Args:
-                A (np.ndarray): The field to propagate
-                dz (float): Propagation step in m
-                alpha (float): Losses
-                g (float): Interactions
-            """
-            for i in numba.prange(A.shape[0]):
-                A_sq = np.abs(A[i])**2
-                A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                                   g*A_sq/(1+A_sq/Isat)))
-
-        @numba.njit(parallel=True, fastmath=True, cache=True)
-        def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, 
-                   ll: int) -> None:
-            """Generates a vortex of charge l at a position (i,j) on the image im.
-
-            Args:
-                im (np.ndarray): Image
-                i (int): position row of the vortex
-                j (int): position column of the vortex
-                ii (int): meshgrid position row (coordinates of the image)
-                jj (int): meshgrid position column (coordinates of the image)
-                l (int): vortex charge
-
-            Returns:
-                None
-            """
-            for i in numba.prange(A.shape[0]):
-                for j in numba.prange(A.shape[1]):
-                    im[i, j] += np.angle(((ii[i, j]-i)+1j*(jj[i, j]-j))**ll)
+        import kernels_cpu as kernels
 else:
     pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def nl_prop_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
-                    V: np.ndarray, g11: float, g12: float,
-                    Isat: float) -> None:
-        """A fused kernel to apply real space terms
-        Args:
-            A1 (cp.ndarray): The field to propagate (1st component)
-            A2 (cp.ndarray): 2nd component
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (cp.ndarray): Potential
-            g11 (float): Intra-component interactions
-            g12 (float): Inter-component interactions
-            Isat (float): Saturation parameter of intra-component interaction
-        """
-        for i in numba.prange(A.shape[0]):
-            for j in numba.prange(A.shape[1]):
-                A_sq_1 = np.abs(A1[i, j])**2
-                A_sq_2 = np.abs(A2[i, j])**2
-                # Losses
-                A1[i, j] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-                # Potential
-                A1[i, j] *= np.exp(dz*(1j * V[i, j]))
-                # Interactions
-                A1[i, j] *= np.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-                    
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def nl_prop_without_V_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
-                            g11: float, g12: float,
-                            Isat: float) -> None:
-        """A fused kernel to apply real space terms
-        Args:
-            A1 (np.ndarray): The field to propagate (1st component)
-            A2 (np.ndarray): 2nd component
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            g11 (float): Intra-component interactions
-            g12 (float): Inter-component interactions
-            Isat (float): Saturation parameter of intra-component interaction
-        """
-        for i in numba.prange(A.shape[0]):
-            for j in numba.prange(A.shape[1]):
-                A_sq_1 = np.abs(A1[i, j])**2
-                A_sq_2 = np.abs(A2[i, j])**2
-                # Losses
-                A1[i, j] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-                # Interactions
-                A1[i, j] *= np.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
-                Isat: float) -> None:
-        """A compiled parallel implementation to apply real space terms
-
-        Args:
-            A (np.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (np.ndarray): Potential
-            g (float): Interactions
-        """
-        for i in numba.prange(A.shape[0]):
-            for j in numba.prange(A.shape[1]):
-                A_sq = np.abs(A[i, j])**2
-                A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                      V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
-                   Isat: float) -> None:
-        """A compiled parallel implementation to apply real space terms
-
-        Args:
-            A (np.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            V (np.ndarray): Potential
-            g (float): Interactions
-        """
-        for i in numba.prange(A.shape[0]):
-            A_sq = np.abs(A[i])**2
-            A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                               V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float, 
-                          Isat: float) -> None:
-        """A compiled parallel implementation to apply real space terms
-
-        Args:
-            A (np.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            g (float): Interactions
-        """
-        for i in numba.prange(A.shape[0]):
-            for j in numba.prange(A.shape[1]):
-                A_sq = np.abs(A[i, j])**2
-                A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                      g*A_sq/(1+A_sq/Isat)))
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float, 
-                             Isat: float) -> None:
-        """A compiled parallel implementation to apply real space terms
-
-        Args:
-            A (np.ndarray): The field to propagate
-            dz (float): Propagation step in m
-            alpha (float): Losses
-            g (float): Interactions
-        """
-        for i in numba.prange(A.shape[0]):
-            A_sq = np.abs(A[i])**2
-            A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                               g*A_sq/(1+A_sq/Isat)))
-
-    @numba.njit(parallel=True, fastmath=True, cache=True)
-    def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, 
-               ll: int) -> None:
-        """Generates a vortex of charge l at a position (i,j) on the image im.
-
-        Args:
-            im (np.ndarray): Image
-            i (int): position row of the vortex
-            j (int): position column of the vortex
-            ii (int): meshgrid position row (coordinates of the image)
-            jj (int): meshgrid position column (coordinates of the image)
-            l (int): vortex charge
-
-        Returns:
-            None
-        """
-        for i in numba.prange(A.shape[0]):
-            for j in numba.prange(A.shape[1]):
-                im[i, j] += np.angle(((ii[i, j]-i)+1j*(jj[i, j]-j))**ll)
+    import kernels_cpu as kernels
 
 
 class NLSE:
     """A class to solve NLSE
     """
 
-    def __init__(self, trans: float, puiss: float, waist: float, window: float, 
-                 n2: float, V: np.ndarray, L: float, NX: int = 1024, 
+    def __init__(self, trans: float, puiss: float, waist: float, window: float,
+                 n2: float, V: np.ndarray, L: float, NX: int = 1024,
                  NY: int = 1024, Isat: float = np.inf) -> object:
         """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi + k0 n2 psi**2 psi
+        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
+          k0 n2 psi**2 psi
         Args:
             trans (float): Transmission
             puiss (float): Power in W
             waist (float): Waist size in m
             n2 (float): Non linear coeff in m^2/W
-            V (np.ndarray) : Potential
+            V (np.ndarray): Potential
+            Isat (float): Saturation intensity in W/m^2
         """
         # listof physical parameters
         self.n2 = n2
@@ -438,9 +68,11 @@ class NLSE:
         self.delta_z = min(0.1e-5*self.z_r, z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
-                                           endpoint=False, retstep=True, dtype=np.float32)
+                                           endpoint=False, retstep=True,
+                                           dtype=np.float32)
         self.Y, self.delta_Y = np.linspace(-self.window/2, self.window/2, num=NY,
-                                           endpoint=False, retstep=True, dtype=np.float32)
+                                           endpoint=False, retstep=True,
+                                           dtype=np.float32)
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
         # definition of the Fourier frequencies for the linear step
@@ -479,7 +111,8 @@ class NLSE:
         plt.colorbar(im)
         return
 
-    def plot_1d(self, ax, T, labelT, AMP, labelAMP, PHASE, labelPHASE, Tmin, Tmax) -> None:
+    def plot_1d(self, ax, T, labelT, AMP, labelAMP, PHASE, labelPHASE, Tmin,
+                Tmax) -> None:
         """Plots a 1D slice of a 2D field with amplitude and phase
 
         Args:
@@ -553,7 +186,8 @@ class NLSE:
         """Builds the linear propagation matrix
 
         Args:
-            precision (str, optional): "single" or "double" application of the propagator.
+            precision (str, optional): "single" or "double" application of the 
+            propagator.
             Defaults to "single".
         Returns:
             propagator (np.ndarray): the propagator matrix
@@ -604,7 +238,7 @@ class NLSE:
                 pickle.dump(wisdom, file)
             return [plan_fft, plan_ifft]
 
-    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray, 
+    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray,
                    plans: list, precision: str = "single"):
         """Split step function for one propagation step
 
@@ -629,12 +263,13 @@ class NLSE:
             # fft normalization
             A /= A.shape[-2]*A.shape[-1]
             if V is None:
-                nl_prop_without_V(A, self.delta_z, self.alpha,
-                                  self.k/2*self.n2*c*epsilon_0, 
-                                  2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V(A, self.delta_z, self.alpha,
+                                          self.k/2*self.n2*c*epsilon_0,
+                                          2*self.I_sat/(epsilon_0*c))
             else:
-                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                        V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop(A, self.delta_z, self.alpha, self.k/2 *
+                                V, self.k/2*self.n2*c*epsilon_0,
+                                2*self.I_sat/(epsilon_0*c))
             if precision == "double":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
@@ -647,18 +282,19 @@ class NLSE:
             np.multiply(A, propagator, out=A)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
             if V is None:
-                nl_prop_without_V(A, self.delta_z, self.alpha,
-                                  self.k/2*self.n2*c*epsilon_0, 
-                                  2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V(A, self.delta_z, self.alpha,
+                                          self.k/2*self.n2*c*epsilon_0,
+                                          2*self.I_sat/(epsilon_0*c))
             else:
-                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                        V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop(A, self.delta_z, self.alpha, self.k/2 *
+                                V, self.k/2*self.n2*c*epsilon_0,
+                                2*self.I_sat/(epsilon_0*c))
             if precision == "double":
                 plan_fft(input_array=A, output_array=A)
                 np.multiply(A, propagator, out=A)
                 plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
-    def out_field(self, E_in: np.ndarray, z: float, plot=False, 
+    def out_field(self, E_in: np.ndarray, z: float, plot=False,
                   precision: str = "single", verbose: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -712,7 +348,8 @@ class NLSE:
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc='Iteration', leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4,
+                             desc='Iteration', leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -760,11 +397,15 @@ class NLSE:
             Kx_2 = 2 * np.pi * np.fft.fftfreq(self.NX-2*lim, d=self.delta_X)
             len_fft = len(im_fft[0, :])
             self.plot_2d(a3, np.fft.fftshift(Kx_2), np.fft.fftshift(Kx_2), im_fft,
-                         r'$|\mathcal{TF}(E_{out})|^2$', cmap='nipy_spectral', label=r'$K_y$')
+                         r'$|\mathcal{TF}(E_{out})|^2$', cmap='nipy_spectral',
+                         label=r'$K_y$')
 
             a4 = fig.add_subplot(224)
-            self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_y (mm^{-1})$', im_fft[len_fft//2, len_fft//2+1:],
-                             r'$|\mathcal{TF}(E_{out})|$', np.fft.fftshift(Kx_2)[len_fft//2+1]*1e-3, np.fft.fftshift(Kx_2)[-1]*1e-3, color='b')
+            self.plot_1d_amp(a4, Kx_2[1:-len_fft//2]*1e-3, r'$K_y (mm^{-1})$',
+                             im_fft[len_fft//2, len_fft//2+1:],
+                             r'$|\mathcal{TF}(E_{out})|$',
+                             np.fft.fftshift(Kx_2)[len_fft//2+1]*1e-3,
+                             np.fft.fftshift(Kx_2)[-1]*1e-3, color='b')
             a4.set_yscale('log')
             a4.set_xscale('log')
 
@@ -777,9 +418,11 @@ class NLSE_1d:
     """A class to solve NLSE in 1d
     """
 
-    def __init__(self, alpha: float, puiss: float, waist: float, window: float, n2: float, V: np.ndarray, L: float, NX: int = 1024) -> None:
+    def __init__(self, alpha: float, puiss: float, waist: float, window: float,
+                 n2: float, V: np.ndarray, L: float, NX: int = 1024) -> None:
         """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi + k0 n2 psi**2 psi
+        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
+          k0 n2 psi**2 psi
         Args:
             alpha (float): Transmission coeff
             puiss (float): Power in W
@@ -806,7 +449,8 @@ class NLSE_1d:
         self.delta_z = min(0.1e-5*self.z_r, z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(-self.window/2, self.window/2, num=NX,
-                                           endpoint=False, retstep=True, dtype=np.float32)
+                                           endpoint=False, retstep=True,
+                                           dtype=np.float32)
         # definition of the Fourier frequencies for the linear step
         self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
 
@@ -824,7 +468,8 @@ class NLSE_1d:
         """Builds the linear propagation matrix
 
         Args:
-            precision (str, optional): "single" or "double" application of the propagator.
+            precision (str, optional): "single" or "double" application of the 
+            propagator.
             Defaults to "single".
         Returns:
             propagator (np.ndarray): the propagator matrix
@@ -873,16 +518,19 @@ class NLSE_1d:
                 pickle.dump(wisdom, file)
             return [plan_fft, plan_ifft]
 
-    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray, plans: list, precision: str = "single"):
+    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray,
+                   plans: list, precision: str = "single"):
         """Split step function for one propagation step
 
         Args:
             A (np.ndarray): Field to propagate
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for both directions
+            plans (list): List of FFT plan objects. Either a single FFT plan for both
+              directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear propagation step.
+            precision (str, optional): Single or double application of the linear 
+            propagation step.
             Defaults to "single".
         """
         if BACKEND == "GPU":
@@ -895,11 +543,11 @@ class NLSE_1d:
             # fft normalization
             A /= A.shape[-1]
             if V is None:
-                nl_prop_without_V(A, self.delta_z, self.alpha,
-                                  self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V(A, self.delta_z, self.alpha,
+                                          self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
             else:
-                nl_prop(A, self.delta_z, self.alpha, self.k/2 *
-                        V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop(A, self.delta_z, self.alpha, self.k/2 *
+                                V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
             if precision == "double":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
@@ -912,17 +560,20 @@ class NLSE_1d:
             np.multiply(A, propagator, out=A)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
             if V is None:
-                nl_prop_without_V_1d(A, self.delta_z, self.alpha,
-                                     self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V_1d(A, self.delta_z, self.alpha,
+                                             self.k/2*self.n2*c*epsilon_0,
+                                             2*self.I_sat/(epsilon_0*c))
             else:
-                nl_prop_1d(A, self.delta_z, self.alpha, self.k/2 *
-                           V, self.k/2*self.n2*c*epsilon_0, 2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_1d(A, self.delta_z, self.alpha, self.k/2 *
+                                   V, self.k/2*self.n2*c*epsilon_0,
+                                   2*self.I_sat/(epsilon_0*c))
             if precision == "double":
                 plan_fft(input_array=A, output_array=A)
                 np.multiply(A, propagator, out=A)
                 plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
-    def out_field(self, E_in: np.ndarray, z: float, plot=False, precision: str = "single", verbose: bool = True) -> np.ndarray:
+    def out_field(self, E_in: np.ndarray, z: float, plot=False,
+                  precision: str = "single", verbose: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
@@ -972,14 +623,15 @@ class NLSE_1d:
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = progressbar.ProgressBar(max_value=len(Z))
+            pbar = tqdm.tqdm(total=len(Z), position=4,
+                             desc='Iteration', leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
             if verbose:
-                pbar.update(i+1)
+                pbar.update(1)
             self.split_step(A, V, propagator, plans, precision)
-
+        pbar.close()
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -995,7 +647,7 @@ class NLSE_1d:
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
 
-        if plot == True:
+        if plot:
             if not (return_np_array):
                 A_plot = cp.asnumpy(A)
             elif return_np_array or BACKEND == 'CPU':
@@ -1015,12 +667,14 @@ class NLSE_1d:
             plt.show()
         return A
 
+
 class CNLSE(NLSE):
     """A class to solve the coupled NLSE
 
     """
-    def __init__(self, trans: float, puiss: float, waist: float, window: float, 
-                 n2: float, n12: float, V: np.ndarray, L: float, NX: int = 1024, 
+
+    def __init__(self, trans: float, puiss: float, waist: float, window: float,
+                 n2: float, n12: float, V: np.ndarray, L: float, NX: int = 1024,
                  NY: int = 1024, Isat: float = np.inf) -> object:
         """Instantiates the class with all the relevant physical parameters
 
@@ -1035,21 +689,20 @@ class CNLSE(NLSE):
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-
+            Isat (float, optional): Saturation intensity, assumed to be the same
+            for both components. Defaults to infinity.
         Returns:
             object: CNLSE class instance
         """
         super().__init__(trans, puiss, waist, window, n2, V, L, NX, NY, Isat)
         self.n12 = n12
         # initialize intra component 2 interaction parameter
-        # to be the same as intra component 1 
+        # to be the same as intra component 1
         self.n22 = self.n2
         # same for the losses, this is to leave separate attributes so
         # the the user can chose whether or not to unbalence the rates
-        self.alpha1 = self.alpha
         self.alpha2 = self.alpha
         # wavenumbers
-        self.k1 = self.k
         self.k2 = self.k
         # powers
         self.puiss2 = self.puiss
@@ -1061,14 +714,15 @@ class CNLSE(NLSE):
         intens = 2*self.puiss2/(np.pi*self.waist2**2)
         return np.sqrt(2*intens/(c*epsilon_0))
 
-    def split_step(self, A1: np.ndarray, A2: np.ndarray, V: np.ndarray, 
-                   propagator1: np.ndarray, propagator2: np.ndarray, plans: list, 
+    def split_step(self, A: np.ndarray, A1_old: np.ndarray, V: np.ndarray,
+                   propagator1: np.ndarray, propagator2: np.ndarray, plans: list,
                    precision: str = "single") -> None:
         """Split step function for one propagation step
 
         Args:
-            A1 (np.ndarray): Field 1 to propagate. 
-            A2 (np.ndarray): Field 2 to propagate
+            A (np.ndarray): Fields to propagate of shape (2, NY, NX)
+            A1_old (np.ndarray): Array to store copy of A1 at start of function
+            to symetrize the evolution term
             V (np.ndarray): Potential field (can be None).
             propagator1 (np.ndarray): Propagator matrix for field 1.
             propagator2 (np.ndarray): Propagator matrix for field 2.
@@ -1081,88 +735,85 @@ class CNLSE(NLSE):
         Returns:
             None
         """
-        A1_old = A1
+        if A.ndim == 3:
+            A1_old[:] = A[0, :, :]
+            # refs to component 1 and 2 : NO COPY :)
+            A1 = A[0, :, :]
+            A2 = A[1, :, :]
+        else:
+            A1_old[:] = A[:, 0, :, :]
+            A1 = A[:, 0, :, :]
+            A2 = A[:, 1, :, :]
         if BACKEND == "GPU":
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
-            plan_fft.fft(A1, A1, cp.cuda.cufft.CUFFT_FORWARD)
-            plan_fft.fft(A2, A2, cp.cuda.cufft.CUFFT_FORWARD)
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A1, propagator1, out=A1)
             cp.multiply(A2, propagator2, out=A2)
-            plan_fft.fft(A1, A1, cp.cuda.cufft.CUFFT_INVERSE)
-            plan_fft.fft(A2, A2, cp.cuda.cufft.CUFFT_INVERSE)
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
-            A1 /= A1.shape[-2]*A1.shape[-1]
-            A2 /= A2.shape[-2]*A2.shape[-1]
+            A /= A.shape[-2]*A.shape[-1]
             if V is None:
-                nl_prop_without_V_c(A1, A2, self.delta_z, self.alpha1,
-                                  self.k/2*self.n2*c*epsilon_0, 
-                                  self.k/2*self.n12*c*epsilon_0, 
-                                  2*self.I_sat/(epsilon_0*c))
-                nl_prop_without_V_c(A2, A1_old, self.delta_z, self.alpha2,
-                                  self.k/2*self.n22*c*epsilon_0, 
-                                  self.k/2*self.n12*c*epsilon_0,
-                                  2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V_c(A1, A2, self.delta_z, self.alpha,
+                                            self.k/2*self.n2*c*epsilon_0,
+                                            self.k/2*self.n12*c*epsilon_0,
+                                            2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V_c(A2, A1_old, self.delta_z, self.alpha2,
+                                            self.k2/2*self.n22*c*epsilon_0,
+                                            self.k2/2*self.n12*c*epsilon_0,
+                                            2*self.I_sat/(epsilon_0*c))
             else:
-                nl_prop_c(A1, A2, self.delta_z, self.alpha1, self.k/2 * V,
-                                  self.k/2*self.n2*c*epsilon_0, 
-                                  self.k/2*self.n12*c*epsilon_0, 
-                                  2*self.I_sat/(epsilon_0*c))
-                nl_prop_c(A2, A1_old, self.delta_z, self.alpha2, self.k/2 * V,
-                                  self.k/2*self.n22*c*epsilon_0, 
+                kernels.nl_prop_c(A1, A2, self.delta_z, self.alpha, self.k/2 * V,
+                                  self.k/2*self.n2*c*epsilon_0,
                                   self.k/2*self.n12*c*epsilon_0,
+                                  2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_c(A2, A1_old, self.delta_z, self.alpha2, self.k2/2 * V,
+                                  self.k2/2*self.n22*c*epsilon_0,
+                                  self.k2/2*self.n12*c*epsilon_0,
                                   2*self.I_sat/(epsilon_0*c))
             if precision == "double":
-                plan_fft.fft(A1, A1, cp.cuda.cufft.CUFFT_FORWARD)
-                plan_fft.fft(A2, A2, cp.cuda.cufft.CUFFT_FORWARD)
+                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
                 cp.multiply(A1, propagator1, out=A1)
                 cp.multiply(A2, propagator2, out=A2)
-                plan_fft.fft(A1, A1, cp.cuda.cufft.CUFFT_INVERSE)
-                plan_fft.fft(A2, A2, cp.cuda.cufft.CUFFT_INVERSE)
-                A1 /= A1.shape[-2]*A1.shape[-1]
-                A2 /= A2.shape[-2]*A2.shape[-1]
+                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+                A /= A.shape[-2]*A.shape[-1]
         else:
             plan_fft, plan_ifft = plans
-            plan_fft(input_array=A1, output_array=A1)
-            plan_fft(input_array=A2, output_array=A2)
+            plan_fft(input_array=A, output_array=A)
             np.multiply(A1, propagator1, out=A1)
             np.multiply(A2, propagator2, out=A2)
-            plan_ifft(input_array=A1, output_array=A1, normalise_idft=True)
-            plan_ifft(input_array=A2, output_array=A2, normalise_idft=True)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
             if V is None:
-                nl_prop_without_V_c(A1, A2, self.delta_z, self.alpha1,
-                                  self.k/2*self.n2*c*epsilon_0, 
-                                  self.k/2*self.n12*c*epsilon_0, 
-                                  2*self.I_sat/(epsilon_0*c))
-                nl_prop_without_V_c(A2, A1_old, self.delta_z, self.alpha2,
-                                  self.k/2*self.n22*c*epsilon_0, 
-                                  self.k/2*self.n12*c*epsilon_0,
-                                  2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V_c(A1, A2, self.delta_z, self.alpha,
+                                            self.k/2*self.n2*c*epsilon_0,
+                                            self.k/2*self.n12*c*epsilon_0,
+                                            2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_without_V_c(A2, A1_old, self.delta_z, self.alpha2,
+                                            self.k2/2*self.n22*c*epsilon_0,
+                                            self.k2/2*self.n12*c*epsilon_0,
+                                            2*self.I_sat/(epsilon_0*c))
             else:
-                nl_prop_c(A1, A2, self.delta_z, self.alpha1, self.k/2 * V,
-                                  self.k/2*self.n2*c*epsilon_0, 
-                                  self.k/2*self.n12*c*epsilon_0, 
-                                  2*self.I_sat/(epsilon_0*c))
-                nl_prop_c(A2, A1_old, self.delta_z, self.alpha2, self.k/2 * V,
-                                  self.k/2*self.n22*c*epsilon_0, 
+                kernels.nl_prop_c(A1, A2, self.delta_z, self.alpha, self.k/2 * V,
+                                  self.k/2*self.n2*c*epsilon_0,
                                   self.k/2*self.n12*c*epsilon_0,
+                                  2*self.I_sat/(epsilon_0*c))
+                kernels.nl_prop_c(A2, A1_old, self.delta_z, self.alpha2, self.k2/2 * V,
+                                  self.k2/2*self.n22*c*epsilon_0,
+                                  self.k2/2*self.n12*c*epsilon_0,
                                   2*self.I_sat/(epsilon_0*c))
             if precision == "double":
-                plan_fft(input_array=A1, output_array=A1)
-                plan_fft(input_array=A2, output_array=A2)
+                plan_fft(input_array=A, output_array=A)
                 np.multiply(A1, propagator1, out=A1)
                 np.multiply(A2, propagator2, out=A2)
-                plan_ifft(input_array=A1, output_array=A1, normalise_idft=True)
-                plan_ifft(input_array=A2, output_array=A2, normalise_idft=True)
+                plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
-    def out_field(self, E1: np.ndarray, E2: np.ndarray,  z: float, plot=False,
+    def out_field(self, E: np.ndarray,  z: float, plot=False,
                   precision: str = "single", verbose: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
-            E1 (np.ndarray): Field component 1
-            E2 (np.ndarray): Field component 2
+            E (np.ndarray): Fields tensor of shape (XX, 2, NY, NX).
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
@@ -1172,27 +823,35 @@ class CNLSE(NLSE):
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
-        assert E1.shape[0] == self.NY and E1.shape[1] == self.NX
+        assert E.shape[-2] == self.NY and E.shape[-1] == self.NX, \
+            (f"Shape mismatch ! Simulation grid size is {(self.NY, self.NX)}"
+             " and array shape is {(E.shape[-2], E.shape[-1])}")
+        assert E.ndim >= 3, ("Input number of dimensions should at least be 3 !"
+                             " (2, NY, NX)")
         Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
         if BACKEND == "GPU":
-            if type(E1) == np.ndarray:
-                A1 = np.empty((self.NX, self.NY), dtype=np.complex64)
-                A2 = np.empty((self.NX, self.NY), dtype=np.complex64)
+            if type(E) == np.ndarray:
+                A = np.empty(E.shape, dtype=np.complex64)
                 return_np_array = True
-            elif type(E1) == cp.ndarray:
-                A1 = cp.empty((self.NX, self.NY), dtype=np.complex64)
-                A2 = cp.empty((self.NX, self.NY), dtype=np.complex64)
+            elif type(E) == cp.ndarray:
+                A = cp.empty(E.shape, dtype=np.complex64)
                 return_np_array = False
         else:
             return_np_array = True
-            A1 = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
-            A2 = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
-        plans = self.build_fft_plan(A1)
-        # A_p[:, :] = E_in*np.cos(theta)*self.E_00
-        # A_m[:, :] = E_in*np.sin(theta)*np.exp(1j*phi)*self.E_00
-        A1[:, :] = self.E_00*E1
-        A2[:, :] = self.E_11*E2
-        propagator1 = self.build_propagator(self.k1, precision)
+            A = pyfftw.empty_aligned(E.shape, dtype=np.complex64)
+        # ndim logic ...
+        if A.ndim == 3:
+            A[:] = E
+            A[0, :, :] *= self.E_00
+            A[1, :, :] *= self.E_11
+            A1_old = A[0, :, :].copy()
+        else:
+            A[:] = E
+            A[:, 0, :, :] = self.E_00
+            A[:, 1, :, :] = self.E_11
+            A1_old = A[:, 0, :, :].copy()
+        plans = self.build_fft_plan(E)
+        propagator1 = self.build_propagator(self.k, precision)
         propagator2 = self.build_propagator(self.k2, precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
@@ -1201,15 +860,14 @@ class CNLSE(NLSE):
                 V = self.V.copy()
             if self.V is None:
                 V = self.V
-            if type(A1) != cp.ndarray:
-                A1 = cp.asarray(A1)
-                A2 = cp.asarray(A2)
+            if type(A) != cp.ndarray:
+                A = cp.asarray(A)
+                A1_old = cp.asarray(A1_old)
         else:
             if self.V is None:
                 V = self.V
             else:
                 V = self.V.copy()
-
         if BACKEND == "GPU":
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
@@ -1217,7 +875,8 @@ class CNLSE(NLSE):
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc='Iteration', leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4,
+                             desc='Iteration', leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -1225,13 +884,14 @@ class CNLSE(NLSE):
                 self.n12 = 0
             if verbose:
                 pbar.update(1)
-            self.split_step(A1, A2, V, propagator1, propagator2, plans, precision)
-
+            self.split_step(A, A1_old, V, propagator1,
+                            propagator2, plans, precision)
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
+            pbar.close()
             if BACKEND == "GPU":
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)")
@@ -1240,16 +900,15 @@ class CNLSE(NLSE):
                     f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
-            A1 = cp.asnumpy(A1)
-            A2 = cp.asnumpy(A2)
+            A = cp.asnumpy(A)
 
         if plot:
-            if not(return_np_array):
-                A_1_plot = cp.asnumpy(A1)
-                A_2_plot = cp.asnumpy(A2)
+            if not (return_np_array):
+                A_1_plot = cp.asnumpy(A[0, :, :])
+                A_2_plot = cp.asnumpy(A[1, :, :])
             elif return_np_array or BACKEND == 'CPU':
-                A_1_plot = A1.copy()
-                A_2_plot = A2.copy()
+                A_1_plot = A[0, :, :].copy()
+                A_2_plot = A[1, :, :].copy()
             fig = plt.figure(layout='constrained')
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
@@ -1268,8 +927,8 @@ class CNLSE(NLSE):
             self.plot_2d(a4, self.X*1e3, self.Y*1e3,
                          np.angle(A_2_plot), r'arg$(\psi_2)$', cmap='twilight')
             plt.show()
-        return A1, A2
-    
+        return A
+
 
 def normalize(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
@@ -1350,7 +1009,7 @@ def flatTop_super(sx: int, sy: int, length: int = 150, width: int = 60,
 if __name__ == "__main__":
     trans = 0.5
     n2 = -1.6e-9
-    n12 = 1e-9
+    n12 = -2e-10
     waist = 1e-3
     window = 2048*5.5e-6
     puiss = 500e-3
@@ -1360,11 +1019,13 @@ if __name__ == "__main__":
     simu = NLSE(trans, puiss, waist, window, n2, dn,
                 L, NX=2048, NY=2048)
     simu_c = CNLSE(trans, puiss, waist, window, n2, n12, None,
-                L, NX=2048, NY=2048)
+                   L, NX=2048, NY=2048)
     simu_1d = NLSE_1d(trans, puiss, waist, window, n2, dn[1024, :],
                       L, NX=2048)
-    simu.delta_z = 0.1e-3
-    simu_1d.delta_z = 0.1e-3
+    simu.delta_z = 1e-4
+    simu_1d.delta_z = 1e-4
+    simu_c.delta_z = .5e-4
+    simu_c.n22 = 0
     simu.I_sat = Isat
     simu_1d.I_sat = Isat
     phase_slm = 2*np.pi * \
@@ -1378,6 +1039,9 @@ if __name__ == "__main__":
     E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
     E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    A_c = simu_c.out_field(E_in_0, E_in_0, L, plot=True, verbose=True)
+    E_in = np.zeros((2, simu.NY, simu.NX), dtype=np.complex64)
+    E_in[0, :, :] = np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
+    E_in[1, :, :] = np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/6)**2))
+    A_c = simu_c.out_field(E_in, L, plot=True, verbose=True)
     A = simu.out_field(E_in_0, L, plot=True)
     A_1d = simu_1d.out_field(E_in_0[1024:1028, :], L, plot=True)

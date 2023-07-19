@@ -79,18 +79,16 @@ class NLSE:
         self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
         self.Ky = 2 * np.pi * np.fft.fftfreq(self.NY, d=self.delta_Y)
         self.Kxx, self.Kyy = np.meshgrid(self.Kx, self.Ky)
-
-    @property
-    def E_00(self):
-        intens = 2*self.puiss/(np.pi*self.waist**2)
-        return np.sqrt(2*intens/(c*epsilon_0))
+        self.propagator = None
+        self.plans = None
 
     @property
     def Dn(self):
         intens = 2*self.puiss/(np.pi*self.waist**2)
         return self.n2*intens
 
-    def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)'):
+    def plot_2d(self, ax, Z, X, AMP, title, cmap='viridis', label=r'$X$ (mm)',
+                **kwargs):
         """Plots a 2d amplitude on an equidistant Z * X grid.
 
         Args:
@@ -104,7 +102,7 @@ class NLSE:
             vmax (int, optional): Maximum value for cmap normalization. Defaults to 1.
         """
         im = ax.imshow(AMP, aspect='equal', origin='lower', extent=(
-            Z[0], Z[-1], X[0], X[-1]), cmap=cmap)
+            Z[0], Z[-1], X[0], X[-1]), cmap=cmap, **kwargs)
         ax.set_xlabel(label)
         ax.set_ylabel(r'$Y$ (mm)')
         ax.set_title(title)
@@ -295,7 +293,8 @@ class NLSE:
                 plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(self, E_in: np.ndarray, z: float, plot=False,
-                  precision: str = "single", verbose: bool = True) -> np.ndarray:
+                  precision: str = "single", verbose: bool = True,
+                  normalize: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
@@ -314,17 +313,25 @@ class NLSE:
             if type(E_in) == np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=np.complex64)
                 A = np.empty(E_in.shape, dtype=np.complex64)
+                integral = np.sum(np.abs(E_in)**2*self.delta_X*self.delta_Y)
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=np.complex64)
                 A = cp.empty(E_in.shape, dtype=np.complex64)
+                integral = cp.sum(cp.abs(E_in)**2*self.delta_X*self.delta_Y)
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
-        plans = self.build_fft_plan(A)
-        A[:] = self.E_00*E_in
-        propagator = self.build_propagator(self.k, precision)
+            integral = np.sum(np.abs(E_in)**2*self.delta_X*self.delta_Y)
+        if self.plans is None:
+            self.plans = self.build_fft_plan(A)
+        if normalize:
+            # normalization of the field
+            E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral))
+            A[:] = E_00*E_in
+        if self.propagator is None:
+            self.propagator = self.build_propagator(self.k, precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
@@ -355,7 +362,7 @@ class NLSE:
                 self.n2 = 0
             if verbose:
                 pbar.update(1)
-            self.split_step(A, V, propagator, plans, precision)
+            self.split_step(A, V, self.propagator, self.plans, precision)
         if verbose:
             pbar.close()
 
@@ -453,11 +460,6 @@ class NLSE_1d:
                                            dtype=np.float32)
         # definition of the Fourier frequencies for the linear step
         self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
-
-    @property
-    def E_00(self):
-        intens = self.puiss/(np.pi*self.waist**2)
-        return np.sqrt(2*intens/(c*epsilon_0))
 
     @property
     def Dn(self):
@@ -573,7 +575,8 @@ class NLSE_1d:
                 plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(self, E_in: np.ndarray, z: float, plot=False,
-                  precision: str = "single", verbose: bool = True) -> np.ndarray:
+                  precision: str = "single", verbose: bool = True,
+                  normalize: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
@@ -583,6 +586,8 @@ class NLSE_1d:
             of the propagator. This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
+            normalize (bool, optional): Normalizes the field to V/m. Defaults to True.
+            Used to be able to reuse fields that have already been propagated.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
@@ -591,15 +596,19 @@ class NLSE_1d:
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
                 A = np.empty(E_in.shape, dtype=np.complex64)
+                integral = np.sum(np.abs(E_in)**2*self.delta_X)
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=np.complex64)
+                integral = cp.sum(cp.abs(E_in)**2*self.delta_X)
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned(E_in.shape, dtype=np.complex64)
         plans = self.build_fft_plan(A)
-        A[:] = self.E_00*E_in
+        if normalize:
+            E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral))
+            A[:] = E_00*E_in
         propagator = self.build_propagator(precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
@@ -708,11 +717,8 @@ class CNLSE(NLSE):
         self.puiss2 = self.puiss
         # waists
         self.waist2 = self.waist
-
-    @property
-    def E_11(self):
-        intens = 2*self.puiss2/(np.pi*self.waist2**2)
-        return np.sqrt(2*intens/(c*epsilon_0))
+        self.propagator1 = None
+        self.propagator2 = None
 
     def split_step(self, A: np.ndarray, A1_old: np.ndarray, V: np.ndarray,
                    propagator1: np.ndarray, propagator2: np.ndarray, plans: list,
@@ -810,7 +816,8 @@ class CNLSE(NLSE):
                 plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(self, E: np.ndarray,  z: float, plot=False,
-                  precision: str = "single", verbose: bool = True) -> np.ndarray:
+                  precision: str = "single", verbose: bool = True,
+                  normalize: bool = True) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
             E (np.ndarray): Fields tensor of shape (XX, 2, NY, NX).
@@ -832,9 +839,13 @@ class CNLSE(NLSE):
         if BACKEND == "GPU":
             if type(E) == np.ndarray:
                 A = np.empty(E.shape, dtype=np.complex64)
+                integral = np.sum(np.abs(E)**2*self.delta_X*self.delta_Y,
+                                  axis=(-1, -2))
                 return_np_array = True
             elif type(E) == cp.ndarray:
                 A = cp.empty(E.shape, dtype=np.complex64)
+                integral = cp.sum(np.abs(E)**2*self.delta_X*self.delta_Y,
+                                  axis=(-1, -2))
                 return_np_array = False
         else:
             return_np_array = True
@@ -842,17 +853,25 @@ class CNLSE(NLSE):
         # ndim logic ...
         if A.ndim == 3:
             A[:] = E
-            A[0, :, :] *= self.E_00
-            A[1, :, :] *= self.E_11
+            if normalize:
+                E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral[0]))
+                E_11 = np.sqrt(2*self.puiss2/(c*epsilon_0*integral[1]))
+                A[0, :, :] *= E_00
+                A[1, :, :] *= E_11
             A1_old = A[0, :, :].copy()
         else:
             A[:] = E
-            A[:, 0, :, :] = self.E_00
-            A[:, 1, :, :] = self.E_11
+            if normalize:
+                E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral[:, 0]))
+                E_11 = np.sqrt(2*self.puiss2/(c*epsilon_0*integral[:, 1]))
+                A[:, 0, :, :] = E_00
+                A[:, 1, :, :] = E_11
             A1_old = A[:, 0, :, :].copy()
-        plans = self.build_fft_plan(E)
-        propagator1 = self.build_propagator(self.k, precision)
-        propagator2 = self.build_propagator(self.k2, precision)
+        if self.plans is None:
+            self.plans = self.build_fft_plan(E)
+        if self.propagator1 is None:
+            self.propagator1 = self.build_propagator(self.k, precision)
+            self.propagator2 = self.build_propagator(self.k2, precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
@@ -884,8 +903,8 @@ class CNLSE(NLSE):
                 self.n12 = 0
             if verbose:
                 pbar.update(1)
-            self.split_step(A, A1_old, V, propagator1,
-                            propagator2, plans, precision)
+            self.split_step(A, A1_old, V, self.propagator1,
+                            self.propagator2, self.plans, precision)
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -904,8 +923,8 @@ class CNLSE(NLSE):
 
         if plot:
             if not (return_np_array):
-                A_1_plot = cp.asnumpy(A[0, :, :])
-                A_2_plot = cp.asnumpy(A[1, :, :])
+                A_1_plot = A[0, :, :].get()
+                A_2_plot = A[1, :, :].get()
             elif return_np_array or BACKEND == 'CPU':
                 A_1_plot = A[0, :, :].copy()
                 A_2_plot = A[1, :, :].copy()
@@ -917,7 +936,8 @@ class CNLSE(NLSE):
 
             a2 = fig.add_subplot(222)
             self.plot_2d(a2, self.X*1e3, self.Y*1e3,
-                         np.angle(A_1_plot), r'arg$(\psi_1)$', cmap='twilight')
+                         np.angle(A_1_plot), r'arg$(\psi_1)$', cmap='twilight_shifted',
+                         vmin=-np.pi, vmax=np.pi)
 
             a3 = fig.add_subplot(223)
             self.plot_2d(a3, self.X*1e3, self.Y*1e3, np.abs(A_2_plot)**2,
@@ -925,7 +945,8 @@ class CNLSE(NLSE):
 
             a4 = fig.add_subplot(224)
             self.plot_2d(a4, self.X*1e3, self.Y*1e3,
-                         np.angle(A_2_plot), r'arg$(\psi_2)$', cmap='twilight')
+                         np.angle(A_2_plot), r'arg$(\psi_2)$', cmap='twilight_shifted',
+                         vmin=-np.pi, vmax=np.pi)
             plt.show()
         return A
 

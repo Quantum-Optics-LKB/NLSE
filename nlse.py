@@ -313,23 +313,28 @@ class NLSE:
             if type(E_in) == np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=np.complex64)
                 A = np.empty(E_in.shape, dtype=np.complex64)
-                integral = np.sum(np.abs(E_in)**2*self.delta_X*self.delta_Y)
+                integral = np.sum(np.abs(E_in)**2*self.delta_X*self.delta_Y,
+                                  axis=(-2, -1))
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=np.complex64)
                 A = cp.empty(E_in.shape, dtype=np.complex64)
-                integral = cp.sum(cp.abs(E_in)**2*self.delta_X*self.delta_Y)
+                integral = cp.sum(cp.abs(E_in)**2*self.delta_X*self.delta_Y,
+                                  axis=(-2, -1))
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
-            integral = np.sum(np.abs(E_in)**2*self.delta_X*self.delta_Y)
+            integral = np.sum(np.abs(E_in)**2*self.delta_X*self.delta_Y,
+                              axis=(-2, -1))
         if self.plans is None:
             self.plans = self.build_fft_plan(A)
         if normalize:
             # normalization of the field
             E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral))
-            A[:] = E_00*E_in
+            A[:] = (E_00.T*E_in.T).T
+        else:
+            A[:] = E_in
         if self.propagator is None:
             self.propagator = self.build_propagator(self.k, precision)
         if BACKEND == "GPU":
@@ -383,9 +388,15 @@ class NLSE:
 
         if plot:
             if not (return_np_array):
-                A_plot = cp.asnumpy(A)
+                if A.ndim == 2:
+                    A_plot = A.get()
+                elif A.ndim == 3:
+                    A_plot = A[0, :, :].get()
             elif return_np_array or BACKEND == 'CPU':
-                A_plot = A.copy()
+                if A.ndim == 2:
+                    A_plot = A
+                elif A.ndim == 3:
+                    A_plot = A[0, :, :]
             fig = plt.figure(3, [9, 8])
 
             # plot amplitudes and phases
@@ -395,7 +406,8 @@ class NLSE:
 
             a2 = fig.add_subplot(222)
             self.plot_2d(a2, self.X*1e3, self.Y*1e3,
-                         np.angle(A_plot), r'arg$(\psi)$', cmap='twilight')
+                         np.angle(A_plot), r'arg$(\psi)$', cmap='twilight',
+                         vmin=-np.pi, vmax=np.pi)
 
             a3 = fig.add_subplot(223)
             lim = 1
@@ -596,11 +608,11 @@ class NLSE_1d:
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
                 A = np.empty(E_in.shape, dtype=np.complex64)
-                integral = np.sum(np.abs(E_in)**2*self.delta_X)
+                integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=np.complex64)
-                integral = cp.sum(cp.abs(E_in)**2*self.delta_X)
+                integral = cp.sum(cp.abs(E_in)**2*self.delta_X, axis=-1)
                 return_np_array = False
         else:
             return_np_array = True
@@ -608,7 +620,9 @@ class NLSE_1d:
         plans = self.build_fft_plan(A)
         if normalize:
             E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral))
-            A[:] = E_00*E_in
+            A[:] = (E_00.T*E_in.T).T
+        else:
+            A[:] = E_in
         propagator = self.build_propagator(precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
@@ -851,21 +865,13 @@ class CNLSE(NLSE):
             return_np_array = True
             A = pyfftw.empty_aligned(E.shape, dtype=np.complex64)
         # ndim logic ...
+        A[:] = E
+        if normalize:
+            E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral))
+            A[:] = (A.T*E_00.T).T
         if A.ndim == 3:
-            A[:] = E
-            if normalize:
-                E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral[0]))
-                E_11 = np.sqrt(2*self.puiss2/(c*epsilon_0*integral[1]))
-                A[0, :, :] *= E_00
-                A[1, :, :] *= E_11
             A1_old = A[0, :, :].copy()
         else:
-            A[:] = E
-            if normalize:
-                E_00 = np.sqrt(2*self.puiss/(c*epsilon_0*integral[:, 0]))
-                E_11 = np.sqrt(2*self.puiss2/(c*epsilon_0*integral[:, 1]))
-                A[:, 0, :, :] = E_00
-                A[:, 1, :, :] = E_11
             A1_old = A[:, 0, :, :].copy()
         if self.plans is None:
             self.plans = self.build_fft_plan(E)

@@ -608,11 +608,11 @@ class NLSE_1d:
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
                 A = np.empty(E_in.shape, dtype=np.complex64)
-                integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
+                integral = np.sum(np.abs(E_in)**2*self.delta_X**2, axis=-1)
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=np.complex64)
-                integral = cp.sum(cp.abs(E_in)**2*self.delta_X, axis=-1)
+                integral = cp.sum(cp.abs(E_in)**2*self.delta_X**2, axis=-1)
                 return_np_array = False
         else:
             return_np_array = True

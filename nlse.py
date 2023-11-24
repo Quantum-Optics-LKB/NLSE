@@ -446,8 +446,6 @@ class NLSE:
                 propagator_lin = cp.asarray(np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * delta_z_lin))
             else: propagator_lin = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * delta_z_lin) 
             for i, z in enumerate(np.arange(0, z, delta_z_lin, dtype=np.float32)):
-                if z > self.L:
-                    self.n2 = 0
                 if verbose:
                     pbar.update(1) 
                 self.split_step(A, V, propagator_lin, self.plans, "single")  

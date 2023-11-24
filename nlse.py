@@ -697,7 +697,7 @@ class NLSE_1d:
                 kernels.nl_prop_without_V(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -705,7 +705,7 @@ class NLSE_1d:
                 kernels.nl_prop(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -725,7 +725,7 @@ class NLSE_1d:
                 kernels.nl_prop_without_V_1d(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -733,7 +733,7 @@ class NLSE_1d:
                 kernels.nl_prop_1d(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -771,11 +771,11 @@ class NLSE_1d:
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
                 A = np.empty(E_in.shape, dtype=np.complex64)
-                integral = np.sum(np.abs(E_in) ** 2 * self.delta_X**2, axis=-1)
+                integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=np.complex64)
-                integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X**2, axis=-1)
+                integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1)
                 return_np_array = False
         else:
             return_np_array = True
@@ -786,7 +786,7 @@ class NLSE_1d:
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in
-        propagator = self.build_propagator(precision)
+        propagator = self.build_propagator(self.k, precision)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)

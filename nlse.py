@@ -441,7 +441,7 @@ class NLSE:
                              desc="Iteration", leave=False)
 
         if self.n2 == 0:   
-            delta_z_lin = 0.4e-2 ### z step linear: can't be too high because of aliasing
+            delta_z_lin = self.window**2/(self.NX*self.wl*30) ### z step linear
             if BACKEND == "GPU":
                 propagator_lin = cp.asarray(np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * delta_z_lin))
             else: propagator_lin = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * delta_z_lin) 

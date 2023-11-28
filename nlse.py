@@ -74,10 +74,7 @@ class NLSE:
         self.NX = NX
         self.NY = NY
         self.window = window
-        if self.n2 == 0:
-            z_nl = L
-        else:
-            z_nl = 1 / (self.k * abs(self.Dn))
+        z_nl = 1 / (self.k * abs(self.Dn))
         self.delta_z = min(0.1e-5 * self.z_r, z_nl)
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
@@ -439,25 +436,12 @@ class NLSE:
         if verbose:
             pbar = tqdm.tqdm(total=len(Z), position=4,
                              desc="Iteration", leave=False)
-
-        if self.n2 == 0:   
-            delta_z_lin = 0.4e-2 ### z step linear: can't be too high because of aliasing
-            if BACKEND == "GPU":
-                propagator_lin = cp.asarray(np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * delta_z_lin))
-            else: propagator_lin = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * delta_z_lin) 
-            for i, z in enumerate(np.arange(0, z, delta_z_lin, dtype=np.float32)):
-                if z > self.L:
-                    self.n2 = 0
-                if verbose:
-                    pbar.update(1) 
-                self.split_step(A, V, propagator_lin, self.plans, "single")  
-        else:
-            for i, z in enumerate(Z):
-                if z > self.L:
-                    self.n2 = 0
-                if verbose:
-                    pbar.update(1)
-                self.split_step(A, V, self.propagator, self.plans, precision)
+        for i, z in enumerate(Z):
+            if z > self.L:
+                self.n2 = 0
+            if verbose:
+                pbar.update(1)
+            self.split_step(A, V, self.propagator, self.plans, precision)
         if verbose:
             pbar.close()
 

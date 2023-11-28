@@ -94,7 +94,7 @@ simu = NLSE(trans, puiss, waist, window, n2, dn,
             L, NX=2048, NY=2048)
 ```
 - `trans` is the transmission accross the non-linear medium sample. Here we lose half of the light in the medium so transmission is 50%.
-- `n2` is the non-linear coefficient in <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=%5Cbbox%5Bwhite%5D%7Bm%5E2%2FW%7D">.
+- `n2` is the non-linear coefficient in $m^2/W$.
 - `waist` is the beam waist size in m.
 - `window` is the total size of the computational window. Here we specify it as `2048*5.5e-6` as our camera has 2048*2048 pixels of 5.5 microns.
 - `puiss` is the laser power in W.

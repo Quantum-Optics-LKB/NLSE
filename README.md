@@ -22,20 +22,17 @@ Other than this, the code relies on these libraries :
 ## How does it work ?
 ### Physical situation
 The code offers to solve a typical [non linear Schrödinger](https://en.wikipedia.org/wiki/Nonlinear_Schr%C3%B6dinger_equation) equation of the type :
+$$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$
 
-<!-- $i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$ --> 
-<img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{i%5Cpartial_%7Bt%7D%5Cpsi%20%3D%20-%5Cfrac%7B1%7D%7B2%7D%5Cnabla%5E2%5Cpsi%2BV%5Cpsi%2Bg%7C%5Cpsi%7C%5E2%5Cpsi}">.
-
-In this particular instance, we solve in the formalism of the propagation of light in a non linear medium, such that the exact equation for the field <!-- $\bbox[white]{E}$ --> <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=%5Cbbox%5Bwhite%5D%7BE%7D"> in V/m solved is :
-<!-- $\bbox[white]{i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2}nc\epsilon_0|E|^2E}$ --> 
-<img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=%5Cbbox%5Bwhite%5D%7Bi%5Cpartial_%7Bz%7DE%20%3D%20-%5Cfrac%7B1%7D%7B2k_0%7D%5Cnabla_%7B%5Cperp%7D%5E2%20E-%5Cfrac%7Bk_0%7D%7B2%7D%5Cdelta%20n(r)%20E%20-%20n_2%20%5Cfrac%7Bk_0%7D%7B2%7Dnc%5Cepsilon_0%7CE%7C%5E2E%7D">
-
+In this particular instance, we solve in the formalism of the propagation of light in a non linear medium, such that the exact equation for the field $E$ in V/m solved is :
+ $$i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2}nc\epsilon_0|E|^2E$$
+ 
 Here, the constants are defined as followed :
-- <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{k_0}"> : is the electric field wavenumber in $m^{-1}$
-- <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{%5Cdelta%20n(r)}"> : the "potential" i.e a local change in linear index of refraction. Dimensionless.
-- <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{n_2}"> : the non linear coefficient in <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=%5Cbbox%5Bwhite%5D%7Bm%5E2%2FW%7D">.
-- <!-- $\bbox[white]{n}$ --> <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=%5Cbbox%5Bwhite%5D%7Bn%7D"> is the linear index of refraction. In our case 1.
-- <!-- $\bbox[white]{c,\epsilon_0}$ --> <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=%5Cbbox%5Bwhite%5D%7Bc%2C%5Cepsilon_0%7D"> : the speed of light and electric permittivity of vacuum.
+- $k_0$ : is the electric field wavenumber in $m^{-1}$
+- $\delta n(r)$ : the "potential" i.e a local change in linear index of refraction. Dimensionless.
+- $n_2$ : the non linear coefficient in $m^2/W$.
+- $n$ is the linear index of refraction. In our case 1.
+- $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
 
 
 Please note that all of the code works with the **"God given" units** i.e **SI units** !
@@ -48,6 +45,18 @@ The `NLSE` class aims at providing a minimal yet functional toolbox to solve non
 
 The physical parameters listed above are defined at the instantiation of the `NLSE` class (`__init__` function).
 
+#### Broadcasting
+
+Since `numpy` / `cupy` allow for natural broadcasting of arrays of compatible size, one can leverage this in order to run parallel realizations. For instance, if we wish to propagate various initial state with the same physical parameters,
+we simply have to initialize a *tensor* of fields of dimensions `(N_real, Ny, Nx)` where `N_real` is the number of initial states we wish to propagate.
+
+Similarly, one can broadcast over the physical parameters by setting some parameters to be tensors as well. If we wish for instance to study the effect of the variation of $n_2$, one can set the `n2` attribute to be a `(N_real, 1, 1)` tensor.
+The field should then be initialized to a `(N_real, Ny, Nx)` tensor of identical fields and each slice over the first dimension will represent the same field propagated with different parameters.
+Finally, one can combine broadcasting over several parameters at the same time: if we wish to do a grid search over $n_2$ and $\alpha$, one can instantiate `n2` to be a `(N_n2, 1, 1, 1)` array, `alpha` to be a `(1, N_alpha, 1, 1)` and the field
+a `(N_n2, N_alpha, Ny, Nx)` array.
+
+The take-home message is that the array shape should be compliant with `numpy` [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html).
+
 #### Propagation
 
 The `out_field` method is the main function of the code that propagates the field for an arbitrary distance from an initial state `E_in` from z=0 (assumed to be the begining of the non linear medium) up to a specified distance z. This function simply works by iterating the spectral solver scheme i.e :
@@ -57,8 +66,8 @@ The `out_field` method is the main function of the code that propagates the fiel
 - Applying all real space terms (potential, losses and interactions)
 - (Optional : Applying the first three steps again)
 
-The `precision` argument allows to switch between applicating the laplacian in a single multiplication (`"single"`), or applying a "half" laplacian before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{%5Cmathcal%7BO%7D(dz)}"> in the first case and <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{%5Cmathcal%7BO%7D(dz%5E3)}"> in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
-The propagation step <img style="transform: translateY(0.1em); background: white;" src="https://render.githubusercontent.com/render/math?math=\bbox[white]{dz}"> is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $\bbox[white]{z_{NL}=\frac{1}{k_0 n_2 I}}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
+The `precision` argument allows to switch between applicating the laplacian in a single multiplication (`"single"`), or applying a "half" laplacian before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is $\mathcal{O}(\delta z)$ in the first case and $\mathcal{O}(\delta z^3)$ in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
+The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $z_{NL}=\frac{1}{k_0 n_2 I}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
 
 #### Simulation of phase or intensity masks
 

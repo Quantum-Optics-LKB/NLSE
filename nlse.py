@@ -74,8 +74,8 @@ class NLSE:
         self.NX = NX
         self.NY = NY
         self.window = window
-        z_nl = 1 / (self.k * abs(self.Dn))
-        self.delta_z = min(0.1e-5 * self.z_r, z_nl)
+        # z_nl = 1 / (self.k * abs(self.Dn))
+        self.delta_z = 1e-5 * self.z_r
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -311,7 +311,7 @@ class NLSE:
                 kernels.nl_prop_without_V(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -319,7 +319,7 @@ class NLSE:
                 kernels.nl_prop(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -339,7 +339,7 @@ class NLSE:
                 kernels.nl_prop_without_V(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -347,7 +347,7 @@ class NLSE:
                 kernels.nl_prop(
                     A,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -365,6 +365,7 @@ class NLSE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
+        callback: callable = None,
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -442,6 +443,9 @@ class NLSE:
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
+            if callback is not None:
+                callback(self, A, z)
+
         if verbose:
             pbar.close()
 
@@ -477,8 +481,7 @@ class NLSE:
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
             self.plot_2d(a1, self.X * 1e3, self.Y * 1e3,
-                         np.abs(A_plot), r"$|\psi|$")
-
+                         np.abs(A_plot)**2*epsilon_0*c/2*1e-4, r"I in $W/cm^{-2}$")
             a2 = fig.add_subplot(222)
             self.plot_2d(
                 a2,
@@ -504,7 +507,7 @@ class NLSE:
                 np.fft.fftshift(Kx_2),
                 im_fft,
                 r"$|\mathcal{TF}(E_{out})|^2$",
-                cmap="nipy_spectral",
+                cmap="viridis",
                 label=r"$K_y$",
             )
 
@@ -568,7 +571,7 @@ class NLSE_1d:
         self.NX = NX
         self.window = window
         z_nl = 1 / (self.k * abs(self.Dn))
-        self.delta_z = min(0.1e-5 * self.z_r, z_nl)
+        self.delta_z = .1e-5 * self.z_r
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -685,6 +688,7 @@ class NLSE_1d:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
+
             else:
                 kernels.nl_prop(
                     A,
@@ -735,6 +739,7 @@ class NLSE_1d:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
+        callback: callable = None
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -801,7 +806,10 @@ class NLSE_1d:
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, propagator, plans, precision)
-        pbar.close()
+            if callback is not None:
+                callback(self, A, z)
+        if verbose:
+            pbar.close()
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -879,6 +887,7 @@ class CNLSE(NLSE):
         """
         super().__init__(alpha, puiss, waist, window, n2, V, L, NX, NY, Isat)
         self.n12 = n12
+        self.I_sat2 = self.I_sat
         # initialize intra component 2 interaction parameter
         # to be the same as intra component 1
         self.n22 = self.n2
@@ -946,7 +955,7 @@ class CNLSE(NLSE):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -955,17 +964,17 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
                 kernels.nl_prop_c(
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -975,11 +984,11 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             if precision == "double":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
@@ -999,7 +1008,7 @@ class CNLSE(NLSE):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1008,17 +1017,17 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
                 kernels.nl_prop_c(
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1028,11 +1037,11 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             if precision == "double":
                 plan_fft(input_array=A, output_array=A)
@@ -1048,6 +1057,7 @@ class CNLSE(NLSE):
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
+        callback: callable = None
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -1135,6 +1145,8 @@ class CNLSE(NLSE):
             self.split_step(
                 A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
             )
+            if callback is not None:
+                callback(self, A, z)
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -1248,6 +1260,7 @@ class CNLSE_1d(NLSE_1d):
             object: CNLSE class instance
         """
         super().__init__(alpha, puiss, waist, window, n2, V, L, NX, Isat)
+        self.I_sat2 = self.I_sat
         self.n12 = n12
         # initialize intra component 2 interaction parameter
         # to be the same as intra component 1
@@ -1316,7 +1329,7 @@ class CNLSE_1d(NLSE_1d):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1325,17 +1338,17 @@ class CNLSE_1d(NLSE_1d):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
                 kernels.nl_prop_c(
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1345,11 +1358,11 @@ class CNLSE_1d(NLSE_1d):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             if precision == "double":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
@@ -1369,7 +1382,7 @@ class CNLSE_1d(NLSE_1d):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1378,17 +1391,17 @@ class CNLSE_1d(NLSE_1d):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
                 kernels.nl_prop_c(
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha,
+                    self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1398,11 +1411,11 @@ class CNLSE_1d(NLSE_1d):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2,
+                    self.alpha2/2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
             if precision == "double":
                 plan_fft(input_array=A, output_array=A)
@@ -1418,6 +1431,7 @@ class CNLSE_1d(NLSE_1d):
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
+        callback: callable = None
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -1442,11 +1456,11 @@ class CNLSE_1d(NLSE_1d):
         if BACKEND == "GPU":
             if type(E) == np.ndarray:
                 A = np.empty(E.shape, dtype=np.complex64)
-                integral = np.sum(np.abs(E) ** 2 * self.delta_X, axis=-1)**2
+                integral = np.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
                 return_np_array = True
             elif type(E) == cp.ndarray:
                 A = cp.empty(E.shape, dtype=np.complex64)
-                integral = cp.sum(np.abs(E) ** 2 * self.delta_X, axis=-1)**2
+                integral = cp.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
                 return_np_array = False
         else:
             return_np_array = True
@@ -1499,6 +1513,8 @@ class CNLSE_1d(NLSE_1d):
             self.split_step(
                 A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
             )
+            if callback is not None:
+                callback(self, A, z)
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -1768,6 +1784,7 @@ class GPE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
+        callback: callable = None
     ) -> np.ndarray:
         """Propagates the field at a time T
         Args:
@@ -1842,6 +1859,8 @@ class GPE:
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
+            if callback is not None:
+                callback(self, A, _)
         if verbose:
             pbar.close()
 

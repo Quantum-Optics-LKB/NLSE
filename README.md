@@ -57,6 +57,20 @@ a `(N_n2, N_alpha, Ny, Nx)` array.
 
 The take-home message is that the array shape should be compliant with `numpy` [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html).
 
+#### Callbacks
+
+The `out_field` functions support callbacks with the following signature `callback(self, A, z)` where `self` is the class instance, `A` is the field and `z` is the current position. 
+For example if you want to print the number of steps every 100 steps, this is the callback you could write :
+
+```python
+def callback(nlse, A, z):
+    n = int(z/nlse.delta_z)
+    if n % 100 == 0:
+        print(n)
+```
+Notice that since the class instance is passed to the callback, you have access to all of the classes attributes. 
+Be mindful however that since the callback is running in the main solver loop, this function should not be called too often in order to not slow down the execution too much.
+
 #### Propagation
 
 The `out_field` method is the main function of the code that propagates the field for an arbitrary distance from an initial state `E_in` from z=0 (assumed to be the begining of the non linear medium) up to a specified distance z. This function simply works by iterating the spectral solver scheme i.e :

@@ -1,10 +1,11 @@
 import numba
 import numpy as np
 
+
 @numba.njit(parallel=True, fastmath=True, cache=True)
 def nl_prop_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
-                V: np.ndarray, g11: float, g12: float,
-                Isat: float) -> None:
+              V: np.ndarray, g11: float, g12: float,
+              Isat: float) -> None:
     """A fused kernel to apply real space terms
     Args:
         A1 (cp.ndarray): The field to propagate (1st component)
@@ -16,17 +17,19 @@ def nl_prop_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
         g12 (float): Inter-component interactions
         Isat (float): Saturation parameter of intra-component interaction
     """
-    for i in numba.prange(A1.shape[0]):
-        for j in numba.prange(A1.shape[1]):
-            A_sq_1 = np.abs(A1[i, j])**2
-            A_sq_2 = np.abs(A2[i, j])**2
-            # Losses
-            A1[i, j] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-            # Potential
-            A1[i, j] *= np.exp(dz*(1j * V[i, j]))
-            # Interactions
-            A1[i, j] *= np.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
-                
+    A1 = A1.ravel()
+    A2 = A2.ravel()
+    for i in numba.prange(A1.size):
+        A_sq_1 = np.abs(A1[i])**2
+        A_sq_2 = np.abs(A2[i])**2
+        # Losses
+        A1[i] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
+        # Potential
+        A1[i] *= np.exp(dz*(1j * V[i]))
+        # Interactions
+        A1[i] *= np.exp(dz *
+                        (1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
+
 
 @numba.njit(parallel=True, fastmath=True, cache=True)
 def nl_prop_without_V_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
@@ -42,14 +45,17 @@ def nl_prop_without_V_c(A1: np.ndarray, A2: np.ndarray, dz: float, alpha: float,
         g12 (float): Inter-component interactions
         Isat (float): Saturation parameter of intra-component interaction
     """
-    for i in numba.prange(A1.shape[0]):
-        for j in numba.prange(A1.shape[1]):
-            A_sq_1 = np.abs(A1[i, j])**2
-            A_sq_2 = np.abs(A2[i, j])**2
-            # Losses
-            A1[i, j] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
-            # Interactions
-            A1[i, j] *= np.exp(dz*(1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
+    A1 = A1.ravel()
+    A2 = A2.ravel()
+    for i in numba.prange(A1.size):
+        A_sq_1 = np.abs(A1[i])**2
+        A_sq_2 = np.abs(A2[i])**2
+        # Losses
+        A1[i] *= np.exp(dz*(-alpha/(2*(1+A_sq_1/Isat))))
+        # Interactions
+        A1[i] *= np.exp(dz *
+                        (1j*(g11*A_sq_1/(1+A_sq_1/Isat) + g12*A_sq_2)))
+
 
 @numba.njit(parallel=True, fastmath=True, cache=True)
 def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
@@ -63,15 +69,17 @@ def nl_prop(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
         V (np.ndarray): Potential
         g (float): Interactions
     """
-    for i in numba.prange(A.shape[0]):
-        for j in numba.prange(A.shape[1]):
-            A_sq = np.abs(A[i, j])**2
-            A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                    V[i, j] + 1j*g*A_sq/(1+A_sq/Isat)))
+    A = A.ravel()
+    V = V.ravel()
+    for i in numba.prange(A.size):
+        A_sq = np.abs(A[i])**2
+        A[i] *= np.exp(dz*(-alpha/2 + 1j *
+                           V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
+
 
 @numba.njit(parallel=True, fastmath=True, cache=True)
-def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float, 
-                Isat: float) -> None:
+def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
+               Isat: float) -> None:
     """A compiled parallel implementation to apply real space terms
 
     Args:
@@ -84,11 +92,12 @@ def nl_prop_1d(A: np.ndarray, dz: float, alpha: float, V: np.ndarray, g: float,
     for i in numba.prange(A.shape[0]):
         A_sq = np.abs(A[i])**2
         A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                            V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
+                           V[i] + 1j*g*A_sq/(1+A_sq/Isat)))
+
 
 @numba.njit(parallel=True, fastmath=True, cache=True)
 def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float,
-                        Isat: float) -> None:
+                      Isat: float) -> None:
     """A compiled parallel implementation to apply real space terms
 
     Args:
@@ -97,15 +106,16 @@ def nl_prop_without_V(A: np.ndarray, dz: float, alpha: float, g: float,
         alpha (float): Losses
         g (float): Interactions
     """
-    for i in numba.prange(A.shape[0]):
-        for j in numba.prange(A.shape[1]):
-            A_sq = np.abs(A[i, j])**2
-            A[i, j] *= np.exp(dz*(-alpha/2 + 1j *
-                                g*A_sq/(1+A_sq/Isat)))
+    A = A.ravel()
+    for i in numba.prange(A.size):
+        A_sq = np.abs(A[i])**2
+        A[i] *= np.exp(dz*(-alpha/2 + 1j *
+                           g*A_sq/(1+A_sq/Isat)))
+
 
 @numba.njit(parallel=True, fastmath=True, cache=True)
 def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float,
-                            Isat: float) -> None:
+                         Isat: float) -> None:
     """A compiled parallel implementation to apply real space terms
 
     Args:
@@ -117,11 +127,12 @@ def nl_prop_without_V_1d(A: np.ndarray, dz: float, alpha: float, g: float,
     for i in numba.prange(A.shape[0]):
         A_sq = np.abs(A[i])**2
         A[i] *= np.exp(dz*(-alpha/2 + 1j *
-                            g*A_sq/(1+A_sq/Isat)))
+                           g*A_sq/(1+A_sq/Isat)))
+
 
 @numba.njit(parallel=True, fastmath=True, cache=True)
-def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, 
-            ll: int) -> None:
+def vortex(im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray,
+           ll: int) -> None:
     """Generates a vortex of charge l at a position (i,j) on the image im.
 
     Args:

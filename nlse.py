@@ -12,7 +12,9 @@ import pyfftw
 from scipy.constants import c, epsilon_0, hbar, atomic_mass
 from scipy.ndimage import zoom
 
-BACKEND = "GPU"
+BACKEND = "CPU"
+PRECISION_REAL = np.float32
+PRECISION_COMPLEX = np.complex64
 
 if BACKEND == "GPU":
     try:
@@ -39,7 +41,6 @@ class NLSE:
         self,
         alpha: float,
         puiss: float,
-        waist: float,
         window: float,
         n2: float,
         V: np.ndarray,
@@ -47,6 +48,7 @@ class NLSE:
         NX: int = 1024,
         NY: int = 1024,
         Isat: float = np.inf,
+        wvl: float = 780e-9
     ) -> object:
         """Instantiates the simulation.
         Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
@@ -62,9 +64,7 @@ class NLSE:
         # listof physical parameters
         self.n2 = n2
         self.V = V
-        self.waist = waist
-        self.wl = 780e-9
-        self.z_r = self.waist**2 * np.pi / self.wl
+        self.wl = wvl
         self.k = 2 * np.pi / self.wl
         self.L = L  # length of the non linear medium
         self.alpha = alpha
@@ -74,8 +74,9 @@ class NLSE:
         self.NX = NX
         self.NY = NY
         self.window = window
-        # z_nl = 1 / (self.k * abs(self.Dn))
-        self.delta_z = 1e-5 * self.z_r
+        Dn = self.n2 * self.puiss / self.window**2
+        z_nl = 1 / (self.k * abs(Dn))
+        self.delta_z = 1e-2 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -83,7 +84,7 @@ class NLSE:
             num=NX,
             endpoint=False,
             retstep=True,
-            dtype=np.float32,
+            dtype=PRECISION_REAL,
         )
         self.Y, self.delta_Y = np.linspace(
             -self.window / 2,
@@ -91,7 +92,7 @@ class NLSE:
             num=NY,
             endpoint=False,
             retstep=True,
-            dtype=np.float32,
+            dtype=PRECISION_REAL,
         )
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
@@ -101,11 +102,6 @@ class NLSE:
         self.Kxx, self.Kyy = np.meshgrid(self.Kx, self.Ky)
         self.propagator = None
         self.plans = None
-
-    @property
-    def Dn(self):
-        intens = 2 * self.puiss / (np.pi * self.waist**2)
-        return self.n2 * intens
 
     def plot_2d(
         self, ax, Z, X, AMP, title, cmap="viridis", label=r"$X$ (mm)", **kwargs
@@ -210,7 +206,7 @@ class NLSE:
         ] = phase_zoomed
         return phase
 
-    def build_propagator(self, k: float, precision: str = "single") -> np.ndarray:
+    def build_propagator(self, k: float) -> np.ndarray:
         """Builds the linear propagation matrix
 
         Args:
@@ -220,14 +216,9 @@ class NLSE:
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        if precision == "double":
-            propagator = np.exp(
-                -1j * 0.25 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z
-            )
-        else:
-            propagator = np.exp(
-                -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z
-            )
+        propagator = np.exp(
+            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z
+        )
         if BACKEND == "GPU":
             return cp.asarray(propagator)
         else:
@@ -301,16 +292,13 @@ class NLSE:
         if BACKEND == "GPU":
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-            # linear step in Fourier domain (shifted)
-            cp.multiply(A, propagator, out=A)
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-            # fft normalization
-            A /= A.shape[-2] * A.shape[-1]
+        else:
+            plan_fft, plan_ifft = plans
+        if precision == "double":
             if V is None:
                 kernels.nl_prop_without_V(
                     A,
-                    self.delta_z,
+                    self.delta_z/2,
                     self.alpha/2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -318,44 +306,59 @@ class NLSE:
             else:
                 kernels.nl_prop(
                     A,
-                    self.delta_z,
+                    self.delta_z/2,
                     self.alpha/2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-            if precision == "double":
+            if BACKEND == "GPU":
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
                 # linear step in Fourier domain (shifted)
                 cp.multiply(A, propagator, out=A)
                 plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+                # fft normalization
                 A /= A.shape[-2] * A.shape[-1]
-        else:
-            plan_fft, plan_ifft = plans
-            plan_fft(input_array=A, output_array=A)
-            np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
-            if V is None:
-                kernels.nl_prop_without_V(
-                    A,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
             else:
-                kernels.nl_prop(
-                    A,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * V,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-            if precision == "double":
                 plan_fft(input_array=A, output_array=A)
                 np.multiply(A, propagator, out=A)
                 plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+            if precision == "double":
+                if V is None:
+                    kernels.nl_prop_without_V(
+                        A,
+                        self.delta_z/2,
+                        self.alpha/2,
+                        self.k / 2 * self.n2 * c * epsilon_0,
+                        2 * self.I_sat / (epsilon_0 * c),
+                    )
+                else:
+                    kernels.nl_prop(
+                        A,
+                        self.delta_z/2,
+                        self.alpha/2,
+                        self.k / 2 * V,
+                        self.k / 2 * self.n2 * c * epsilon_0,
+                        2 * self.I_sat / (epsilon_0 * c),
+                    )
+            else:
+                if V is None:
+                    kernels.nl_prop_without_V(
+                        A,
+                        self.delta_z,
+                        self.alpha/2,
+                        self.k / 2 * self.n2 * c * epsilon_0,
+                        2 * self.I_sat / (epsilon_0 * c),
+                    )
+                else:
+                    kernels.nl_prop(
+                        A,
+                        self.delta_z,
+                        self.alpha/2,
+                        self.k / 2 * V,
+                        self.k / 2 * self.n2 * c * epsilon_0,
+                        2 * self.I_sat / (epsilon_0 * c),
+                    )
 
     def out_field(
         self,
@@ -380,25 +383,26 @@ class NLSE:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-2] == self.NY and E_in.shape[-1] == self.NX
-        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
+        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
-                # A = np.empty((self.NX, self.NY), dtype=np.complex64)
-                A = np.empty(E_in.shape, dtype=np.complex64)
+                # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
+                A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
                     np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
-                # A = cp.empty((self.NX, self.NY), dtype=np.complex64)
-                A = cp.empty(E_in.shape, dtype=np.complex64)
+                # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
+                A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
                     cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
+            A = pyfftw.empty_aligned(
+                (self.NX, self.NY), dtype=PRECISION_COMPLEX)
             integral = np.sum(
                 np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
             )
@@ -411,7 +415,7 @@ class NLSE:
         else:
             A[:] = E_in
         if self.propagator is None:
-            self.propagator = self.build_propagator(self.k, precision)
+            self.propagator = self.build_propagator(self.k)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
@@ -537,14 +541,14 @@ class NLSE_1d:
         self,
         alpha: float,
         puiss: float,
-        waist: float,
         window: float,
         n2: float,
         V: np.ndarray,
         L: float,
         NX: int = 1024,
         Isat: float = np.inf,
-    ) -> None:
+        wvl: float = 780e-9
+    ) -> object:
         """Instantiates the simulation.
         Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
           k0 n2 psi**2 psi
@@ -558,9 +562,7 @@ class NLSE_1d:
         # listof physical parameters
         self.n2 = n2
         self.V = V
-        self.waist = waist
-        self.wl = 780e-9
-        self.z_r = self.waist**2 * np.pi / self.wl
+        self.wl = wvl
         self.k = 2 * np.pi / self.wl
         self.L = L  # length of the non linear medium
         self.alpha = alpha
@@ -570,8 +572,10 @@ class NLSE_1d:
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.window = window
-        z_nl = 1 / (self.k * abs(self.Dn))
-        self.delta_z = .1e-5 * self.z_r
+        rho0 = puiss/L**2
+        Dn = self.n2 * rho0
+        z_nl = 1 / (self.k * abs(Dn))
+        self.delta_z = .1*z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -579,19 +583,14 @@ class NLSE_1d:
             num=NX,
             endpoint=False,
             retstep=True,
-            dtype=np.float32,
+            dtype=PRECISION_REAL,
         )
         # definition of the Fourier frequencies for the linear step
         self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
         self.propagator = None
         self.plans = None
 
-    @property
-    def Dn(self):
-        intens = self.puiss / (np.pi * self.waist**2)
-        return self.n2 * intens
-
-    def build_propagator(self, k: float, precision: str = "single") -> np.ndarray:
+    def build_propagator(self, k: float) -> np.ndarray:
         """Builds the linear propagation matrix
 
         Args:
@@ -601,10 +600,7 @@ class NLSE_1d:
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        if precision == "double":
-            propagator = np.exp(-1j * 0.25 * (self.Kx**2) / k * self.delta_z)
-        else:
-            propagator = np.exp(-1j * 0.5 * (self.Kx**2) / k * self.delta_z)
+        propagator = np.exp(-1j * 0.5 * (self.Kx**2) / k * self.delta_z)
         if BACKEND == "GPU":
             return cp.asarray(propagator)
         else:
@@ -674,12 +670,58 @@ class NLSE_1d:
         if BACKEND == "GPU":
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
+        else:
+            plan_fft, plan_ifft = plans
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V(
+                    A,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+
+            else:
+                kernels.nl_prop(
+                    A,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+        if BACKEND == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
             A /= A.shape[-1]
+        else:
+            plan_fft(input_array=A, output_array=A)
+            np.multiply(A, propagator, out=A)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V(
+                    A,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+
+            else:
+                kernels.nl_prop(
+                    A,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+        else:
             if V is None:
                 kernels.nl_prop_without_V(
                     A,
@@ -698,38 +740,6 @@ class NLSE_1d:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-            if precision == "double":
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                # linear step in Fourier domain (shifted)
-                cp.multiply(A, propagator, out=A)
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                A /= A.shape[-1]
-        else:
-            plan_fft, plan_ifft = plans
-            plan_fft(input_array=A, output_array=A)
-            np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
-            if V is None:
-                kernels.nl_prop_without_V_1d(
-                    A,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-            else:
-                kernels.nl_prop_1d(
-                    A,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * V,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-            if precision == "double":
-                plan_fft(input_array=A, output_array=A)
-                np.multiply(A, propagator, out=A)
-                plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(
         self,
@@ -756,26 +766,27 @@ class NLSE_1d:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX
-        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
+        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
-                A = np.empty(E_in.shape, dtype=np.complex64)
+                A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
-                A = cp.empty(E_in.shape, dtype=np.complex64)
+                A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
                 return_np_array = False
         else:
+            integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
             return_np_array = True
-            A = pyfftw.empty_aligned(E_in.shape, dtype=np.complex64)
+            A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
         plans = self.build_fft_plan(A)
         if normalize:
             E_00 = np.sqrt(2 * self.puiss / (c * epsilon_0 * integral))
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in
-        propagator = self.build_propagator(self.k, precision)
+        propagator = self.build_propagator(self.k)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
@@ -857,7 +868,6 @@ class CNLSE(NLSE):
         self,
         alpha: float,
         puiss: float,
-        waist: float,
         window: float,
         n2: float,
         n12: float,
@@ -885,7 +895,7 @@ class CNLSE(NLSE):
         Returns:
             object: CNLSE class instance
         """
-        super().__init__(alpha, puiss, waist, window, n2, V, L, NX, NY, Isat)
+        super().__init__(alpha, puiss, window, n2, V, L, NX, NY, Isat)
         self.n12 = n12
         self.I_sat2 = self.I_sat
         # initialize intra component 2 interaction parameter
@@ -899,7 +909,6 @@ class CNLSE(NLSE):
         # powers
         self.puiss2 = self.puiss
         # waists
-        self.waist2 = self.waist
         self.propagator1 = None
         self.propagator2 = None
 
@@ -943,6 +952,50 @@ class CNLSE(NLSE):
         if BACKEND == "GPU":
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
+        else:
+            plan_fft, plan_ifft = plans
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V_c(
+                    A1,
+                    A2,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_without_V_c(
+                    A2,
+                    A1_old,
+                    self.delta_z/2,
+                    self.alpha2/2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+            else:
+                kernels.nl_prop_c(
+                    A1,
+                    A2,
+                    self.delta_z,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_c(
+                    A2,
+                    A1_old,
+                    self.delta_z,
+                    self.alpha2/2,
+                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+        if BACKEND == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A1, propagator1, out=A1)
@@ -950,59 +1003,54 @@ class CNLSE(NLSE):
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
             A /= A.shape[-2] * A.shape[-1]
-            if V is None:
-                kernels.nl_prop_without_V_c(
-                    A1,
-                    A2,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    self.k / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-                kernels.nl_prop_without_V_c(
-                    A2,
-                    A1_old,
-                    self.delta_z,
-                    self.alpha2/2,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                )
-            else:
-                kernels.nl_prop_c(
-                    A1,
-                    A2,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * V,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    self.k / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-                kernels.nl_prop_c(
-                    A2,
-                    A1_old,
-                    self.delta_z,
-                    self.alpha2/2,
-                    self.k2 / 2 * V,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                )
-            if precision == "double":
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                # linear step in Fourier domain (shifted)
-                cp.multiply(A1, propagator1, out=A1)
-                cp.multiply(A2, propagator2, out=A2)
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                A /= A.shape[-2] * A.shape[-1]
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)
             np.multiply(A1, propagator1, out=A1)
             np.multiply(A2, propagator2, out=A2)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V_c(
+                    A1,
+                    A2,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_without_V_c(
+                    A2,
+                    A1_old,
+                    self.delta_z/2,
+                    self.alpha2/2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+            else:
+                kernels.nl_prop_c(
+                    A1,
+                    A2,
+                    self.delta_z,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_c(
+                    A2,
+                    A1_old,
+                    self.delta_z,
+                    self.alpha2/2,
+                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+        else:
             if V is None:
                 kernels.nl_prop_without_V_c(
                     A1,
@@ -1043,11 +1091,6 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
-            if precision == "double":
-                plan_fft(input_array=A, output_array=A)
-                np.multiply(A1, propagator1, out=A1)
-                np.multiply(A2, propagator2, out=A2)
-                plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(
         self,
@@ -1078,25 +1121,29 @@ class CNLSE(NLSE):
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
-        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
+        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) == np.ndarray:
-                A = np.empty(E.shape, dtype=np.complex64)
+                A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
                     np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
                 )
                 puiss_arr = np.array([self.puiss, self.puiss2])
                 return_np_array = True
             elif type(E) == cp.ndarray:
-                A = cp.empty(E.shape, dtype=np.complex64)
+                A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
                     np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
                 )
                 puiss_arr = cp.array([self.puiss, self.puiss2])
                 return_np_array = False
         else:
+            integral = np.sum(
+                np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
+            )
+            puiss_arr = np.array([self.puiss, self.puiss2])
             return_np_array = True
-            A = pyfftw.empty_aligned(E.shape, dtype=np.complex64)
+            A = pyfftw.empty_aligned(E.shape, dtype=PRECISION_COMPLEX)
         # ndim logic ...
         A[:] = E
         if normalize:
@@ -1109,8 +1156,8 @@ class CNLSE(NLSE):
         if self.plans is None:
             self.plans = self.build_fft_plan(E)
         if self.propagator1 is None:
-            self.propagator1 = self.build_propagator(self.k, precision)
-            self.propagator2 = self.build_propagator(self.k2, precision)
+            self.propagator1 = self.build_propagator(self.k)
+            self.propagator2 = self.build_propagator(self.k2)
         if BACKEND == "GPU":
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
@@ -1317,6 +1364,50 @@ class CNLSE_1d(NLSE_1d):
         if BACKEND == "GPU":
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
+        else:
+            plan_fft, plan_ifft = plans
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V_c(
+                    A1,
+                    A2,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_without_V_c(
+                    A2,
+                    A1_old,
+                    self.delta_z/2,
+                    self.alpha2/2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+            else:
+                kernels.nl_prop_c(
+                    A1,
+                    A2,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_c(
+                    A2,
+                    A1_old,
+                    self.delta_z/2,
+                    self.alpha2/2,
+                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+        if BACKEND == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A1, propagator1, out=A1)
@@ -1324,59 +1415,53 @@ class CNLSE_1d(NLSE_1d):
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
             A /= A.shape[-1]
-            if V is None:
-                kernels.nl_prop_without_V_c(
-                    A1,
-                    A2,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    self.k / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-                kernels.nl_prop_without_V_c(
-                    A2,
-                    A1_old,
-                    self.delta_z,
-                    self.alpha2/2,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                )
-            else:
-                kernels.nl_prop_c(
-                    A1,
-                    A2,
-                    self.delta_z,
-                    self.alpha/2,
-                    self.k / 2 * V,
-                    self.k / 2 * self.n2 * c * epsilon_0,
-                    self.k / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat / (epsilon_0 * c),
-                )
-                kernels.nl_prop_c(
-                    A2,
-                    A1_old,
-                    self.delta_z,
-                    self.alpha2/2,
-                    self.k2 / 2 * V,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                )
-            if precision == "double":
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                # linear step in Fourier domain (shifted)
-                cp.multiply(A1, propagator1, out=A1)
-                cp.multiply(A2, propagator2, out=A2)
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                A /= A.shape[-1]
         else:
-            plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)
             np.multiply(A1, propagator1, out=A1)
             np.multiply(A2, propagator2, out=A2)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V_c(
+                    A1,
+                    A2,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_without_V_c(
+                    A2,
+                    A1_old,
+                    self.delta_z/2,
+                    self.alpha2/2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+            else:
+                kernels.nl_prop_c(
+                    A1,
+                    A2,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    self.k / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+                kernels.nl_prop_c(
+                    A2,
+                    A1_old,
+                    self.delta_z/2,
+                    self.alpha2/2,
+                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                )
+        else:
             if V is None:
                 kernels.nl_prop_without_V_c(
                     A1,
@@ -1417,11 +1502,6 @@ class CNLSE_1d(NLSE_1d):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
-            if precision == "double":
-                plan_fft(input_array=A, output_array=A)
-                np.multiply(A1, propagator1, out=A1)
-                np.multiply(A2, propagator2, out=A2)
-                plan_ifft(input_array=A, output_array=A, normalise_idft=True)
 
     def out_field(
         self,
@@ -1452,19 +1532,19 @@ class CNLSE_1d(NLSE_1d):
         assert E.ndim >= 2, (
             "Input number of dimensions should at least be 2 !" " (2, NX)"
         )
-        Z = np.arange(0, z, step=self.delta_z, dtype=np.float32)
+        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) == np.ndarray:
-                A = np.empty(E.shape, dtype=np.complex64)
+                A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
                 return_np_array = True
             elif type(E) == cp.ndarray:
-                A = cp.empty(E.shape, dtype=np.complex64)
+                A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned(E.shape, dtype=np.complex64)
+            A = pyfftw.empty_aligned(E.shape, dtype=PRECISION_COMPLEX)
         # ndim logic ...
         A[:] = E
         if normalize:
@@ -1600,7 +1680,7 @@ class GPE:
             num=NX,
             endpoint=False,
             retstep=True,
-            dtype=np.float32,
+            dtype=PRECISION_REAL,
         )
         self.Y, self.delta_Y = np.linspace(
             -self.window / 2,
@@ -1608,7 +1688,7 @@ class GPE:
             num=NY,
             endpoint=False,
             retstep=True,
-            dtype=np.float32,
+            dtype=PRECISION_REAL,
         )
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
@@ -1799,25 +1879,26 @@ class GPE:
             np.ndarray: Propagated field in proper units atoms/m
         """
         assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
-        Ts = np.arange(0, T, step=self.delta_t, dtype=np.float32)
+        Ts = np.arange(0, T, step=self.delta_t, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(psi) == np.ndarray:
-                # A = np.empty((self.NX, self.NY), dtype=np.complex64)
-                A = np.empty(psi.shape, dtype=np.complex64)
+                # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
+                A = np.empty(psi.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
                     np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = True
             elif type(psi) == cp.ndarray:
-                # A = cp.empty((self.NX, self.NY), dtype=np.complex64)
-                A = cp.empty(psi.shape, dtype=np.complex64)
+                # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
+                A = cp.empty(psi.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
                     cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=np.complex64)
+            A = pyfftw.empty_aligned(
+                (self.NX, self.NY), dtype=PRECISION_COMPLEX)
             integral = np.sum(
                 np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
             )
@@ -1915,6 +1996,275 @@ class GPE:
             fig.colorbar(im, ax=ax[2], label="Density")
             plt.show()
         return A
+
+
+class NLSE_1d_adim(NLSE_1d):
+
+    def __init__(
+        self,
+        alpha: float,
+        puiss: float,
+        window: float,
+        n2: float,
+        V: np.ndarray,
+        L: float,
+        NX: int = 1024,
+        Isat: float = np.inf,
+        wvl: float = 1,
+    ) -> object:
+        super().__init__(alpha, puiss, window, n2, V, L, NX, Isat, wvl)
+        self.m = 2*np.pi/self.wl
+        self.rho0 = self.puiss/self.window
+        self.c = np.sqrt(self.n2*self.rho0/self.m)
+        self.xi = 1/np.sqrt(4*self.n2*self.rho0*self.m)
+
+    def build_propagator(self) -> np.ndarray:
+        """Builds the linear propagation matrix
+
+        Args:
+            precision (str, optional): "single" or "double" application of the 
+            propagator.
+            Defaults to "single".
+        Returns:
+            propagator (np.ndarray): the propagator matrix
+        """
+        propagator = np.exp(-1j * 0.5 * (self.Kx**2) /
+                            self.k * self.delta_z)
+        if BACKEND == "GPU":
+            return cp.asarray(propagator)
+        else:
+            return propagator
+
+    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray,
+                   plans: list, precision: str = "single"):
+        """Split step function for one propagation step
+
+        Args:
+            A (np.ndarray): Field to propagate
+            V (np.ndarray): Potential field (can be None).
+            propagator (np.ndarray): Propagator matrix.
+            plans (list): List of FFT plan objects. Either a single FFT plan for both
+              directions
+            (GPU case) or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of the linear 
+            propagation step.
+            Defaults to "single".
+        """
+        if BACKEND == "GPU":
+            # on GPU, only one plan for both FFT directions
+            plan_fft = plans[0]
+        else:
+            plan_fft, plan_ifft = plans
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V(A, self.delta_z/2, self.alpha/2,
+                                          -self.n2/2, self.I_sat)
+            else:
+                kernels.nl_prop(A, self.delta_z/2, self.alpha/2,
+                                V, -self.n2/2, self.I_sat)
+        if BACKEND == "GPU":
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+            # linear step in Fourier domain (shifted)
+            cp.multiply(A, propagator, out=A)
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+            # fft normalization
+            A /= A.shape[-1]
+        else:
+            plan_fft(input_array=A, output_array=A)
+            np.multiply(A, propagator, out=A)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V(A, self.delta_z/2, self.alpha/2,
+                                          -self.n2/2, self.I_sat)
+            else:
+                kernels.nl_prop(A, self.delta_z/2, self.alpha/2,
+                                V, -self.n2/2, self.I_sat)
+        else:
+            if V is None:
+                kernels.nl_prop_without_V(A, self.delta_z, self.alpha/2,
+                                          -self.n2/2, self.I_sat)
+            else:
+                kernels.nl_prop(A, self.delta_z, self.alpha/2,
+                                V, -self.n2/2, self.I_sat)
+
+    def out_field(self, E_in: np.ndarray, z: float, plot=False,
+                  precision: str = "single", verbose: bool = True,
+                  normalize: bool = True,
+                  callback: callable = None) -> np.ndarray:
+        """Propagates the field at a distance z
+        Args:
+            E_in (np.ndarray): Normalized input field (between 0 and 1)
+            z (float): propagation distance in m
+            plot (bool, optional): Plots the results. Defaults to False.
+            precision (str, optional): Does a "double" or a "single" application
+            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            Defaults to "single".
+            verbose (bool, optional): Prints progress and time. Defaults to True.
+            normalize (bool, optional): Normalizes the field to V/m. Defaults to True.
+            Used to be able to reuse fields that have already been propagated.
+        Returns:
+            np.ndarray: Propagated field in proper units V/m
+        """
+        assert E_in.shape[-1] == self.NX
+        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
+        if BACKEND == "GPU":
+            if type(E_in) == np.ndarray:
+                A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
+                integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
+                return_np_array = True
+            elif type(E_in) == cp.ndarray:
+                A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
+                integral = cp.sum(cp.abs(E_in)**2*self.delta_X, axis=-1)
+                return_np_array = False
+        else:
+            return_np_array = True
+            A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
+        plans = self.build_fft_plan(A)
+        if normalize:
+            E_00 = np.sqrt(self.puiss/integral)
+            A[:] = (E_00.T*E_in.T).T
+        else:
+            A[:] = E_in
+        propagator = self.build_propagator()
+        if BACKEND == "GPU":
+            if type(self.V) == np.ndarray:
+                V = cp.asarray(self.V)
+            elif type(self.V) == cp.ndarray:
+                V = self.V.copy()
+            if self.V is None:
+                V = self.V
+            if type(A) != cp.ndarray:
+                A = cp.asarray(A)
+        else:
+            if self.V is None:
+                V = self.V
+            else:
+                V = self.V.copy()
+
+        if BACKEND == "GPU":
+            start_gpu = cp.cuda.Event()
+            end_gpu = cp.cuda.Event()
+            start_gpu.record()
+        t0 = time.perf_counter()
+        n2_old = self.n2
+        if verbose:
+            pbar = tqdm.tqdm(total=len(Z), position=4,
+                             desc='Iteration', leave=False)
+        # dz = self.delta_z
+        for i, z in enumerate(Z):
+            # eps = 1-2*np.random.random()
+            # self.delta_z = dz*(1+1e-2*eps)
+            if z > self.L:
+                self.n2 = 0
+            if verbose:
+                pbar.update(1)
+            self.split_step(A, V, propagator, plans, precision)
+            if callback is not None:
+                callback(self, A, z, i)
+        pbar.close()
+        if BACKEND == "GPU":
+            end_gpu.record()
+            end_gpu.synchronize()
+            t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
+        if verbose:
+            if BACKEND == "GPU":
+                print(
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)")
+            else:
+                print(
+                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+        self.n2 = n2_old
+        if BACKEND == "GPU" and return_np_array:
+            A = cp.asnumpy(A)
+
+        if plot:
+            if not (return_np_array):
+                A_plot = cp.asnumpy(A)
+            elif return_np_array or BACKEND == 'CPU':
+                A_plot = A.copy()
+            fig, ax = plt.subplots(1, 2)
+            if A.ndim == 2:
+                for i in range(A.shape[0]):
+                    ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
+                    ax[1].plot(self.X, np.abs(A_plot[i, :])**2)
+            elif A.ndim == 1:
+                ax[0].plot(self.X, np.unwrap(np.angle(A_plot)))
+                ax[1].plot(self.X, np.abs(A_plot)**2)
+            ax[0].set_title("Phase")
+            ax[1].set_title(r"Density")
+            plt.tight_layout()
+            plt.show()
+        return A
+
+    # def bogo_disp(self, q: float) -> np.ndarray:
+    #     """_summary_
+
+    #     Args:
+    #         q (float): Momentum
+
+    #     Returns:
+    #         any: The bogoliubov dispersion at this momentum
+    #     """
+    #     return self.c*np.abs(q)*np.sqrt(1 + self.xi**2 * q**2)
+
+    # def thermal_state(self, T: float, n_real: int = 1) -> np.ndarray:
+    #     """Generates a thermal state at temperature T
+
+    #     Args:
+    #         T (float): Temperature in dimensionless units
+
+    #     Returns:
+    #         np.ndarray: The thermal state
+    #     """
+    #     eps_q = cp.asarray(self.bogo_disp(self.Kx))
+    #     E_q = cp.asarray(self.Kx**2/(2*self.m))
+    #     var = T/eps_q
+    #     var[0] = 1
+    #     sigma = np.sqrt(.5*var)
+    #     if n_real == 1:
+    #         Re_X = cp.random.normal(0, sigma, self.NX)
+    #         Im_X = cp.random.normal(0, sigma, self.NX)
+    #     else:
+    #         Re_X = cp.random.normal(0, sigma, (n_real, self.NX))
+    #         Im_X = cp.random.normal(0, sigma, (n_real, self.NX))
+    #     bq = Re_X + 1j*Im_X
+    #     if n_real == 1:
+    #         bmq = cp.roll(bq[::-1], 1)
+    #     else:
+    #         bmq = cp.roll(bq[:, ::-1], 1, axis=-1)
+    #     # phase distrib in k space
+    #     theta_q = (1j/2)*cp.sqrt(eps_q/E_q) * (bq - cp.conj(bmq))
+    #     theta_q[0] = 0.0
+    #     # density distrib in k space
+    #     delta_rho_q = cp.sqrt(E_q/eps_q) * (cp.conj(bmq) + bq)
+    #     delta_rho_q[0] = 0.0
+    #     # density distrib in real space
+    #     delta_rho_x = cp.real(cp.fft.ifft(delta_rho_q, axis=-1))/self.window
+    #     theta_x = cp.real(cp.fft.ifft(theta_q, axis=-1))
+    #     rho_x = self.rho0 + delta_rho_x
+    #     psi_x = cp.sqrt(rho_x) * cp.exp(1j*theta_x)
+    #     return psi_x
+
+    # def get_bq(self, psi: cp.ndarray) -> cp.ndarray:
+        """Retrieves the distribution of Bogoliubov modes from a field
+
+        Args:
+            psi (cp.ndarray): Field
+
+        Returns:
+            cp.ndarray: the distribution of Bogoliubov modes in momentum space
+        """
+        eps_q = cp.asarray(self.bogo_disp(self.Kx))
+        E_q = cp.asarray(self.Kx**2/(2*self.m))
+        theta = cp.angle(psi)
+        rho = cp.abs(psi)**2 - self.rho0
+        theta_q = cp.fft.fft(theta, axis=-1)
+        rho_q = cp.fft.fft(rho, axis=-1)*self.window
+        bq = 0.5*(-2*1j*(E_q/eps_q)**0.5 * theta_q +
+                  (E_q/eps_q)**-0.5 * rho_q)
+        bq[0] = 0
+        return bq
 
 
 def normalize(data: np.ndarray) -> np.ndarray:
@@ -2023,14 +2373,17 @@ if __name__ == "__main__":
     puiss = 500e-3
     Isat = 10e4  # saturation intensity in W/m^2
     L = 5e-2
-    dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
-    simu = NLSE(trans, puiss, waist, window, n2, dn, L, NX=2048, NY=2048)
-    simu_c = CNLSE(trans, puiss, waist, window, n2,
+    alpha = -np.log(trans)/L
+    dn = 2.5e-4 * np.ones((2048, 2048), dtype=PRECISION_COMPLEX)
+    simu = NLSE(alpha=alpha, puiss=puiss,
+                window=window, n2=n2, V=dn, L=L, NX=2048, NY=2048)
+    simu_c = CNLSE(alpha, puiss, window, n2,
                    n12, None, L, NX=2048, NY=2048)
-    simu_1d = NLSE_1d(trans, puiss, waist, window, n2, dn[1024, :], L, NX=2048)
+    simu_1d = NLSE_1d(alpha, puiss, window, n2, dn[1024, :], L, NX=2048)
     g = 1e3/(N/1e-3**2)
     print(f"{g=}")
-    simu_gpe = GPE(gamma=0, N=N, m=87*atomic_mass, window=1e-3, g=g, V=None, NX=4096, NY=4096)
+    simu_gpe = GPE(gamma=0, N=N, m=87*atomic_mass,
+                   window=1e-3, g=g, V=None, NX=4096, NY=4096)
     simu_gpe.delta_t = 1e-8
     simu.delta_z = 1e-4
     simu_1d.delta_z = 1e-4
@@ -2040,23 +2393,24 @@ if __name__ == "__main__":
     simu_1d.I_sat = Isat
     phase_slm = 2 * np.pi * flatTop_super(1272, 1024, length=1000, width=600)
     phase_slm = simu.slm(phase_slm, 6.25e-6)
-    E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * np.exp(
-        -(simu.XX**2 + simu.YY**2) / (2 * simu.waist**2)
+    E_in_0 = np.ones((simu.NY, simu.NX), dtype=PRECISION_COMPLEX) * np.exp(
+        -(simu.XX**2 + simu.YY**2) / (2 * waist**2)
     )
-    E_in_0_g = np.ones((simu_gpe.NY, simu_gpe.NX), dtype=np.complex64) * np.exp(
+    E_in_0_g = np.ones((simu_gpe.NY, simu_gpe.NX), dtype=PRECISION_COMPLEX) * np.exp(
         -(simu_gpe.XX**2 + simu_gpe.YY**2) / (2 * (1e-4)**2)
     )
-    A_gpe = simu_gpe.out_field(E_in_0_g, 7e-4, plot=True)
-    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2) / (2 * (simu.waist / 3) ** 2))
+    # A_gpe = simu_gpe.out_field(E_in_0_g, 7e-4, plot=True)
+    simu.V *= np.exp(-(simu.XX**2 + simu.YY**2) / (2 * (waist / 3) ** 2))
     E_in_0 *= np.exp(1j * phase_slm)
     E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
     E_in_0[0: E_in_0.shape[0] // 2 + 20, :] = 1e-10
     E_in_0[E_in_0.shape[0] // 2 + 225:, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-    E_in = np.zeros((2, simu.NY, simu.NX), dtype=np.complex64)
-    E_in[0, :, :] = np.exp(-(simu.XX**2 + simu.YY**2) / (2 * simu.waist**2))
+    E_in = np.zeros((2, simu.NY, simu.NX), dtype=PRECISION_COMPLEX)
+    E_in[0, :, :] = np.exp(-(simu.XX**2 + simu.YY**2) / (2 * waist**2))
     E_in[1, :, :] = np.exp(-(simu.XX**2 + simu.YY**2) /
-                           (2 * (simu.waist / 6) ** 2))
-    A_c = simu_c.out_field(E_in, L, plot=True, verbose=True)
+                           (2 * (waist / 6) ** 2))
+    A_c = simu_c.out_field(
+        E_in, L, plot=True, verbose=True)
     A = simu.out_field(E_in_0, L, plot=True)
     A_1d = simu_1d.out_field(E_in_0[1024:1028, :], L, plot=True)

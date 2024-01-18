@@ -12,9 +12,9 @@ import pyfftw
 from scipy.constants import c, epsilon_0, hbar, atomic_mass
 from scipy.ndimage import zoom
 
-BACKEND = "CPU"
-PRECISION_REAL = np.float32
-PRECISION_COMPLEX = np.complex64
+BACKEND = "GPU"
+PRECISION_REAL = np.float64
+PRECISION_COMPLEX = np.complex128
 
 if BACKEND == "GPU":
     try:
@@ -2028,8 +2028,8 @@ class NLSE_1d_adim(NLSE_1d):
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        propagator = np.exp(-1j * 0.5 * (self.Kx**2) /
-                            self.k * self.delta_z)
+        propagator = np.exp(-1j * self.delta_z * (self.Kx**2) /
+                            (2*self.m))
         if BACKEND == "GPU":
             return cp.asarray(propagator)
         else:
@@ -2058,10 +2058,10 @@ class NLSE_1d_adim(NLSE_1d):
         if precision == "double":
             if V is None:
                 kernels.nl_prop_without_V(A, self.delta_z/2, self.alpha/2,
-                                          -self.n2/2, self.I_sat)
+                                          -self.n2, self.I_sat)
             else:
                 kernels.nl_prop(A, self.delta_z/2, self.alpha/2,
-                                V, -self.n2/2, self.I_sat)
+                                V, -self.n2, self.I_sat)
         if BACKEND == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
@@ -2076,17 +2076,17 @@ class NLSE_1d_adim(NLSE_1d):
         if precision == "double":
             if V is None:
                 kernels.nl_prop_without_V(A, self.delta_z/2, self.alpha/2,
-                                          -self.n2/2, self.I_sat)
+                                          -self.n2, self.I_sat)
             else:
-                kernels.nl_prop(A, self.delta_z/2, self.alpha/2,
-                                V, -self.n2/2, self.I_sat)
+                kernels.nl_prop(A, self.delta_z, self.alpha/2,
+                                V, -self.n2, self.I_sat)
         else:
             if V is None:
                 kernels.nl_prop_without_V(A, self.delta_z, self.alpha/2,
-                                          -self.n2/2, self.I_sat)
+                                          -self.n2, self.I_sat)
             else:
                 kernels.nl_prop(A, self.delta_z, self.alpha/2,
-                                V, -self.n2/2, self.I_sat)
+                                V, -self.n2, self.I_sat)
 
     def out_field(self, E_in: np.ndarray, z: float, plot=False,
                   precision: str = "single", verbose: bool = True,
@@ -2118,6 +2118,7 @@ class NLSE_1d_adim(NLSE_1d):
                 integral = cp.sum(cp.abs(E_in)**2*self.delta_X, axis=-1)
                 return_np_array = False
         else:
+            integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
             return_np_array = True
             A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
         plans = self.build_fft_plan(A)

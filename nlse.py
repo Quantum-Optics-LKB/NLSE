@@ -11,10 +11,18 @@ import numpy as np
 import pyfftw
 from scipy.constants import c, epsilon_0, hbar, atomic_mass
 from scipy.ndimage import zoom
+from typing import Any
 
 BACKEND = "GPU"
-PRECISION_REAL = np.float64
-PRECISION_COMPLEX = np.complex128
+PRECISION = "double"
+if PRECISION == "double":
+    PRECISION_REAL = np.float64
+    PRECISION_COMPLEX = np.complex128
+else:
+    PRECISION_REAL = np.float32
+    PRECISION_COMPLEX = np.complex64
+
+np.random.seed(1)
 
 if BACKEND == "GPU":
     try:
@@ -312,53 +320,53 @@ class NLSE:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-            if BACKEND == "GPU":
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-                # linear step in Fourier domain (shifted)
-                cp.multiply(A, propagator, out=A)
-                plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-                # fft normalization
-                A /= A.shape[-2] * A.shape[-1]
+        if BACKEND == "GPU":
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+            # linear step in Fourier domain (shifted)
+            cp.multiply(A, propagator, out=A)
+            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+            # fft normalization
+            A /= A.shape[-2] * A.shape[-1]
+        else:
+            plan_fft(input_array=A, output_array=A)
+            np.multiply(A, propagator, out=A)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+        if precision == "double":
+            if V is None:
+                kernels.nl_prop_without_V(
+                    A,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
             else:
-                plan_fft(input_array=A, output_array=A)
-                np.multiply(A, propagator, out=A)
-                plan_ifft(input_array=A, output_array=A, normalise_idft=True)
-            if precision == "double":
-                if V is None:
-                    kernels.nl_prop_without_V(
-                        A,
-                        self.delta_z/2,
-                        self.alpha/2,
-                        self.k / 2 * self.n2 * c * epsilon_0,
-                        2 * self.I_sat / (epsilon_0 * c),
-                    )
-                else:
-                    kernels.nl_prop(
-                        A,
-                        self.delta_z/2,
-                        self.alpha/2,
-                        self.k / 2 * V,
-                        self.k / 2 * self.n2 * c * epsilon_0,
-                        2 * self.I_sat / (epsilon_0 * c),
-                    )
+                kernels.nl_prop(
+                    A,
+                    self.delta_z/2,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+        else:
+            if V is None:
+                kernels.nl_prop_without_V(
+                    A,
+                    self.delta_z,
+                    self.alpha/2,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
             else:
-                if V is None:
-                    kernels.nl_prop_without_V(
-                        A,
-                        self.delta_z,
-                        self.alpha/2,
-                        self.k / 2 * self.n2 * c * epsilon_0,
-                        2 * self.I_sat / (epsilon_0 * c),
-                    )
-                else:
-                    kernels.nl_prop(
-                        A,
-                        self.delta_z,
-                        self.alpha/2,
-                        self.k / 2 * V,
-                        self.k / 2 * self.n2 * c * epsilon_0,
-                        2 * self.I_sat / (epsilon_0 * c),
-                    )
+                kernels.nl_prop(
+                    A,
+                    self.delta_z,
+                    self.alpha/2,
+                    self.k / 2 * V,
+                    self.k / 2 * self.n2 * c * epsilon_0,
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
 
     def out_field(
         self,
@@ -2107,7 +2115,8 @@ class NLSE_1d_adim(NLSE_1d):
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX
-        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
+        Z = np.arange(0, z,
+                      step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
@@ -2163,12 +2172,12 @@ class NLSE_1d_adim(NLSE_1d):
             self.split_step(A, V, propagator, plans, precision)
             if callback is not None:
                 callback(self, A, z, i)
-        pbar.close()
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
+            pbar.close()
             if BACKEND == "GPU":
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)")
@@ -2265,6 +2274,93 @@ class NLSE_1d_adim(NLSE_1d):
         bq = 0.5*(-2*1j*(E_q/eps_q)**0.5 * theta_q +
                   (E_q/eps_q)**-0.5 * rho_q)
         bq[0] = 0
+        return bq
+
+    def bogo_disp(self, q: Any) -> Any:
+        """Returns the Bogoliubov dispersion relation assuming
+        a constant density
+
+        Args:
+            q (Any): Wavenumber
+
+        Returns:
+            Any: The corresponding Bogoliubov frequency
+        """
+        # return self.c*np.abs(q)*np.sqrt(1 + self.xi**2 * q**2)
+        return np.sqrt((q**2/(2*self.m))*(q**2/(2*self.m) + 2*self.n2*self.rho0))
+
+    def thermal_state(self, T: float, nb_real: int = 1) -> Any:
+        """Defines a thermal state of Bogoliubov excitations
+
+        Args:
+            T (float): The temperature of the state
+            nb_real (int, optional): Number of realizations. Defaults to 1.
+
+        Returns:
+            Any: The thermal state of shape (n_real, NX) psi_x and the 
+            corresponding Bogoliubov modes bq
+        """
+        eps_q = self.bogo_disp(self.Kx)
+        eps_q[0] = 1
+        E_q = self.Kx**2/(2*self.m)
+        E_q[0] = 1
+        var_X = T/eps_q
+        var_X[0] = 0
+        sigma = np.sqrt(0.5*var_X)
+        Re_X = np.random.normal(0, sigma, (nb_real, self.NX))
+        Im_X = np.random.normal(0, sigma, (nb_real, self.NX))
+
+        bq = Re_X + 1j*Im_X
+
+        bmq = np.roll(bq[:, ::-1], 1, axis=1)
+        theta_q = (1j/2)*np.sqrt(eps_q/E_q) * (bq - np.conj(bmq))
+        theta_q[..., 0] = 1.0
+
+        delta_rho_q = np.sqrt(E_q/eps_q) * (np.conj(bmq) + bq)
+        delta_rho_q[..., 0] = 1.0
+        delta_rho_x = np.real(np.fft.ifft(delta_rho_q))
+        theta_x = np.real(np.fft.ifft(theta_q))
+
+        rho_x = self.rho0 + delta_rho_x
+        psi_x = np.sqrt(rho_x) * np.exp(1j*theta_x)
+        return psi_x, bq
+
+    def thermal_state_kulkarni(self, T: float, nb_real: int = 1) -> Any:
+        eps_q = self.bogo_disp(self.Kx)
+        eps_q[0] = 1
+        E_q = self.Kx**2/(2*self.m)
+        E_q[0] = 1
+        alpha_q = np.sqrt(E_q/(E_q + 2*self.n2*self.rho0))
+        var_rho_q = self.rho0/(2*self.window)*alpha_q*T/eps_q
+        var_rho_q[0] = 1
+        var_theta_q = 1/(2*self.rho0*self.window)*T/(alpha_q*eps_q)
+        rho_q = np.random.normal(0, np.sqrt(var_rho_q), (nb_real, self.NX))
+        theta_q = np.random.normal(0, np.sqrt(var_theta_q), (nb_real, self.NX))
+        rho = np.real(np.fft.ifft(rho_q))
+        theta = np.real(np.fft.ifft(theta_q))
+        psi_x = rho*np.exp(1j*theta)
+        return psi_x
+
+    def get_bq(self, psi_x: Any) -> Any:
+        """Retrieves the distribution of Bogoliubov modes from a field
+
+        Args:
+            psi_x (Any): The field
+
+        Returns:
+            Any: The distribution of Bogoliubov modes in momentum space bq
+        """
+        eps_q = self.bogo_disp(self.Kx)
+        eps_q[0] = 1
+        E_q = self.Kx**2/(2*self.m)
+        E_q[0] = 1
+        theta_x = np.unwrap(np.angle(psi_x))
+        delta_rho_x = np.abs(psi_x)**2
+        theta_q = np.fft.fft(theta_x)
+        delta_rho_q = np.fft.fft(delta_rho_x)
+        bq = 0.5*(-2*1j*np.sqrt(E_q/eps_q) * theta_q +
+                  np.sqrt(eps_q/E_q) * delta_rho_q)
+        bq[..., 0] = 0
         return bq
 
 

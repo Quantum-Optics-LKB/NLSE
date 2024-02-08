@@ -456,7 +456,7 @@ class NLSE:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
             if callback is not None:
-                callback(self, A, z)
+                callback(self, A, z, i)
 
         if verbose:
             pbar.close()
@@ -826,7 +826,7 @@ class NLSE_1d:
                 pbar.update(1)
             self.split_step(A, V, propagator, plans, precision)
             if callback is not None:
-                callback(self, A, z)
+                callback(self, A, z, i)
         if verbose:
             pbar.close()
         if BACKEND == "GPU":
@@ -1201,7 +1201,7 @@ class CNLSE(NLSE):
                 A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
             )
             if callback is not None:
-                callback(self, A, z)
+                callback(self, A, z, i)
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -1602,7 +1602,7 @@ class CNLSE_1d(NLSE_1d):
                 A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
             )
             if callback is not None:
-                callback(self, A, z)
+                callback(self, A, z, i)
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -1944,12 +1944,12 @@ class GPE:
         if verbose:
             pbar = tqdm.tqdm(total=len(Ts), position=4,
                              desc="Iteration", leave=False)
-        for _ in Ts:
+        for i, _ in enumerate(Ts):
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
             if callback is not None:
-                callback(self, A, _)
+                callback(self, A, _, i)
         if verbose:
             pbar.close()
 

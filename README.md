@@ -59,11 +59,11 @@ The take-home message is that the array shape should be compliant with `numpy` [
 
 #### Callbacks
 
-The `out_field` functions support callbacks with the following signature `callback(self, A, z)` where `self` is the class instance, `A` is the field and `z` is the current position. 
+The `out_field` functions support callbacks with the following signature `callback(self, A, z, i)` where `self` is the class instance, `A` is the field, `z` is the current position and `i` the main loop index. 
 For example if you want to print the number of steps every 100 steps, this is the callback you could write :
 
 ```python
-def callback(nlse, A, z):
+def callback(nlse, A, z, i):
     n = int(z/nlse.delta_z)
     if n % 100 == 0:
         print(n)

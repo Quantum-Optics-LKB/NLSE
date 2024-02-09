@@ -391,6 +391,7 @@ class NLSE:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-2] == self.NY and E_in.shape[-1] == self.NX
+        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
@@ -773,7 +774,8 @@ class NLSE_1d:
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
-        assert E_in.shape[-1] == self.NX
+        assert E_in.shape[-1] == self.NX, "Shape mismatch"
+        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) == np.ndarray:
@@ -1124,11 +1126,12 @@ class CNLSE(NLSE):
         """
         assert E.shape[-2] == self.NY and E.shape[-1] == self.NX, (
             f"Shape mismatch ! Simulation grid size is {(self.NY, self.NX)}"
-            " and array shape is {(E.shape[-2], E.shape[-1])}"
+            f" and array shape is {(E.shape[-2], E.shape[-1])}"
         )
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
+        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) == np.ndarray:
@@ -1540,6 +1543,7 @@ class CNLSE_1d(NLSE_1d):
         assert E.ndim >= 2, (
             "Input number of dimensions should at least be 2 !" " (2, NX)"
         )
+        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) == np.ndarray:
@@ -1887,6 +1891,7 @@ class GPE:
             np.ndarray: Propagated field in proper units atoms/m
         """
         assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
+        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Ts = np.arange(0, T, step=self.delta_t, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(psi) == np.ndarray:
@@ -1944,12 +1949,12 @@ class GPE:
         if verbose:
             pbar = tqdm.tqdm(total=len(Ts), position=4,
                              desc="Iteration", leave=False)
-        for i, _ in enumerate(Ts):
+        for _ in Ts:
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
             if callback is not None:
-                callback(self, A, _, i)
+                callback(self, A, _)
         if verbose:
             pbar.close()
 
@@ -2115,6 +2120,7 @@ class NLSE_1d_adim(NLSE_1d):
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX
+        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z,
                       step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
@@ -2207,75 +2213,6 @@ class NLSE_1d_adim(NLSE_1d):
             plt.show()
         return A
 
-    # def bogo_disp(self, q: float) -> np.ndarray:
-    #     """_summary_
-
-    #     Args:
-    #         q (float): Momentum
-
-    #     Returns:
-    #         any: The bogoliubov dispersion at this momentum
-    #     """
-    #     return self.c*np.abs(q)*np.sqrt(1 + self.xi**2 * q**2)
-
-    # def thermal_state(self, T: float, n_real: int = 1) -> np.ndarray:
-    #     """Generates a thermal state at temperature T
-
-    #     Args:
-    #         T (float): Temperature in dimensionless units
-
-    #     Returns:
-    #         np.ndarray: The thermal state
-    #     """
-    #     eps_q = cp.asarray(self.bogo_disp(self.Kx))
-    #     E_q = cp.asarray(self.Kx**2/(2*self.m))
-    #     var = T/eps_q
-    #     var[0] = 1
-    #     sigma = np.sqrt(.5*var)
-    #     if n_real == 1:
-    #         Re_X = cp.random.normal(0, sigma, self.NX)
-    #         Im_X = cp.random.normal(0, sigma, self.NX)
-    #     else:
-    #         Re_X = cp.random.normal(0, sigma, (n_real, self.NX))
-    #         Im_X = cp.random.normal(0, sigma, (n_real, self.NX))
-    #     bq = Re_X + 1j*Im_X
-    #     if n_real == 1:
-    #         bmq = cp.roll(bq[::-1], 1)
-    #     else:
-    #         bmq = cp.roll(bq[:, ::-1], 1, axis=-1)
-    #     # phase distrib in k space
-    #     theta_q = (1j/2)*cp.sqrt(eps_q/E_q) * (bq - cp.conj(bmq))
-    #     theta_q[0] = 0.0
-    #     # density distrib in k space
-    #     delta_rho_q = cp.sqrt(E_q/eps_q) * (cp.conj(bmq) + bq)
-    #     delta_rho_q[0] = 0.0
-    #     # density distrib in real space
-    #     delta_rho_x = cp.real(cp.fft.ifft(delta_rho_q, axis=-1))/self.window
-    #     theta_x = cp.real(cp.fft.ifft(theta_q, axis=-1))
-    #     rho_x = self.rho0 + delta_rho_x
-    #     psi_x = cp.sqrt(rho_x) * cp.exp(1j*theta_x)
-    #     return psi_x
-
-    # def get_bq(self, psi: cp.ndarray) -> cp.ndarray:
-        """Retrieves the distribution of Bogoliubov modes from a field
-
-        Args:
-            psi (cp.ndarray): Field
-
-        Returns:
-            cp.ndarray: the distribution of Bogoliubov modes in momentum space
-        """
-        eps_q = cp.asarray(self.bogo_disp(self.Kx))
-        E_q = cp.asarray(self.Kx**2/(2*self.m))
-        theta = cp.angle(psi)
-        rho = cp.abs(psi)**2 - self.rho0
-        theta_q = cp.fft.fft(theta, axis=-1)
-        rho_q = cp.fft.fft(rho, axis=-1)*self.window
-        bq = 0.5*(-2*1j*(E_q/eps_q)**0.5 * theta_q +
-                  (E_q/eps_q)**-0.5 * rho_q)
-        bq[0] = 0
-        return bq
-
     def bogo_disp(self, q: Any) -> Any:
         """Returns the Bogoliubov dispersion relation assuming
         a constant density
@@ -2324,22 +2261,6 @@ class NLSE_1d_adim(NLSE_1d):
         rho_x = self.rho0 + delta_rho_x
         psi_x = np.sqrt(rho_x) * np.exp(1j*theta_x)
         return psi_x, bq
-
-    def thermal_state_kulkarni(self, T: float, nb_real: int = 1) -> Any:
-        eps_q = self.bogo_disp(self.Kx)
-        eps_q[0] = 1
-        E_q = self.Kx**2/(2*self.m)
-        E_q[0] = 1
-        alpha_q = np.sqrt(E_q/(E_q + 2*self.n2*self.rho0))
-        var_rho_q = self.rho0/(2*self.window)*alpha_q*T/eps_q
-        var_rho_q[0] = 1
-        var_theta_q = 1/(2*self.rho0*self.window)*T/(alpha_q*eps_q)
-        rho_q = np.random.normal(0, np.sqrt(var_rho_q), (nb_real, self.NX))
-        theta_q = np.random.normal(0, np.sqrt(var_theta_q), (nb_real, self.NX))
-        rho = np.real(np.fft.ifft(rho_q))
-        theta = np.real(np.fft.ifft(theta_q))
-        psi_x = rho*np.exp(1j*theta)
-        return psi_x
 
     def get_bq(self, psi_x: Any) -> Any:
         """Retrieves the distribution of Bogoliubov modes from a field
@@ -2458,7 +2379,6 @@ def flatTop_super(
 
     grating_axe = ((grating_axe + grating_axe_vert) % 1) * output
     return grating_axe
-
 
 if __name__ == "__main__":
     trans = 0.5

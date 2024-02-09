@@ -57,6 +57,11 @@ a `(N_n2, N_alpha, Ny, Nx)` array.
 
 The take-home message is that the array shape should be compliant with `numpy` [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html).
 
+#### Numerical precision
+
+In order to reach the best performance, the numerical precision is hardcoded as a constant variable at the top of `nlse.py`. 
+When importing the solvers like `NLSE`, the data types of the input arrays must match the data type given as input of `out_field`.
+
 #### Callbacks
 
 The `out_field` functions support callbacks with the following signature `callback(self, A, z, i)` where `self` is the class instance, `A` is the field, `z` is the current position and `i` the main loop index. 

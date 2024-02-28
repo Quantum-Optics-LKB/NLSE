@@ -1131,7 +1131,7 @@ class CNLSE(NLSE):
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
-        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) == np.ndarray:

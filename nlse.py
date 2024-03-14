@@ -2422,7 +2422,7 @@ if __name__ == "__main__":
     ) -> np.ndarray:
         """Shear two components.
 
-        Generates the phase mask to create two counterstreaming shearing 
+        Generates the phase mask to create two counterstreaming shearing
         components.
 
         Args:

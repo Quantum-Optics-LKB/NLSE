@@ -1,7 +1,7 @@
 """
 NLSE.
 
-A package for solving the Nonlinear Schrödinger Equation (NLSE) using the 
+A package for solving the Nonlinear Schrödinger Equation (NLSE) using the
 Split-Step Fourier method.
 """
 

@@ -11,8 +11,9 @@ setup(
     author='Tangui Aladjidi',
     author_email='tangui.aladjidi@lkb.upmc.fr',
     license='MIT',
-    packages=['nlse'],
-    install_requires=["numpy", "scipy", "matplotlib", "tqdm"],
+    packages=['NLSE'],
+    install_requires=["numpy", "scipy",
+                      "matplotlib", "tqdm", "pyfftw", "numba"],
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Science/Research',

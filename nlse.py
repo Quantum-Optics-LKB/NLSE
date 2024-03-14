@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @author: Tangui Aladjidi / Clara Piekarski
-
+"""NLSE Main module."""
 import multiprocessing
 import pickle
 import time
@@ -43,7 +43,7 @@ else:
 
 
 class NLSE:
-    """A class to solve NLSE"""
+    """A class to solve NLSE."""
 
     def __init__(
         self,
@@ -58,9 +58,10 @@ class NLSE:
         Isat: float = np.inf,
         wvl: float = 780e-9
     ) -> object:
-        """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
-          k0 n2 psi**2 psi
+        """Instantiate the simulation.
+
+        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn
+        psi + k0 n2 psi**2 psi
         Args:
             alpha (float): alpha
             puiss (float): Power in W
@@ -78,7 +79,8 @@ class NLSE:
         self.alpha = alpha
         self.puiss = puiss
         self.I_sat = Isat
-        # number of grid points in X (even, best is power of 2 or low prime factors)
+        # number of grid points in X (even, best is power of 2 or low
+        # prime factors)
         self.NX = NX
         self.NY = NY
         self.window = window
@@ -114,17 +116,19 @@ class NLSE:
     def plot_2d(
         self, ax, Z, X, AMP, title, cmap="viridis", label=r"$X$ (mm)", **kwargs
     ):
-        """Plots a 2d amplitude on an equidistant Z * X grid.
+        """Plot a 2d amplitude on an equidistant Z * X grid.
 
         Args:
-            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
+            ax (matplotlib.Axes): The ax instance on which the plot will be
+            drawn
             Z (np.ndarray): the X axis values
             X (np.ndarray): the Y axis values
             AMP (np.ndarray): The 2D field to plot
             title (str): Title of the plot
             cmap (str, optional): Colormap. Defaults to 'viridis'.
             label (str, optional): Label for the x axis. Defaults to r'$ (mm)'.
-            vmax (int, optional): Maximum value for cmap normalization. Defaults to 1.
+            vmax (int, optional): Maximum value for cmap normalization.
+            Defaults to 1.
         """
         im = ax.imshow(
             AMP,
@@ -143,10 +147,11 @@ class NLSE:
     def plot_1d(
         self, ax, T, labelT, AMP, labelAMP, PHASE, labelPHASE, Tmin, Tmax
     ) -> None:
-        """Plots a 1D slice of a 2D field with amplitude and phase
+        """Plot a 1D slice of a 2D field with amplitude and phase.
 
         Args:
-            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
+            ax (matplotlib.Axes): The ax instance on which the plot will be
+            drawn
             T (np.ndarray): The x axis
             labelT (str):  x axis label
             AMP (np.ndarray): The field slice
@@ -168,11 +173,13 @@ class NLSE:
 
         return
 
-    def plot_1d_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax, color="b") -> None:
-        """Plots a 1D slice of a 2D field
+    def plot_1d_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax,
+                    color="b") -> None:
+        """Plot a 1D slice of a 2D field.
 
         Args:
-            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
+            ax (matplotlib.Axes): The ax instance on which the plot will be
+            drawn
             T (np.ndarray): The x axis
             labelT (str):  x axis label
             AMP (np.ndarray): The field slice
@@ -190,11 +197,11 @@ class NLSE:
         return
 
     def slm(self, pattern: np.ndarray, d_slm: float) -> np.ndarray:
-        """Resizes the SLM pattern according to the sampling size chosen
+        """Resize the SLM pattern according to the sampling size chosen.
 
         Args:
             pattern (np.ndarray): Pattern displayed on the SLM
-            d_slm (_type_): Pixel pitch of the SLM
+            d_slm (float): Pixel pitch of the SLM in m
 
         Returns:
             np.ndarray: Resized pattern.
@@ -215,7 +222,7 @@ class NLSE:
         return phase
 
     def build_propagator(self, k: float) -> np.ndarray:
-        """Builds the linear propagation matrix
+        """Build the linear propagation matrix.
 
         Args:
             precision (str, optional): "single" or "double" application of the
@@ -233,7 +240,7 @@ class NLSE:
             return propagator
 
     def build_fft_plan(self, A: np.ndarray) -> list:
-        """Builds the FFT plan objects for propagation
+        """Build the FFT plan objects for propagation.
 
         Args:
             A (np.ndarray): Array to transform.
@@ -244,7 +251,8 @@ class NLSE:
             # plan_fft = fftpack.get_fft_plan(
             #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
-                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1), value_type="C2C"
+                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1),
+                value_type="C2C"
             )
             return [plan_fft]
         else:
@@ -284,18 +292,17 @@ class NLSE:
         plans: list,
         precision: str = "single",
     ):
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Field to propagate
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
+            plans (list): List of FFT plan objects. Either a single FFT plan
+            for both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
-            propagation step.
-            Defaults to "single".
+            precision (str, optional): Single or double application of the
+            linear propagation step. Defaults to "single".
         """
         if BACKEND == "GPU":
             # on GPU, only one plan for both FFT directions
@@ -378,34 +385,41 @@ class NLSE:
         normalize: bool = True,
         callback: callable = None,
     ) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): Does a "double" or a "single"
+            application of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
+            verbose (bool, optional): Prints progress and time.
+            Defaults to True.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-2] == self.NY and E_in.shape[-1] == self.NX
-        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E_in.dtype == PRECISION_COMPLEX, (
+            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        )
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
-            if type(E_in) == np.ndarray:
+            if type(E_in) is np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
-                    np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                    np.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
+                    axis=(-2, -1)
                 )
                 return_np_array = True
-            elif type(E_in) == cp.ndarray:
+            elif type(E_in) is cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
-                    cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                    cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
+                    axis=(-2, -1)
                 )
                 return_np_array = False
         else:
@@ -426,14 +440,14 @@ class NLSE:
         if self.propagator is None:
             self.propagator = self.build_propagator(self.k)
         if BACKEND == "GPU":
-            if type(self.V) == np.ndarray:
+            if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
+            elif type(self.V) is cp.ndarray:
                 # V = self.V.copy()
                 V = self.V
             if self.V is None:
                 V = self.V
-            if type(A) != cp.ndarray:
+            if type(A) is not cp.ndarray:
                 A = cp.asarray(A)
         else:
             if self.V is None:
@@ -461,7 +475,7 @@ class NLSE:
 
         if verbose:
             pbar.close()
-
+        t_cpu = time.perf_counter()-t0
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -469,11 +483,12 @@ class NLSE:
         if verbose:
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
+                    " / {t_cpu} s (CPU)"
                 )
             else:
                 print(
-                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -494,7 +509,8 @@ class NLSE:
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
             self.plot_2d(a1, self.X * 1e3, self.Y * 1e3,
-                         np.abs(A_plot)**2*epsilon_0*c/2*1e-4, r"I in $W/cm^{-2}$")
+                         np.abs(A_plot)**2*epsilon_0*c/2*1e-4,
+                         r"I in $W/cm^{-2}$")
             a2 = fig.add_subplot(222)
             self.plot_2d(
                 a2,
@@ -544,7 +560,7 @@ class NLSE:
 
 
 class NLSE_1d:
-    """A class to solve NLSE in 1d"""
+    """A class to solve NLSE in 1d."""
 
     def __init__(
         self,
@@ -558,9 +574,10 @@ class NLSE_1d:
         Isat: float = np.inf,
         wvl: float = 780e-9
     ) -> object:
-        """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
-          k0 n2 psi**2 psi
+        """Instantiate the simulation.
+
+        Solves an equation :
+        d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi + k0 n2 psi**2 psi
         Args:
             alpha (float): Transmission coeff
             puiss (float): Power in W
@@ -578,7 +595,8 @@ class NLSE_1d:
         self.puiss = puiss
         self.I_sat = Isat
 
-        # number of grid points in X (even, best is power of 2 or low prime factors)
+        # number of grid points in X (even, best is power of 2 or low
+        # prime factors)
         self.NX = NX
         self.window = window
         rho0 = puiss/L**2
@@ -600,7 +618,7 @@ class NLSE_1d:
         self.plans = None
 
     def build_propagator(self, k: float) -> np.ndarray:
-        """Builds the linear propagation matrix
+        """Build the linear propagation matrix.
 
         Args:
             precision (str, optional): "single" or "double" application of the
@@ -616,7 +634,7 @@ class NLSE_1d:
             return propagator
 
     def build_fft_plan(self, A: np.ndarray) -> list:
-        """Builds the FFT plan objects for propagation
+        """Build the FFT plan objects for propagation.
 
         Args:
             A (np.ndarray): Array to transform.
@@ -663,17 +681,17 @@ class NLSE_1d:
         plans: list,
         precision: str = "single",
     ):
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Field to propagate
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for both
-              directions
+            plans (list): List of FFT plan objects.
+            Either a single FFT plan for both directions.
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
-            propagation step.
+            precision (str, optional): Single or double application of the
+            nonlinear propagation step.
             Defaults to "single".
         """
         if BACKEND == "GPU":
@@ -760,29 +778,35 @@ class NLSE_1d:
         normalize: bool = True,
         callback: callable = None
     ) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): Does a "double" or a "single"
+            application of the nonlinear step
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
-            normalize (bool, optional): Normalizes the field to V/m. Defaults to True.
+            verbose (bool, optional): Prints progress and time.
+            Defaults to True.
+            normalize (bool, optional): Normalizes the field to V/m.
+            Defaults to True.
             Used to be able to reuse fields that have already been propagated.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX, "Shape mismatch"
-        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E_in.dtype == PRECISION_COMPLEX, (
+            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        )
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
-            if type(E_in) == np.ndarray:
+            if type(E_in) is np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
                 return_np_array = True
-            elif type(E_in) == cp.ndarray:
+            elif type(E_in) is cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
                 return_np_array = False
@@ -798,13 +822,13 @@ class NLSE_1d:
             A[:] = E_in
         propagator = self.build_propagator(self.k)
         if BACKEND == "GPU":
-            if type(self.V) == np.ndarray:
+            if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
+            elif type(self.V) is cp.ndarray:
                 V = self.V.copy()
             if self.V is None:
                 V = self.V
-            if type(A) != cp.ndarray:
+            if type(A) is not cp.ndarray:
                 A = cp.asarray(A)
         else:
             if self.V is None:
@@ -831,6 +855,7 @@ class NLSE_1d:
                 callback(self, A, z, i)
         if verbose:
             pbar.close()
+        t_cpu = time.perf_counter()-t0
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -838,11 +863,12 @@ class NLSE_1d:
         if verbose:
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
+                    " / {t_cpu} s (CPU)"
                 )
             else:
                 print(
-                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -872,7 +898,7 @@ class NLSE_1d:
 
 
 class CNLSE(NLSE):
-    """A class to solve the coupled NLSE"""
+    """A class to solve the coupled NLSE."""
 
     def __init__(
         self,
@@ -887,7 +913,7 @@ class CNLSE(NLSE):
         NY: int = 1024,
         Isat: float = np.inf,
     ) -> object:
-        """Instantiates the class with all the relevant physical parameters
+        """Instantiate the class with all the relevant physical parameters.
 
         Args:
             alpha (float): alpha through the cell
@@ -900,8 +926,8 @@ class CNLSE(NLSE):
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the
+            same for both components. Defaults to infinity.
         Returns:
             object: CNLSE class instance
         """
@@ -932,7 +958,7 @@ class CNLSE(NLSE):
         plans: list,
         precision: str = "single",
     ) -> None:
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
@@ -941,11 +967,11 @@ class CNLSE(NLSE):
             V (np.ndarray): Potential field (can be None).
             propagator1 (np.ndarray): Propagator matrix for field 1.
             propagator2 (np.ndarray): Propagator matrix for field 2.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
+            plans (list): List of FFT plan objects.
+            Either a single FFT plan for both directions.
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
-            propagation step.
+            precision (str, optional): Single or double application of the
+            nonlinear propagation step.
             Defaults to "single".
         Returns:
             None
@@ -1112,15 +1138,18 @@ class CNLSE(NLSE):
         normalize: bool = True,
         callback: callable = None
     ) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
         Args:
             E (np.ndarray): Fields tensor of shape (XX, 2, NY, NX).
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): Does a "double" or a "single"
+            application of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
+            verbose (bool, optional): Prints progress and time.
+            Defaults to True.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
@@ -1131,17 +1160,19 @@ class CNLSE(NLSE):
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
-        assert E.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E.dtype == PRECISION_COMPLEX, (
+            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        )
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
-            if type(E) == np.ndarray:
+            if type(E) is np.ndarray:
                 A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
                     np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
                 )
                 puiss_arr = np.array([self.puiss, self.puiss2])
                 return_np_array = True
-            elif type(E) == cp.ndarray:
+            elif type(E) is cp.ndarray:
                 A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
                     np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
@@ -1170,13 +1201,13 @@ class CNLSE(NLSE):
             self.propagator1 = self.build_propagator(self.k)
             self.propagator2 = self.build_propagator(self.k2)
         if BACKEND == "GPU":
-            if type(self.V) == np.ndarray:
+            if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
+            elif type(self.V) is cp.ndarray:
                 V = self.V.copy()
             if self.V is None:
                 V = self.V
-            if type(A) != cp.ndarray:
+            if type(A) is not cp.ndarray:
                 A = cp.asarray(A)
                 A1_old = cp.asarray(A1_old)
         else:
@@ -1201,7 +1232,8 @@ class CNLSE(NLSE):
             if verbose:
                 pbar.update(1)
             self.split_step(
-                A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
+                A, A1_old, V, self.propagator1, self.propagator2, self.plans,
+                precision
             )
             if callback is not None:
                 callback(self, A, z, i)
@@ -1209,15 +1241,17 @@ class CNLSE(NLSE):
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
+        t_cpu = time.perf_counter()-t0
         if verbose:
             pbar.close()
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
+                    " / {t_cpu} s (CPU)"
                 )
             else:
                 print(
-                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -1285,7 +1319,7 @@ class CNLSE(NLSE):
 
 
 class CNLSE_1d(NLSE_1d):
-    """A class to solve the 1D coupled NLSE"""
+    """A class to solve the 1D coupled NLSE."""
 
     def __init__(
         self,
@@ -1300,7 +1334,7 @@ class CNLSE_1d(NLSE_1d):
         NX: int = 1024,
         Isat: float = np.inf,
     ) -> object:
-        """Instantiates the class with all the relevant physical parameters
+        """Instantiate the class with all the relevant physical parameters.
 
         Args:
             alpha (float): Alpha through the cell
@@ -1312,8 +1346,8 @@ class CNLSE_1d(NLSE_1d):
             V (np.ndarray): Potential landscape in a.u
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the
+            same for both components. Defaults to infinity.
         Returns:
             object: CNLSE class instance
         """
@@ -1345,7 +1379,7 @@ class CNLSE_1d(NLSE_1d):
         plans: list,
         precision: str = "single",
     ) -> None:
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
@@ -1354,11 +1388,11 @@ class CNLSE_1d(NLSE_1d):
             V (np.ndarray): Potential field (can be None).
             propagator1 (np.ndarray): Propagator matrix for field 1.
             propagator2 (np.ndarray): Propagator matrix for field 2.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
+            plans (list): List of FFT plan objects.
+            Either a single FFT plan for both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
-            propagation step.
+            precision (str, optional): Single or double application of the
+            nonlinear propagation step.
             Defaults to "single".
         Returns:
             None
@@ -1524,15 +1558,18 @@ class CNLSE_1d(NLSE_1d):
         normalize: bool = True,
         callback: callable = None
     ) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
         Args:
             E (np.ndarray): Fields tensor of shape (XX, 2, NX).
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): Does a "double" or a "single"
+            application of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
+            verbose (bool, optional): Prints progress and time.
+            Defaults to True.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
@@ -1543,14 +1580,16 @@ class CNLSE_1d(NLSE_1d):
         assert E.ndim >= 2, (
             "Input number of dimensions should at least be 2 !" " (2, NX)"
         )
-        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E_in.dtype == PRECISION_COMPLEX, (
+            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        )
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
-            if type(E) == np.ndarray:
+            if type(E) is np.ndarray:
                 A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
                 return_np_array = True
-            elif type(E) == cp.ndarray:
+            elif type(E) is cp.ndarray:
                 A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
                 return_np_array = False
@@ -1572,13 +1611,13 @@ class CNLSE_1d(NLSE_1d):
             self.propagator1 = self.build_propagator(self.k, precision)
             self.propagator2 = self.build_propagator(self.k2, precision)
         if BACKEND == "GPU":
-            if type(self.V) == np.ndarray:
+            if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
+            elif type(self.V) is cp.ndarray:
                 V = self.V.copy()
             if self.V is None:
                 V = self.V
-            if type(A) != cp.ndarray:
+            if type(A) is not cp.ndarray:
                 A = cp.asarray(A)
                 A1_old = cp.asarray(A1_old)
         else:
@@ -1603,7 +1642,8 @@ class CNLSE_1d(NLSE_1d):
             if verbose:
                 pbar.update(1)
             self.split_step(
-                A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
+                A, A1_old, V, self.propagator1, self.propagator2, self.plans,
+                precision
             )
             if callback is not None:
                 callback(self, A, z, i)
@@ -1611,41 +1651,44 @@ class CNLSE_1d(NLSE_1d):
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
+        t_cpu = time.perf_counter()-t0
         if verbose:
             pbar.close()
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
+                    " / {t_cpu} s (CPU)"
                 )
             else:
                 print(
-                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
 
-            # if plot:
-            #     if not (return_np_array):
-            #         A_1_plot = A[0, :].get()
-            #         A_2_plot = A[1, :].get()
-            #     elif return_np_array or BACKEND == 'CPU':
-            #         A_1_plot = A[0, :].copy()
-            #         A_2_plot = A[1, :].copy()
-            #     fig = plt.figure(layout='constrained')
-            #     # plot amplitudes and phases
-            #     a1 = fig.add_subplot(211)
-            #     self.plot_1d(a1, self.X*1e3, np.abs(A_1_plot)**2,
-            #                  r'$|\psi_1|^2$',np.angle(A_1_plot), r'arg$(\psi_1)$')
-            #     a2 = fig.add_subplot(212)
-            #     self.plot_2d(a2, self.X*1e3, np.abs(A_2_plot)**2,
-            #                  r'$|\psi_2|^2$',np.angle(A_2_plot), r'arg$(\psi_2)$')
-
+            if plot:
+                if not (return_np_array):
+                    A_1_plot = A[0, :].get()
+                    A_2_plot = A[1, :].get()
+                elif return_np_array or BACKEND == 'CPU':
+                    A_1_plot = A[0, :].copy()
+                    A_2_plot = A[1, :].copy()
+                fig = plt.figure(layout='constrained')
+                # plot amplitudes and phases
+                a1 = fig.add_subplot(211)
+                self.plot_1d(a1, self.X*1e3, np.abs(A_1_plot)**2,
+                             r'$|\psi_1|^2$', np.angle(A_1_plot),
+                             r'arg$(\psi_1)$')
+                a2 = fig.add_subplot(212)
+                self.plot_2d(a2, self.X*1e3, np.abs(A_2_plot)**2,
+                             r'$|\psi_2|^2$', np.angle(A_2_plot),
+                             r'arg$(\psi_2)$')
             plt.show()
         return A
 
 
 class GPE:
-    """A class to solve GPE"""
+    """A class to solve GPE."""
 
     def __init__(
         self,
@@ -1659,9 +1702,10 @@ class GPE:
         NY: int = 1024,
         sat: float = np.inf,
     ) -> object:
-        """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
-          k0 n2 psi**2 psi
+        """Instantiate the simulation.
+
+        Solves an equation : d/dt psi = -1/2m(d2/dx2 + d2/dy2) psi + V psi +
+          g psi**2 psi
         Args:
             gamma (float): Losses in Hz
             N (float): Total number of atoms
@@ -1678,7 +1722,8 @@ class GPE:
         self.N = N
         self.m = m
         self.sat = sat
-        # number of grid points in X (even, best is power of 2 or low prime factors)
+        # number of grid points in X (even, best is power of 2 or
+        # low prime factors)
         self.NX = NX
         self.NY = NY
         self.window = window
@@ -1711,8 +1756,9 @@ class GPE:
         self.propagator = None
         self.plans = None
 
-    def build_propagator(self, m: float, precision: str = "single") -> np.ndarray:
-        """Builds the linear propagation matrix
+    def build_propagator(self, m: float,
+                         precision: str = "single") -> np.ndarray:
+        """Build the linear propagation matrix.
 
         Args:
             precision (str, optional): "single" or "double" application of the
@@ -1745,7 +1791,7 @@ class GPE:
             return propagator
 
     def build_fft_plan(self, A: np.ndarray) -> list:
-        """Builds the FFT plan objects for propagation
+        """Build the FFT plan objects for propagation.
 
         Args:
             A (np.ndarray): Array to transform.
@@ -1756,7 +1802,8 @@ class GPE:
             # plan_fft = fftpack.get_fft_plan(
             #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
-                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1), value_type="C2C"
+                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1),
+                value_type="C2C"
             )
             return [plan_fft]
         else:
@@ -1796,17 +1843,17 @@ class GPE:
         plans: list,
         precision: str = "single",
     ) -> None:
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Field to propagate
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
+            plans (list): List of FFT plan objects.
+            Either a single FFT plan for both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
-            propagation step.
+            precision (str, optional): Single or double application of the
+            nonlinear propagation step.
             Defaults to "single".
         """
         if BACKEND == "GPU":
@@ -1878,34 +1925,41 @@ class GPE:
         normalize: bool = True,
         callback: callable = None
     ) -> np.ndarray:
-        """Propagates the field at a time T
+        """Propagate the field at a time T.
+
         Args:
             psi (np.ndarray): Normalized input field (between 0 and 1)
             T (float): propagation time in s
             plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): Does a "double" or a "single"
+            application of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
+            verbose (bool, optional): Prints progress and time.
+            Defaults to True.
         Returns:
             np.ndarray: Propagated field in proper units atoms/m
         """
         assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
-        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E_in.dtype == PRECISION_COMPLEX, (
+            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        )
         Ts = np.arange(0, T, step=self.delta_t, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
-            if type(psi) == np.ndarray:
+            if type(psi) is np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty(psi.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
-                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y,
+                    axis=(-2, -1)
                 )
                 return_np_array = True
-            elif type(psi) == cp.ndarray:
+            elif type(psi) is cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = cp.empty(psi.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
-                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y,
+                    axis=(-2, -1)
                 )
                 return_np_array = False
         else:
@@ -1926,14 +1980,13 @@ class GPE:
         if self.propagator is None:
             self.propagator = self.build_propagator(self.m, precision)
         if BACKEND == "GPU":
-            if type(self.V) == np.ndarray:
+            if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
-                # V = self.V.copy()
+            elif type(self.V) is cp.ndarray:
                 V = self.V
             if self.V is None:
                 V = self.V
-            if type(A) != cp.ndarray:
+            if type(A) is not cp.ndarray:
                 A = cp.asarray(A)
         else:
             if self.V is None:
@@ -1962,14 +2015,16 @@ class GPE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
+        t_cpu = time.perf_counter()-t0
         if verbose:
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
+                    " / {t_cpu} s (CPU)"
                 )
             else:
                 print(
-                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_cpu} s (CPU)")
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
 
@@ -1987,8 +2042,10 @@ class GPE:
             im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))**2
             ext_real = [self.X[0]*1e3, self.X[-1] *
                         1e3, self.Y[0]*1e3, self.Y[-1]*1e3]
-            ext_fft = [self.Kx[self.Kx.size//2]*1e-3, self.Kx[self.Kx.size//2-1]*1e-3,
-                       self.Ky[self.Ky.size//2]*1e-3, self.Ky[self.Ky.size//2-1]*1e-3]
+            ext_fft = [self.Kx[self.Kx.size//2]*1e-3,
+                       self.Kx[self.Kx.size//2-1]*1e-3,
+                       self.Ky[self.Ky.size//2]*1e-3,
+                       self.Ky[self.Ky.size//2-1]*1e-3]
             fig, ax = plt.subplots(1, 3)
             im = ax[0].imshow(np.abs(A_plot)**2,
                               cmap='viridis', extent=ext_real)
@@ -2012,6 +2069,7 @@ class GPE:
 
 
 class NLSE_1d_adim(NLSE_1d):
+    """A class to solve the 1D NLSE in adimensional units."""
 
     def __init__(
         self,
@@ -2025,6 +2083,7 @@ class NLSE_1d_adim(NLSE_1d):
         Isat: float = np.inf,
         wvl: float = 1,
     ) -> object:
+        """Instantiate the simulation."""
         super().__init__(alpha, puiss, window, n2, V, L, NX, Isat, wvl)
         self.m = 2*np.pi/self.wl
         self.rho0 = self.puiss/self.window
@@ -2032,10 +2091,10 @@ class NLSE_1d_adim(NLSE_1d):
         self.xi = 1/np.sqrt(4*self.n2*self.rho0*self.m)
 
     def build_propagator(self) -> np.ndarray:
-        """Builds the linear propagation matrix
+        """Build the linear propagation matrix.
 
         Args:
-            precision (str, optional): "single" or "double" application of the 
+            precision (str, optional): "single" or "double" application of the
             propagator.
             Defaults to "single".
         Returns:
@@ -2050,17 +2109,17 @@ class NLSE_1d_adim(NLSE_1d):
 
     def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray,
                    plans: list, precision: str = "single"):
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Field to propagate
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for both
-              directions
+            plans (list): List of FFT plan objects.
+            Either a single FFT plan for both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear 
-            propagation step.
+            precision (str, optional): Single or double application of the
+            nonlinear propagation step.
             Defaults to "single".
         """
         if BACKEND == "GPU":
@@ -2105,30 +2164,36 @@ class NLSE_1d_adim(NLSE_1d):
                   precision: str = "single", verbose: bool = True,
                   normalize: bool = True,
                   callback: callable = None) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            precision (str, optional): Does a "double" or a "single"
+            application of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
-            normalize (bool, optional): Normalizes the field to V/m. Defaults to True.
+            verbose (bool, optional): Prints progress and time.
+            Defaults to True.
+            normalize (bool, optional): Normalizes the field to V/m.
+            Defaults to True.
             Used to be able to reuse fields that have already been propagated.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX
-        assert E_in.dtype == PRECISION_COMPLEX, f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        assert E_in.dtype == PRECISION_COMPLEX, (
+            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        )
         Z = np.arange(0, z,
                       step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
-            if type(E_in) == np.ndarray:
+            if type(E_in) is np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
                 return_np_array = True
-            elif type(E_in) == cp.ndarray:
+            elif type(E_in) is cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(cp.abs(E_in)**2*self.delta_X, axis=-1)
                 return_np_array = False
@@ -2144,13 +2209,13 @@ class NLSE_1d_adim(NLSE_1d):
             A[:] = E_in
         propagator = self.build_propagator()
         if BACKEND == "GPU":
-            if type(self.V) == np.ndarray:
+            if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
+            elif type(self.V) is cp.ndarray:
                 V = self.V.copy()
             if self.V is None:
                 V = self.V
-            if type(A) != cp.ndarray:
+            if type(A) is not cp.ndarray:
                 A = cp.asarray(A)
         else:
             if self.V is None:
@@ -2182,14 +2247,15 @@ class NLSE_1d_adim(NLSE_1d):
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
+        t_cpu = time.perf_counter()-t0
         if verbose:
             pbar.close()
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {t_cpu} s (CPU)")
             else:
                 print(
-                    f"\nTime spent to solve : {time.perf_counter()-t0} s (CPU)")
+                    f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -2214,8 +2280,10 @@ class NLSE_1d_adim(NLSE_1d):
         return A
 
     def bogo_disp(self, q: Any) -> Any:
-        """Returns the Bogoliubov dispersion relation assuming
-        a constant density
+        """Return the dispersion.
+
+        Return the Bogoliubov dispersion relation assuming
+        a constant density.
 
         Args:
             q (Any): Wavenumber
@@ -2224,17 +2292,18 @@ class NLSE_1d_adim(NLSE_1d):
             Any: The corresponding Bogoliubov frequency
         """
         # return self.c*np.abs(q)*np.sqrt(1 + self.xi**2 * q**2)
-        return np.sqrt((q**2/(2*self.m))*(q**2/(2*self.m) + 2*self.n2*self.rho0))
+        return np.sqrt((
+            q**2/(2*self.m))*(q**2/(2*self.m) + 2*self.n2*self.rho0))
 
     def thermal_state(self, T: float, nb_real: int = 1) -> Any:
-        """Defines a thermal state of Bogoliubov excitations
+        """Define a thermal state of Bogoliubov excitations.
 
         Args:
             T (float): The temperature of the state
             nb_real (int, optional): Number of realizations. Defaults to 1.
 
         Returns:
-            Any: The thermal state of shape (n_real, NX) psi_x and the 
+            Any: The thermal state of shape (n_real, NX) psi_x and the
             corresponding Bogoliubov modes bq
         """
         eps_q = self.bogo_disp(self.Kx)
@@ -2263,7 +2332,7 @@ class NLSE_1d_adim(NLSE_1d):
         return psi_x, bq
 
     def get_bq(self, psi_x: Any) -> Any:
-        """Retrieves the distribution of Bogoliubov modes from a field
+        """Retrieve the distribution of Bogoliubov modes from a field.
 
         Args:
             psi_x (Any): The field
@@ -2285,102 +2354,110 @@ class NLSE_1d_adim(NLSE_1d):
         return bq
 
 
-def normalize(data: np.ndarray) -> np.ndarray:
-    """Normalizes an array
-
-    Args:
-        data (np.ndarray): Input array
-
-    Returns:
-        np.ndarray: Normalized array
-    """
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
-
-
-def flatTop_tur(
-    sx: int,
-    sy: int,
-    length: int = 150,
-    width: int = 60,
-    k_counter: int = 81,
-    N_steps: int = 81,
-) -> np.ndarray:
-    """Generates the phase mask to create two counterstreaming colliding components
-
-    Args:
-        sx (int): x Dimension of the mask : slm dimensions.
-        sy (int): y Dimension of the mask : slm dimensions.
-        length (int, optional): Length of the pattern. Defaults to 150.
-        width (int, optional): Width of the pattern. Defaults to 60.
-        k_counter (int, optional): Frequency of the blazed grating. Defaults to 81.
-        N_steps (int, optional): Frequency of the vertical grating. Defaults to 81.
-
-    Returns:
-        _type_: _description_
-    """
-    output = np.zeros((sy, sx))
-    Y, X = np.indices(output.shape)
-    output[abs(X - output.shape[1] // 2) < length / 2] = 1
-    output[abs(Y - output.shape[0] // 2) > width / 2] = 0
-
-    grating_axe = X
-    grating_axe = grating_axe % (sx / k_counter)
-    grating_axe += abs(np.amin(grating_axe))
-    grating_axe /= np.amax(grating_axe)
-
-    grating_axe[X > output.shape[1] // 2] *= -1
-    grating_axe[X > output.shape[1] // 2] += 1
-
-    grating_axe_vert = Y
-    grating_axe_vert = grating_axe_vert % (sy / N_steps)
-    grating_axe_vert = normalize(grating_axe_vert)
-
-    grating_axe = ((grating_axe + grating_axe_vert) % 1) * output
-    return grating_axe
-
-
-def flatTop_super(
-    sx: int,
-    sy: int,
-    length: int = 150,
-    width: int = 60,
-    k_counter: int = 81,
-    N_steps: int = 81,
-) -> np.ndarray:
-    """Generates the phase mask to create two counterstreaming shearing components
-
-    Args:
-        sx (int): x Dimension of the mask : slm dimensions.
-        sy (int): y Dimension of the mask : slm dimensions.
-        length (int, optional): Length of the pattern. Defaults to 150.
-        width (int, optional): Width of the pattern. Defaults to 60.
-        k_counter (int, optional): Frequency of the blazed grating. Defaults to 81.
-        N_steps (int, optional): Frequency of the vertical grating. Defaults to 81.
-
-    Returns:
-        _type_: _description_
-    """
-    output = np.zeros((sy, sx))
-    Y, X = np.indices(output.shape)
-    output[abs(X - output.shape[1] // 2) < length / 2] = 1
-    output[abs(Y - output.shape[0] // 2) > width / 2] = 0
-
-    grating_axe = X
-    grating_axe = grating_axe % (sx / k_counter)
-    grating_axe += abs(np.amin(grating_axe))
-    grating_axe /= np.amax(grating_axe)
-
-    grating_axe[Y > output.shape[0] // 2] *= -1
-    grating_axe[Y > output.shape[0] // 2] += 1
-
-    grating_axe_vert = Y
-    grating_axe_vert = grating_axe_vert % (sy / N_steps)
-    grating_axe_vert = normalize(grating_axe_vert)
-
-    grating_axe = ((grating_axe + grating_axe_vert) % 1) * output
-    return grating_axe
-
 if __name__ == "__main__":
+    def normalize(arr: np.ndarray) -> np.ndarray:
+        """Normalize an array.
+
+        Args:
+            arr (np.ndarray): Array to normalize.
+
+        Returns:
+            np.ndarray: Normalized array.
+        """
+        return (arr - np.amin(arr))/(np.amax(arr) - np.amin(arr))
+
+    def flatTop_tur(
+        sx: int,
+        sy: int,
+        length: int = 150,
+        width: int = 60,
+        k_counter: int = 81,
+        N_steps: int = 81,
+    ) -> np.ndarray:
+        """Collide two counterstreaming components.
+
+        Generates the phase mask to create two counterstreaming colliding
+        components.
+
+        Args:
+            sx (int): x Dimension of the mask : slm dimensions.
+            sy (int): y Dimension of the mask : slm dimensions.
+            length (int, optional): Length of the pattern. Defaults to 150.
+            width (int, optional): Width of the pattern. Defaults to 60.
+            k_counter (int, optional): Frequency of the blazed grating.
+            Defaults to 81.
+            N_steps (int, optional): Frequency of the vertical grating.
+            Defaults to 81.
+
+        Returns:
+            _type_: _description_
+        """
+        output = np.zeros((sy, sx))
+        Y, X = np.indices(output.shape)
+        output[abs(X - output.shape[1] // 2) < length / 2] = 1
+        output[abs(Y - output.shape[0] // 2) > width / 2] = 0
+
+        grating_axe = X
+        grating_axe = grating_axe % (sx / k_counter)
+        grating_axe += abs(np.amin(grating_axe))
+        grating_axe /= np.amax(grating_axe)
+
+        grating_axe[X > output.shape[1] // 2] *= -1
+        grating_axe[X > output.shape[1] // 2] += 1
+
+        grating_axe_vert = Y
+        grating_axe_vert = grating_axe_vert % (sy / N_steps)
+        grating_axe_vert = normalize(grating_axe_vert)
+
+        grating_axe = ((grating_axe + grating_axe_vert) % 1) * output
+        return grating_axe
+
+    def flatTop_super(
+        sx: int,
+        sy: int,
+        length: int = 150,
+        width: int = 60,
+        k_counter: int = 81,
+        N_steps: int = 81,
+    ) -> np.ndarray:
+        """Shear two components.
+
+        Generates the phase mask to create two counterstreaming shearing 
+        components.
+
+        Args:
+            sx (int): x Dimension of the mask : slm dimensions.
+            sy (int): y Dimension of the mask : slm dimensions.
+            length (int, optional): Length of the pattern. Defaults to 150.
+            width (int, optional): Width of the pattern. Defaults to 60.
+            k_counter (int, optional): Frequency of the blazed grating.
+            Defaults to 81.
+            N_steps (int, optional): Frequency of the vertical grating.
+            Defaults to 81.
+
+        Returns:
+            (np.ndarray): The generated phase mask.
+        """
+        output = np.zeros((sy, sx))
+        Y, X = np.indices(output.shape)
+        output[abs(X - output.shape[1] // 2) < length / 2] = 1
+        output[abs(Y - output.shape[0] // 2) > width / 2] = 0
+
+        grating_axe = X
+        grating_axe = grating_axe % (sx / k_counter)
+        grating_axe += abs(np.amin(grating_axe))
+        grating_axe /= np.amax(grating_axe)
+
+        grating_axe[Y > output.shape[0] // 2] *= -1
+        grating_axe[Y > output.shape[0] // 2] += 1
+
+        grating_axe_vert = Y
+        grating_axe_vert = grating_axe_vert % (sy / N_steps)
+        grating_axe_vert = normalize(grating_axe_vert)
+
+        grating_axe = ((grating_axe + grating_axe_vert) % 1) * output
+        return grating_axe
+
     trans = 0.5
     n2 = -1.6e-9
     n12 = -2e-10

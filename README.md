@@ -2,6 +2,21 @@
 
 A small utility to easily simulate all sorts of non linear Schrödinger equation. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equation.
 
+## Installation
+
+First clone the repository:
+
+```bash
+git clone https://github.com/Quantum-Optics-LKB/NLSE/tree/main
+cd NLSE
+```
+
+Then pip install the package:
+
+```bash
+pip install .
+```
+
 ## Requirements
 
 ### GPU computing
@@ -13,27 +28,30 @@ For optimal speed, this code uses your GPU (graphics card). For this, you need s
 If the code does not find Cupy, it will fall back to a CPU based implementation that uses the CPU : [PyFFTW](https://pyfftw.readthedocs.io/en/latest/). To make the best out of your computer, this library is multithreaded. By default it will use all available threads. If this is not what you want, you can disable this by setting the variable `pyfftw.config.NUM_THREADS` to a number of your choosing.
 
 Other than this, the code relies on these libraries :
-- `numba` : for best CPU performance on Intel CPU's, with `icc_rt` 
+
+- `numba` : for best CPU performance on Intel CPU's, with `icc_rt`
 - `pickle`
 - `numpy`
 - `scipy`
 - `matplotlib`
 
 ## How does it work ?
+
 ### Physical situation
-The code offers to solve a typical [non linear Schrödinger](https://en.wikipedia.org/wiki/Nonlinear_Schr%C3%B6dinger_equation) equation of the type :
+
+The code offers to solve a typical [non linear Schrödinger](https://en.wikipedia.org/wiki/Nonlinear_Schr%C3%B6dinger_equation) / [Gross-Pitaevskii](https://en.wikipedia.org/wiki/Gross%E2%80%93Pitaevskii_equation) equation of the type :
 $$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$
 
 In this particular instance, we solve in the formalism of the propagation of light in a non linear medium, such that the exact equation for the field $E$ in V/m solved is :
  $$i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E$$
- 
+
 Here, the constants are defined as followed :
+
 - $k_0$ : is the electric field wavenumber in $m^{-1}$
 - $\delta n(r)$ : the "potential" i.e a local change in linear index of refraction. Dimensionless.
 - $n_2$ : the non linear coefficient in $m^2/W$.
 - $n$ is the linear index of refraction. In our case 1.
 - $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
-
 
 Please note that all of the code works with the **"God given" units** i.e **SI units** !
   
@@ -59,12 +77,12 @@ The take-home message is that the array shape should be compliant with `numpy` [
 
 #### Numerical precision
 
-In order to reach the best performance, the numerical precision is hardcoded as a constant variable at the top of `nlse.py`. 
+In order to reach the best performance, the numerical precision is hardcoded as a constant variable at the top of `nlse.py`.
 When importing the solvers like `NLSE`, the data types of the input arrays must match the data type given as input of `out_field`.
 
 #### Callbacks
 
-The `out_field` functions support callbacks with the following signature `callback(self, A, z, i)` where `self` is the class instance, `A` is the field, `z` is the current position and `i` the main loop index. 
+The `out_field` functions support callbacks with the following signature `callback(self, A, z, i)` where `self` is the class instance, `A` is the field, `z` is the current position and `i` the main loop index.
 For example if you want to print the number of steps every 100 steps, this is the callback you could write :
 
 ```python
@@ -73,34 +91,37 @@ def callback(nlse, A, z, i):
     if n % 100 == 0:
         print(n)
 ```
-Notice that since the class instance is passed to the callback, you have access to all of the classes attributes. 
+
+Notice that since the class instance is passed to the callback, you have access to all of the classes attributes.
 Be mindful however that since the callback is running in the main solver loop, this function should not be called too often in order to not slow down the execution too much.
 
 #### Propagation
 
 The `out_field` method is the main function of the code that propagates the field for an arbitrary distance from an initial state `E_in` from z=0 (assumed to be the begining of the non linear medium) up to a specified distance z. This function simply works by iterating the spectral solver scheme i.e :
+
+- (If precision is `'double'` apply real space terms)
 - Fourier transforming the field
 - Applying the laplacian operator (multiplication by a constant matrix)
 - Inverse Fourier transforming the field
 - Applying all real space terms (potential, losses and interactions)
-- (Optional : Applying the first three steps again)
 
-The `precision` argument allows to switch between applicating the laplacian in a single multiplication (`"single"`), or applying a "half" laplacian before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is $\mathcal{O}(\delta z)$ in the first case and $\mathcal{O}(\delta z^3)$ in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
+The `precision` argument allows to switch between applicating the nonlinear terms in a single multiplication (`"single"`), or applying a "half" nonlinear term before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is $\mathcal{O}(\delta z)$ in the first case and $\mathcal{O}(\delta z^3)$ in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
 The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $z_{NL}=\frac{1}{k_0 n_2 I}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
 
 #### Simulation of phase or intensity masks
 
 A convenience function `slm` allows to simulate the application of a phase mask or intensity mask using a SLM or DMD of pixel pitch `d_slm` of the screen. This function resizes the picture to match the simulation pixel size.
 
-#### Initial state modelling 
+#### Initial state modelling
 
-We wrote two functions that allow to generate SLM phase patterns for initial fluid of light engineering : `flatTop_super` and `flatTop_tur`. They allow to generate either two counterstreaming shearing (`super`) or colliding (`tur`) components.\
-The documentation describes all the tuning knobs of theses functions. 
+In the `__main__` function, we wrote two functions that allow to generate SLM phase patterns for initial fluid of light engineering : `flatTop_super` and `flatTop_tur`. They allow to generate either two counterstreaming shearing (`super`) or colliding (`tur`) components.\
+The documentation describes all the tuning knobs of these functions.
 
 #### Example
 
 A small example is defined in the `main` function of [`nlse.py`](nlse.py).\
 We first create a `NLSE` instance for our simulation with the physical parameters of our experiment :
+
 ```python
 trans = 0.5
 n2 = -1.9e-9
@@ -112,6 +133,7 @@ dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
 simu = NLSE(trans, puiss, waist, window, n2, dn,
             L, NX=2048, NY=2048)
 ```
+
 - `trans` is the transmission accross the non-linear medium sample. Here we lose half of the light in the medium so transmission is 50%.
 - `n2` is the non-linear coefficient in $m^2/W$.
 - `waist` is the beam waist size in m.
@@ -141,6 +163,7 @@ E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
 E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
 E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
 ```
+
 Here we simulate two shearing components that will generate a line of vortices. We do some Fourier filtering to keep only the first order of the generated phase mask.\
 Finally we propagate to the output of the non linear medium (in our case a hot rubidium vapour):
 
@@ -149,12 +172,14 @@ A = simu.out_field(E_in_0, L, plot=True)
 ```
 
 This yields the following plot and output :
+
 ```bash
 Iteration 2052/2052
 Time spent to solve : 9.573697265625 s (GPU) / 9.576363077998394 s (CPU)
 ```
+
 ![output](img/output.png)
-We see that the line of vortices is being pulled into the attractive potential located at the center of the top left image. The other plots allow to visualize the phase or the Fourier spectrum of the image. 
+We see that the line of vortices is being pulled into the attractive potential located at the center of the top left image. The other plots allow to visualize the phase or the Fourier spectrum of the image.
 
 ### The `CNLSE` and `NLSE_1d` classes
 
@@ -162,10 +187,18 @@ There are two subclasses of the `NLSE` main class.
 The `NLSE_1d` class is a specialization of the `NLSE` class to 1d problems. It allows vectorized calculations i.e evolving in parallel an arbitrary tensor of fields of shape `(N1, N2, ...., NX)`.
 
 The `CNLSE` class is a coupled non-linear Schrödinger equation allowing to solve the following equation:
+
 ```math
 \begin{split}
 i\frac{\partial\psi_f}{\partial z} &= -\frac{1}{2k_f}\nabla^2\psi_f -\frac{1}{2}n_2^f k_f c\epsilon_0|\psi_f|^2\psi_f + k_f n_2^{fd}c\epsilon_0|\psi_d|^2\psi_f-\frac{i\alpha_f}{2}\psi_f  \\
 i\frac{\partial\psi_d}{\partial z} &= -\frac{1}{2k_d}\nabla^2\psi_d -\frac{1}{2}n_2^d k_d c\epsilon_0|\psi_d|^2\psi_d + k_d n_2^{fd}c\epsilon_0|\psi_f|^2\psi_d-\frac{i\alpha_d}{2}\psi_d
 \end{split}
 ```
+
 This allows to describe the back reaction of the fluid onto the defect as well as two components scenarii.
+
+### The `GPE` class
+
+The `GPE` class allows to solve the 2D Gross-Pitaevskii equation describing the temporal evolution of a Bosonic field:
+
+$$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi.$$

@@ -46,7 +46,7 @@ The goal of this package is to provide a natural framework for all physicists wi
 
 It provides several classes to model 1D, 2D propagation, and leverages the array functionalities of `numpy` like broadcasting in order to allow easily scans of physical parameters to most closely replicate experimental setups.
 
-This code has beenb developped during the author's PhD thesis `[@aladjidiFullOpticalControl2023]` and used as the main simulation tool for several publications `[@glorieuxHotAtomicVapors2023; @baker-rasooliTurbulentDynamicsTwodimensional2023]`.
+This code has been developped during the author's PhD thesis `@aladjidiFullOpticalControl2023` and used as the main simulation tool for several publications `[@glorieuxHotAtomicVapors2023; @bakerrasooliTurbulentDynamicsTwodimensional2023]`.
 
 ![Example of an output of the solver. A shearing layer is observed nucleating vortices, that are attracted towards the center due to an attractive potential. The density and phase of the field are represented as well as the momentum distribution in order to get a quick overview of the state of the field.\label{fig:output}](../img/output.png)
 

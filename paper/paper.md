@@ -35,9 +35,8 @@ Providing a flexible, modern and performant framework to solve these equations i
 # Statement of need
 
 `NLSE` harnesses the power of pseudo-spectral schemes in order to solve efficiently the following general type of equation:
-$$
-i\partial_t\psi = -\frac{1}{2m}\nabla^2\psi + V\psi + g|\psi|^2\psi.
-$$
+$$i\partial_t\psi = -\frac{1}{2m}\nabla^2\psi + V\psi + g|\psi|^2\psi.$$
+
 In order to take advantge of the computing power of modern Graphical Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`cupy`](https://cupy.dev/) package that maps [`numpy`](https://numpy.org/) functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
 It also heavily uses just-in-time compilation using [`numba`](https://numba.pydata.org/) in order to optimize performance while having an easily maintainable Python codebase.
 Compared to CPU implementations, this package provides a 10 to 100 times speedup for typical sizes.

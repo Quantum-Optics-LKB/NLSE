@@ -48,13 +48,17 @@ In this particular instance, we solve in the formalism of the propagation of lig
 Here, the constants are defined as followed :
 
 - $k_0$ : is the electric field wavenumber in $m^{-1}$
-- $\delta n(r)$ : the "potential" i.e a local change in linear index of refraction. Dimensionless.
+- $\delta n(\mathbf{r})$ : the "potential" i.e a local change in linear index of refraction. Dimensionless.
 - $n_2$ : the non linear coefficient in $m^2/W$.
 - $n$ is the linear index of refraction. In our case 1.
 - $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
 
+In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$. 
+This means usually that the response will be described as a convolution by some non-local kernel:
+$$n_2(\mathbf{r}_\perp)|E|^2(\mathbf{r}_\perp)=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{r}_\perp' K(\mathbf{r}_\perp-\mathbf{r}_\perp')|E|^2(\mathbf{r}_\perp),$$
+where $K(\mathbf{r}_\perp)$ is the non-local kernel, typically the Green function of some diffusion equation.
 Please note that all of the code works with the **"God given" units** i.e **SI units** !
-  
+
 ### The `NLSE` class
 
 The `NLSE` class aims at providing a minimal yet functional toolbox to solve non-linear Schrödinger type equation in optics / atomic physics settings such as the propagation of light in a Kerr medium or solving the Gross Pitaevskii equation for the evolution of cold gases.
@@ -202,3 +206,4 @@ This allows to describe the back reaction of the fluid onto the defect as well a
 The `GPE` class allows to solve the 2D Gross-Pitaevskii equation describing the temporal evolution of a Bosonic field:
 
 $$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi.$$
+It follows exactly the same conventions as the other classes a part from the fact that since it describes atoms, the units are the "atomic" units (masses in kg, times in s).

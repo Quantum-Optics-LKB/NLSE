@@ -511,10 +511,8 @@ class NLSE:
         if verbose:
             if self.backend == "GPU":
                 print(
-                    print(
-                        f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
-                        f" {time.perf_counter()-t0} s (CPU)"
-                    )
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
+                    f" {time.perf_counter()-t0} s (CPU)"
                 )
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
@@ -923,10 +921,8 @@ class NLSE_1d:
         if verbose:
             if self.backend == "GPU":
                 print(
-                    print(
-                        f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
-                        f" {time.perf_counter()-t0} s (CPU)"
-                    )
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
+                    f" {time.perf_counter()-t0} s (CPU)"
                 )
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
@@ -1344,10 +1340,8 @@ class CNLSE(NLSE):
             pbar.close()
             if self.backend == "GPU":
                 print(
-                    print(
-                        f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
-                        f" {time.perf_counter()-t0} s (CPU)"
-                    )
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
+                    f" {time.perf_counter()-t0} s (CPU)"
                 )
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
@@ -2207,7 +2201,8 @@ class GPE:
         if verbose:
             if self.backend == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)" " / {t_cpu} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
+                    f" / {t_cpu} s (CPU)"
                 )
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")

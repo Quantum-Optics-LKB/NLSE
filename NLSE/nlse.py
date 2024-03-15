@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # @author: Tangui Aladjidi / Clara Piekarski
 """NLSE Main module."""
+
 import multiprocessing
 import pickle
 import time
@@ -56,7 +57,7 @@ class NLSE:
         NX: int = 1024,
         NY: int = 1024,
         Isat: float = np.inf,
-        wvl: float = 780e-9
+        wvl: float = 780e-9,
     ) -> object:
         """Instantiate the simulation.
 
@@ -173,8 +174,7 @@ class NLSE:
 
         return
 
-    def plot_1d_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax,
-                    color="b") -> None:
+    def plot_1d_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax, color="b") -> None:
         """Plot a 1D slice of a 2D field.
 
         Args:
@@ -216,8 +216,8 @@ class NLSE:
 
         # copy img image into center of result image
         phase[
-            y_center: y_center + phase_zoomed.shape[0],
-            x_center: x_center + phase_zoomed.shape[1],
+            y_center : y_center + phase_zoomed.shape[0],
+            x_center : x_center + phase_zoomed.shape[1],
         ] = phase_zoomed
         return phase
 
@@ -231,9 +231,7 @@ class NLSE:
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        propagator = np.exp(
-            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z
-        )
+        propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z)
         if BACKEND == "GPU":
             return cp.asarray(propagator)
         else:
@@ -251,8 +249,7 @@ class NLSE:
             # plan_fft = fftpack.get_fft_plan(
             #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
-                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1),
-                value_type="C2C"
+                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1), value_type="C2C"
             )
             return [plan_fft]
         else:
@@ -313,16 +310,16 @@ class NLSE:
             if V is None:
                 kernels.nl_prop_without_V(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 kernels.nl_prop(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -342,16 +339,16 @@ class NLSE:
             if V is None:
                 kernels.nl_prop_without_V(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 kernels.nl_prop(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -361,7 +358,7 @@ class NLSE:
                 kernels.nl_prop_without_V(
                     A,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -369,7 +366,7 @@ class NLSE:
                 kernels.nl_prop(
                     A,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -401,31 +398,28 @@ class NLSE:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-2] == self.NY and E_in.shape[-1] == self.NX
-        assert E_in.dtype == PRECISION_COMPLEX, (
-            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        )
+        assert (
+            E_in.dtype == PRECISION_COMPLEX
+        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) is np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
-                    np.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
-                    axis=(-2, -1)
+                    np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = True
             elif type(E_in) is cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
-                    cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
-                    axis=(-2, -1)
+                    cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned(
-                (self.NX, self.NY), dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=PRECISION_COMPLEX)
             integral = np.sum(
                 np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
             )
@@ -462,8 +456,7 @@ class NLSE:
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4,
-                             desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -475,7 +468,7 @@ class NLSE:
 
         if verbose:
             pbar.close()
-        t_cpu = time.perf_counter()-t0
+        t_cpu = time.perf_counter() - t0
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -483,12 +476,10 @@ class NLSE:
         if verbose:
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    " / {t_cpu} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)" " / {t_cpu} s (CPU)"
                 )
             else:
-                print(
-                    f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -508,9 +499,13 @@ class NLSE:
 
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
-            self.plot_2d(a1, self.X * 1e3, self.Y * 1e3,
-                         np.abs(A_plot)**2*epsilon_0*c/2*1e-4,
-                         r"I in $W/cm^{-2}$")
+            self.plot_2d(
+                a1,
+                self.X * 1e3,
+                self.Y * 1e3,
+                np.abs(A_plot) ** 2 * epsilon_0 * c / 2 * 1e-4,
+                r"I in $W/cm^{-2}$",
+            )
             a2 = fig.add_subplot(222)
             self.plot_2d(
                 a2,
@@ -525,10 +520,8 @@ class NLSE:
 
             a3 = fig.add_subplot(223)
             lim = 1
-            im_fft = np.abs(np.fft.fftshift(
-                np.fft.fft2(A_plot[lim:-lim, lim:-lim])))
-            Kx_2 = 2 * np.pi * \
-                np.fft.fftfreq(self.NX - 2 * lim, d=self.delta_X)
+            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot[lim:-lim, lim:-lim])))
+            Kx_2 = 2 * np.pi * np.fft.fftfreq(self.NX - 2 * lim, d=self.delta_X)
             len_fft = len(im_fft[0, :])
             self.plot_2d(
                 a3,
@@ -543,9 +536,9 @@ class NLSE:
             a4 = fig.add_subplot(224)
             self.plot_1d_amp(
                 a4,
-                Kx_2[1: -len_fft // 2] * 1e-3,
+                Kx_2[1 : -len_fft // 2] * 1e-3,
                 r"$K_y (mm^{-1})$",
-                im_fft[len_fft // 2, len_fft // 2 + 1:],
+                im_fft[len_fft // 2, len_fft // 2 + 1 :],
                 r"$|\mathcal{TF}(E_{out})|$",
                 np.fft.fftshift(Kx_2)[len_fft // 2 + 1] * 1e-3,
                 np.fft.fftshift(Kx_2)[-1] * 1e-3,
@@ -572,7 +565,7 @@ class NLSE_1d:
         L: float,
         NX: int = 1024,
         Isat: float = np.inf,
-        wvl: float = 780e-9
+        wvl: float = 780e-9,
     ) -> object:
         """Instantiate the simulation.
 
@@ -599,10 +592,10 @@ class NLSE_1d:
         # prime factors)
         self.NX = NX
         self.window = window
-        rho0 = puiss/L**2
+        rho0 = puiss / L**2
         Dn = self.n2 * rho0
         z_nl = 1 / (self.k * abs(Dn))
-        self.delta_z = .1*z_nl
+        self.delta_z = 0.1 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -703,8 +696,8 @@ class NLSE_1d:
             if V is None:
                 kernels.nl_prop_without_V(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -712,8 +705,8 @@ class NLSE_1d:
             else:
                 kernels.nl_prop(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -733,8 +726,8 @@ class NLSE_1d:
             if V is None:
                 kernels.nl_prop_without_V(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -742,8 +735,8 @@ class NLSE_1d:
             else:
                 kernels.nl_prop(
                     A,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -753,7 +746,7 @@ class NLSE_1d:
                 kernels.nl_prop_without_V(
                     A,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
@@ -762,7 +755,7 @@ class NLSE_1d:
                 kernels.nl_prop(
                     A,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -776,7 +769,7 @@ class NLSE_1d:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: callable = None
+        callback: callable = None,
     ) -> np.ndarray:
         """Propagate the field at a distance z.
 
@@ -797,21 +790,21 @@ class NLSE_1d:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX, "Shape mismatch"
-        assert E_in.dtype == PRECISION_COMPLEX, (
-            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        )
+        assert (
+            E_in.dtype == PRECISION_COMPLEX
+        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) is np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
-                integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
+                integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = True
             elif type(E_in) is cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
-                integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
+                integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = False
         else:
-            integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)**2
+            integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1) ** 2
             return_np_array = True
             A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
         plans = self.build_fft_plan(A)
@@ -843,8 +836,7 @@ class NLSE_1d:
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4,
-                             desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -855,7 +847,7 @@ class NLSE_1d:
                 callback(self, A, z, i)
         if verbose:
             pbar.close()
-        t_cpu = time.perf_counter()-t0
+        t_cpu = time.perf_counter() - t0
         if BACKEND == "GPU":
             end_gpu.record()
             end_gpu.synchronize()
@@ -863,12 +855,10 @@ class NLSE_1d:
         if verbose:
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    " / {t_cpu} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)" " / {t_cpu} s (CPU)"
                 )
             else:
-                print(
-                    f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -883,13 +873,11 @@ class NLSE_1d:
                 for i in range(A.shape[0]):
                     ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
                     ax[1].plot(
-                        self.X, 1e-4 * c / 2 * epsilon_0 *
-                        np.abs(A_plot[i, :]) ** 2
+                        self.X, 1e-4 * c / 2 * epsilon_0 * np.abs(A_plot[i, :]) ** 2
                     )
             elif A.ndim == 1:
                 ax[0].plot(self.X, np.unwrap(np.angle(A_plot)))
-                ax[1].plot(self.X, 1e-4 * c / 2 *
-                           epsilon_0 * np.abs(A_plot) ** 2)
+                ax[1].plot(self.X, 1e-4 * c / 2 * epsilon_0 * np.abs(A_plot) ** 2)
             ax[0].set_title("Phase")
             ax[1].set_title(r"Intensity in $W/cm^2$")
             plt.tight_layout()
@@ -995,8 +983,8 @@ class CNLSE(NLSE):
                 kernels.nl_prop_without_V_c(
                     A1,
                     A2,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1004,8 +992,8 @@ class CNLSE(NLSE):
                 kernels.nl_prop_without_V_c(
                     A2,
                     A1_old,
-                    self.delta_z/2,
-                    self.alpha2/2,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -1015,7 +1003,7 @@ class CNLSE(NLSE):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1025,7 +1013,7 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2/2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
@@ -1050,8 +1038,8 @@ class CNLSE(NLSE):
                 kernels.nl_prop_without_V_c(
                     A1,
                     A2,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1059,8 +1047,8 @@ class CNLSE(NLSE):
                 kernels.nl_prop_without_V_c(
                     A2,
                     A1_old,
-                    self.delta_z/2,
-                    self.alpha2/2,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -1070,7 +1058,7 @@ class CNLSE(NLSE):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1080,7 +1068,7 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2/2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
@@ -1092,7 +1080,7 @@ class CNLSE(NLSE):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1101,7 +1089,7 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2/2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -1111,7 +1099,7 @@ class CNLSE(NLSE):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1121,7 +1109,7 @@ class CNLSE(NLSE):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2/2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
@@ -1136,7 +1124,7 @@ class CNLSE(NLSE):
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: callable = None
+        callback: callable = None,
     ) -> np.ndarray:
         """Propagate the field at a distance z.
 
@@ -1160,9 +1148,9 @@ class CNLSE(NLSE):
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
-        assert E.dtype == PRECISION_COMPLEX, (
-            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        )
+        assert (
+            E.dtype == PRECISION_COMPLEX
+        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) is np.ndarray:
@@ -1189,7 +1177,7 @@ class CNLSE(NLSE):
         # ndim logic ...
         A[:] = E
         if normalize:
-            E_00 = np.sqrt(2 * puiss_arr/(c * epsilon_0 * integral))
+            E_00 = np.sqrt(2 * puiss_arr / (c * epsilon_0 * integral))
             A[:] = (A.T * E_00.T).T
         if A.ndim == 3:
             A1_old = A[0, :, :].copy()
@@ -1222,8 +1210,7 @@ class CNLSE(NLSE):
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4,
-                             desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -1232,8 +1219,7 @@ class CNLSE(NLSE):
             if verbose:
                 pbar.update(1)
             self.split_step(
-                A, A1_old, V, self.propagator1, self.propagator2, self.plans,
-                precision
+                A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
             )
             if callback is not None:
                 callback(self, A, z, i)
@@ -1241,17 +1227,15 @@ class CNLSE(NLSE):
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        t_cpu = time.perf_counter()-t0
+        t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    " / {t_cpu} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)" " / {t_cpu} s (CPU)"
                 )
             else:
-                print(
-                    f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -1275,8 +1259,7 @@ class CNLSE(NLSE):
             # plot amplitudes and phases
             a1 = fig.add_subplot(221)
             self.plot_2d(
-                a1, self.X * 1e3, self.Y *
-                1e3, np.abs(A_1_plot) ** 2, r"$|\psi_1|^2$"
+                a1, self.X * 1e3, self.Y * 1e3, np.abs(A_1_plot) ** 2, r"$|\psi_1|^2$"
             )
 
             a2 = fig.add_subplot(222)
@@ -1293,8 +1276,7 @@ class CNLSE(NLSE):
 
             a3 = fig.add_subplot(223)
             self.plot_2d(
-                a3, self.X * 1e3, self.Y *
-                1e3, np.abs(A_2_plot) ** 2, r"$|\psi_2|^2$"
+                a3, self.X * 1e3, self.Y * 1e3, np.abs(A_2_plot) ** 2, r"$|\psi_2|^2$"
             )
 
             a4 = fig.add_subplot(224)
@@ -1416,8 +1398,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_without_V_c(
                     A1,
                     A2,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1425,8 +1407,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_without_V_c(
                     A2,
                     A1_old,
-                    self.delta_z/2,
-                    self.alpha2/2,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -1435,8 +1417,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_c(
                     A1,
                     A2,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1445,8 +1427,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_c(
                     A2,
                     A1_old,
-                    self.delta_z/2,
-                    self.alpha2/2,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
@@ -1470,8 +1452,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_without_V_c(
                     A1,
                     A2,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1479,8 +1461,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_without_V_c(
                     A2,
                     A1_old,
-                    self.delta_z/2,
-                    self.alpha2/2,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -1489,8 +1471,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_c(
                     A1,
                     A2,
-                    self.delta_z/2,
-                    self.alpha/2,
+                    self.delta_z / 2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1499,8 +1481,8 @@ class CNLSE_1d(NLSE_1d):
                 kernels.nl_prop_c(
                     A2,
                     A1_old,
-                    self.delta_z/2,
-                    self.alpha2/2,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
@@ -1512,7 +1494,7 @@ class CNLSE_1d(NLSE_1d):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -1521,7 +1503,7 @@ class CNLSE_1d(NLSE_1d):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2/2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -1531,7 +1513,7 @@ class CNLSE_1d(NLSE_1d):
                     A1,
                     A2,
                     self.delta_z,
-                    self.alpha/2,
+                    self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
@@ -1541,7 +1523,7 @@ class CNLSE_1d(NLSE_1d):
                     A2,
                     A1_old,
                     self.delta_z,
-                    self.alpha2/2,
+                    self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
@@ -1556,7 +1538,7 @@ class CNLSE_1d(NLSE_1d):
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: callable = None
+        callback: callable = None,
     ) -> np.ndarray:
         """Propagate the field at a distance z.
 
@@ -1580,9 +1562,9 @@ class CNLSE_1d(NLSE_1d):
         assert E.ndim >= 2, (
             "Input number of dimensions should at least be 2 !" " (2, NX)"
         )
-        assert E_in.dtype == PRECISION_COMPLEX, (
-            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        )
+        assert (
+            E_in.dtype == PRECISION_COMPLEX
+        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E) is np.ndarray:
@@ -1632,8 +1614,7 @@ class CNLSE_1d(NLSE_1d):
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4,
-                             desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -1642,8 +1623,7 @@ class CNLSE_1d(NLSE_1d):
             if verbose:
                 pbar.update(1)
             self.split_step(
-                A, A1_old, V, self.propagator1, self.propagator2, self.plans,
-                precision
+                A, A1_old, V, self.propagator1, self.propagator2, self.plans, precision
             )
             if callback is not None:
                 callback(self, A, z, i)
@@ -1651,17 +1631,15 @@ class CNLSE_1d(NLSE_1d):
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        t_cpu = time.perf_counter()-t0
+        t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    " / {t_cpu} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)" " / {t_cpu} s (CPU)"
                 )
             else:
-                print(
-                    f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -1670,19 +1648,29 @@ class CNLSE_1d(NLSE_1d):
                 if not (return_np_array):
                     A_1_plot = A[0, :].get()
                     A_2_plot = A[1, :].get()
-                elif return_np_array or BACKEND == 'CPU':
+                elif return_np_array or BACKEND == "CPU":
                     A_1_plot = A[0, :].copy()
                     A_2_plot = A[1, :].copy()
-                fig = plt.figure(layout='constrained')
+                fig = plt.figure(layout="constrained")
                 # plot amplitudes and phases
                 a1 = fig.add_subplot(211)
-                self.plot_1d(a1, self.X*1e3, np.abs(A_1_plot)**2,
-                             r'$|\psi_1|^2$', np.angle(A_1_plot),
-                             r'arg$(\psi_1)$')
+                self.plot_1d(
+                    a1,
+                    self.X * 1e3,
+                    np.abs(A_1_plot) ** 2,
+                    r"$|\psi_1|^2$",
+                    np.angle(A_1_plot),
+                    r"arg$(\psi_1)$",
+                )
                 a2 = fig.add_subplot(212)
-                self.plot_2d(a2, self.X*1e3, np.abs(A_2_plot)**2,
-                             r'$|\psi_2|^2$', np.angle(A_2_plot),
-                             r'arg$(\psi_2)$')
+                self.plot_2d(
+                    a2,
+                    self.X * 1e3,
+                    np.abs(A_2_plot) ** 2,
+                    r"$|\psi_2|^2$",
+                    np.angle(A_2_plot),
+                    r"arg$(\psi_2)$",
+                )
             plt.show()
         return A
 
@@ -1756,8 +1744,7 @@ class GPE:
         self.propagator = None
         self.plans = None
 
-    def build_propagator(self, m: float,
-                         precision: str = "single") -> np.ndarray:
+    def build_propagator(self, m: float, precision: str = "single") -> np.ndarray:
         """Build the linear propagation matrix.
 
         Args:
@@ -1769,21 +1756,11 @@ class GPE:
         """
         if precision == "double":
             propagator = np.exp(
-                -1j
-                * 0.25
-                * hbar
-                * (self.Kxx**2 + self.Kyy**2)
-                / m
-                * self.delta_t
+                -1j * 0.25 * hbar * (self.Kxx**2 + self.Kyy**2) / m * self.delta_t
             )
         else:
             propagator = np.exp(
-                -1j
-                * 0.5
-                * hbar
-                * (self.Kxx**2 + self.Kyy**2)
-                / m
-                * self.delta_t
+                -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / m * self.delta_t
             )
         if BACKEND == "GPU":
             return cp.asarray(propagator)
@@ -1802,8 +1779,7 @@ class GPE:
             # plan_fft = fftpack.get_fft_plan(
             #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
-                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1),
-                value_type="C2C"
+                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1), value_type="C2C"
             )
             return [plan_fft]
         else:
@@ -1923,7 +1899,7 @@ class GPE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: callable = None
+        callback: callable = None,
     ) -> np.ndarray:
         """Propagate the field at a time T.
 
@@ -1941,31 +1917,28 @@ class GPE:
             np.ndarray: Propagated field in proper units atoms/m
         """
         assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
-        assert E_in.dtype == PRECISION_COMPLEX, (
-            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        )
+        assert (
+            E_in.dtype == PRECISION_COMPLEX
+        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Ts = np.arange(0, T, step=self.delta_t, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(psi) is np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty(psi.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(
-                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y,
-                    axis=(-2, -1)
+                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = True
             elif type(psi) is cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = cp.empty(psi.shape, dtype=PRECISION_COMPLEX)
                 integral = cp.sum(
-                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y,
-                    axis=(-2, -1)
+                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned(
-                (self.NX, self.NY), dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=PRECISION_COMPLEX)
             integral = np.sum(
                 np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
             )
@@ -2000,8 +1973,7 @@ class GPE:
             start_gpu.record()
         t0 = time.perf_counter()
         if verbose:
-            pbar = tqdm.tqdm(total=len(Ts), position=4,
-                             desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(total=len(Ts), position=4, desc="Iteration", leave=False)
         for _ in Ts:
             if verbose:
                 pbar.update(1)
@@ -2015,16 +1987,14 @@ class GPE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        t_cpu = time.perf_counter()-t0
+        t_cpu = time.perf_counter() - t0
         if verbose:
             if BACKEND == "GPU":
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    " / {t_cpu} s (CPU)"
+                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)" " / {t_cpu} s (CPU)"
                 )
             else:
-                print(
-                    f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
 
@@ -2039,27 +2009,37 @@ class GPE:
                     A_plot = A
                 elif A.ndim == 3:
                     A_plot = A[0, :, :]
-            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))**2
-            ext_real = [self.X[0]*1e3, self.X[-1] *
-                        1e3, self.Y[0]*1e3, self.Y[-1]*1e3]
-            ext_fft = [self.Kx[self.Kx.size//2]*1e-3,
-                       self.Kx[self.Kx.size//2-1]*1e-3,
-                       self.Ky[self.Ky.size//2]*1e-3,
-                       self.Ky[self.Ky.size//2-1]*1e-3]
+            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot))) ** 2
+            ext_real = [
+                self.X[0] * 1e3,
+                self.X[-1] * 1e3,
+                self.Y[0] * 1e3,
+                self.Y[-1] * 1e3,
+            ]
+            ext_fft = [
+                self.Kx[self.Kx.size // 2] * 1e-3,
+                self.Kx[self.Kx.size // 2 - 1] * 1e-3,
+                self.Ky[self.Ky.size // 2] * 1e-3,
+                self.Ky[self.Ky.size // 2 - 1] * 1e-3,
+            ]
             fig, ax = plt.subplots(1, 3)
-            im = ax[0].imshow(np.abs(A_plot)**2,
-                              cmap='viridis', extent=ext_real)
+            im = ax[0].imshow(np.abs(A_plot) ** 2, cmap="viridis", extent=ext_real)
             ax[0].set_title(r"Density in atoms/$m^2$")
             ax[0].set_xlabel("x (mm)")
             ax[0].set_ylabel("y (mm)")
             fig.colorbar(im, ax=ax[0], label="Density")
-            im = ax[1].imshow(np.angle(A_plot), cmap='twilight_shifted',
-                              vmin=-np.pi, vmax=np.pi, extent=ext_real)
+            im = ax[1].imshow(
+                np.angle(A_plot),
+                cmap="twilight_shifted",
+                vmin=-np.pi,
+                vmax=np.pi,
+                extent=ext_real,
+            )
             ax[1].set_title("Phase")
             ax[1].set_xlabel("x (mm)")
             ax[1].set_ylabel("y (mm)")
             fig.colorbar(im, ax=ax[1], label="Phase")
-            im = ax[2].imshow(im_fft, cmap='nipy_spectral', extent=ext_fft)
+            im = ax[2].imshow(im_fft, cmap="nipy_spectral", extent=ext_fft)
             ax[2].set_title("Momentum space")
             ax[2].set_xlabel(r"kx ($mm^{-1}$)")
             ax[2].set_ylabel(r"ky ($mm^{-1}$)")
@@ -2085,10 +2065,10 @@ class NLSE_1d_adim(NLSE_1d):
     ) -> object:
         """Instantiate the simulation."""
         super().__init__(alpha, puiss, window, n2, V, L, NX, Isat, wvl)
-        self.m = 2*np.pi/self.wl
-        self.rho0 = self.puiss/self.window
-        self.c = np.sqrt(self.n2*self.rho0/self.m)
-        self.xi = 1/np.sqrt(4*self.n2*self.rho0*self.m)
+        self.m = 2 * np.pi / self.wl
+        self.rho0 = self.puiss / self.window
+        self.c = np.sqrt(self.n2 * self.rho0 / self.m)
+        self.xi = 1 / np.sqrt(4 * self.n2 * self.rho0 * self.m)
 
     def build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.
@@ -2100,15 +2080,20 @@ class NLSE_1d_adim(NLSE_1d):
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        propagator = np.exp(-1j * self.delta_z * (self.Kx**2) /
-                            (2*self.m))
+        propagator = np.exp(-1j * self.delta_z * (self.Kx**2) / (2 * self.m))
         if BACKEND == "GPU":
             return cp.asarray(propagator)
         else:
             return propagator
 
-    def split_step(self, A: np.ndarray, V: np.ndarray, propagator: np.ndarray,
-                   plans: list, precision: str = "single"):
+    def split_step(
+        self,
+        A: np.ndarray,
+        V: np.ndarray,
+        propagator: np.ndarray,
+        plans: list,
+        precision: str = "single",
+    ):
         """Split step function for one propagation step.
 
         Args:
@@ -2129,11 +2114,13 @@ class NLSE_1d_adim(NLSE_1d):
             plan_fft, plan_ifft = plans
         if precision == "double":
             if V is None:
-                kernels.nl_prop_without_V(A, self.delta_z/2, self.alpha/2,
-                                          -self.n2, self.I_sat)
+                kernels.nl_prop_without_V(
+                    A, self.delta_z / 2, self.alpha / 2, -self.n2, self.I_sat
+                )
             else:
-                kernels.nl_prop(A, self.delta_z/2, self.alpha/2,
-                                V, -self.n2, self.I_sat)
+                kernels.nl_prop(
+                    A, self.delta_z / 2, self.alpha / 2, V, -self.n2, self.I_sat
+                )
         if BACKEND == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
@@ -2147,23 +2134,33 @@ class NLSE_1d_adim(NLSE_1d):
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         if precision == "double":
             if V is None:
-                kernels.nl_prop_without_V(A, self.delta_z/2, self.alpha/2,
-                                          -self.n2, self.I_sat)
+                kernels.nl_prop_without_V(
+                    A, self.delta_z / 2, self.alpha / 2, -self.n2, self.I_sat
+                )
             else:
-                kernels.nl_prop(A, self.delta_z, self.alpha/2,
-                                V, -self.n2, self.I_sat)
+                kernels.nl_prop(
+                    A, self.delta_z, self.alpha / 2, V, -self.n2, self.I_sat
+                )
         else:
             if V is None:
-                kernels.nl_prop_without_V(A, self.delta_z, self.alpha/2,
-                                          -self.n2, self.I_sat)
+                kernels.nl_prop_without_V(
+                    A, self.delta_z, self.alpha / 2, -self.n2, self.I_sat
+                )
             else:
-                kernels.nl_prop(A, self.delta_z, self.alpha/2,
-                                V, -self.n2, self.I_sat)
+                kernels.nl_prop(
+                    A, self.delta_z, self.alpha / 2, V, -self.n2, self.I_sat
+                )
 
-    def out_field(self, E_in: np.ndarray, z: float, plot=False,
-                  precision: str = "single", verbose: bool = True,
-                  normalize: bool = True,
-                  callback: callable = None) -> np.ndarray:
+    def out_field(
+        self,
+        E_in: np.ndarray,
+        z: float,
+        plot=False,
+        precision: str = "single",
+        verbose: bool = True,
+        normalize: bool = True,
+        callback: callable = None,
+    ) -> np.ndarray:
         """Propagate the field at a distance z.
 
         Args:
@@ -2183,28 +2180,27 @@ class NLSE_1d_adim(NLSE_1d):
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX
-        assert E_in.dtype == PRECISION_COMPLEX, (
-            f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        )
-        Z = np.arange(0, z,
-                      step=self.delta_z, dtype=PRECISION_REAL)
+        assert (
+            E_in.dtype == PRECISION_COMPLEX
+        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
+        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
         if BACKEND == "GPU":
             if type(E_in) is np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
-                integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
+                integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)
                 return_np_array = True
             elif type(E_in) is cp.ndarray:
                 A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
-                integral = cp.sum(cp.abs(E_in)**2*self.delta_X, axis=-1)
+                integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1)
                 return_np_array = False
         else:
-            integral = np.sum(np.abs(E_in)**2*self.delta_X, axis=-1)
+            integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)
             return_np_array = True
             A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
         plans = self.build_fft_plan(A)
         if normalize:
-            E_00 = np.sqrt(self.puiss/integral)
-            A[:] = (E_00.T*E_in.T).T
+            E_00 = np.sqrt(self.puiss / integral)
+            A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in
         propagator = self.build_propagator()
@@ -2230,8 +2226,7 @@ class NLSE_1d_adim(NLSE_1d):
         t0 = time.perf_counter()
         n2_old = self.n2
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4,
-                             desc='Iteration', leave=False)
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         # dz = self.delta_z
         for i, z in enumerate(Z):
             # eps = 1-2*np.random.random()
@@ -2247,15 +2242,13 @@ class NLSE_1d_adim(NLSE_1d):
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        t_cpu = time.perf_counter()-t0
+        t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()
             if BACKEND == "GPU":
-                print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) / {t_cpu} s (CPU)")
             else:
-                print(
-                    f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         if BACKEND == "GPU" and return_np_array:
             A = cp.asnumpy(A)
@@ -2263,16 +2256,16 @@ class NLSE_1d_adim(NLSE_1d):
         if plot:
             if not (return_np_array):
                 A_plot = cp.asnumpy(A)
-            elif return_np_array or BACKEND == 'CPU':
+            elif return_np_array or BACKEND == "CPU":
                 A_plot = A.copy()
             fig, ax = plt.subplots(1, 2)
             if A.ndim == 2:
                 for i in range(A.shape[0]):
                     ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
-                    ax[1].plot(self.X, np.abs(A_plot[i, :])**2)
+                    ax[1].plot(self.X, np.abs(A_plot[i, :]) ** 2)
             elif A.ndim == 1:
                 ax[0].plot(self.X, np.unwrap(np.angle(A_plot)))
-                ax[1].plot(self.X, np.abs(A_plot)**2)
+                ax[1].plot(self.X, np.abs(A_plot) ** 2)
             ax[0].set_title("Phase")
             ax[1].set_title(r"Density")
             plt.tight_layout()
@@ -2292,8 +2285,9 @@ class NLSE_1d_adim(NLSE_1d):
             Any: The corresponding Bogoliubov frequency
         """
         # return self.c*np.abs(q)*np.sqrt(1 + self.xi**2 * q**2)
-        return np.sqrt((
-            q**2/(2*self.m))*(q**2/(2*self.m) + 2*self.n2*self.rho0))
+        return np.sqrt(
+            (q**2 / (2 * self.m)) * (q**2 / (2 * self.m) + 2 * self.n2 * self.rho0)
+        )
 
     def thermal_state(self, T: float, nb_real: int = 1) -> Any:
         """Define a thermal state of Bogoliubov excitations.
@@ -2308,27 +2302,27 @@ class NLSE_1d_adim(NLSE_1d):
         """
         eps_q = self.bogo_disp(self.Kx)
         eps_q[0] = 1
-        E_q = self.Kx**2/(2*self.m)
+        E_q = self.Kx**2 / (2 * self.m)
         E_q[0] = 1
-        var_X = T/eps_q
+        var_X = T / eps_q
         var_X[0] = 0
-        sigma = np.sqrt(0.5*var_X)
+        sigma = np.sqrt(0.5 * var_X)
         Re_X = np.random.normal(0, sigma, (nb_real, self.NX))
         Im_X = np.random.normal(0, sigma, (nb_real, self.NX))
 
-        bq = Re_X + 1j*Im_X
+        bq = Re_X + 1j * Im_X
 
         bmq = np.roll(bq[:, ::-1], 1, axis=1)
-        theta_q = (1j/2)*np.sqrt(eps_q/E_q) * (bq - np.conj(bmq))
+        theta_q = (1j / 2) * np.sqrt(eps_q / E_q) * (bq - np.conj(bmq))
         theta_q[..., 0] = 1.0
 
-        delta_rho_q = np.sqrt(E_q/eps_q) * (np.conj(bmq) + bq)
+        delta_rho_q = np.sqrt(E_q / eps_q) * (np.conj(bmq) + bq)
         delta_rho_q[..., 0] = 1.0
         delta_rho_x = np.real(np.fft.ifft(delta_rho_q))
         theta_x = np.real(np.fft.ifft(theta_q))
 
         rho_x = self.rho0 + delta_rho_x
-        psi_x = np.sqrt(rho_x) * np.exp(1j*theta_x)
+        psi_x = np.sqrt(rho_x) * np.exp(1j * theta_x)
         return psi_x, bq
 
     def get_bq(self, psi_x: Any) -> Any:
@@ -2342,19 +2336,22 @@ class NLSE_1d_adim(NLSE_1d):
         """
         eps_q = self.bogo_disp(self.Kx)
         eps_q[0] = 1
-        E_q = self.Kx**2/(2*self.m)
+        E_q = self.Kx**2 / (2 * self.m)
         E_q[0] = 1
         theta_x = np.unwrap(np.angle(psi_x))
-        delta_rho_x = np.abs(psi_x)**2
+        delta_rho_x = np.abs(psi_x) ** 2
         theta_q = np.fft.fft(theta_x)
         delta_rho_q = np.fft.fft(delta_rho_x)
-        bq = 0.5*(-2*1j*np.sqrt(E_q/eps_q) * theta_q +
-                  np.sqrt(eps_q/E_q) * delta_rho_q)
+        bq = 0.5 * (
+            -2 * 1j * np.sqrt(E_q / eps_q) * theta_q
+            + np.sqrt(eps_q / E_q) * delta_rho_q
+        )
         bq[..., 0] = 0
         return bq
 
 
 if __name__ == "__main__":
+
     def normalize(arr: np.ndarray) -> np.ndarray:
         """Normalize an array.
 
@@ -2364,7 +2361,7 @@ if __name__ == "__main__":
         Returns:
             np.ndarray: Normalized array.
         """
-        return (arr - np.amin(arr))/(np.amax(arr) - np.amin(arr))
+        return (arr - np.amin(arr)) / (np.amax(arr) - np.amin(arr))
 
     def flatTop_tur(
         sx: int,
@@ -2467,17 +2464,18 @@ if __name__ == "__main__":
     puiss = 500e-3
     Isat = 10e4  # saturation intensity in W/m^2
     L = 5e-2
-    alpha = -np.log(trans)/L
+    alpha = -np.log(trans) / L
     dn = 2.5e-4 * np.ones((2048, 2048), dtype=PRECISION_COMPLEX)
-    simu = NLSE(alpha=alpha, puiss=puiss,
-                window=window, n2=n2, V=dn, L=L, NX=2048, NY=2048)
-    simu_c = CNLSE(alpha, puiss, window, n2,
-                   n12, None, L, NX=2048, NY=2048)
+    simu = NLSE(
+        alpha=alpha, puiss=puiss, window=window, n2=n2, V=dn, L=L, NX=2048, NY=2048
+    )
+    simu_c = CNLSE(alpha, puiss, window, n2, n12, None, L, NX=2048, NY=2048)
     simu_1d = NLSE_1d(alpha, puiss, window, n2, dn[1024, :], L, NX=2048)
-    g = 1e3/(N/1e-3**2)
+    g = 1e3 / (N / 1e-3**2)
     print(f"{g=}")
-    simu_gpe = GPE(gamma=0, N=N, m=87*atomic_mass,
-                   window=1e-3, g=g, V=None, NX=4096, NY=4096)
+    simu_gpe = GPE(
+        gamma=0, N=N, m=87 * atomic_mass, window=1e-3, g=g, V=None, NX=4096, NY=4096
+    )
     simu_gpe.delta_t = 1e-8
     simu.delta_z = 1e-4
     simu_1d.delta_z = 1e-4
@@ -2491,20 +2489,18 @@ if __name__ == "__main__":
         -(simu.XX**2 + simu.YY**2) / (2 * waist**2)
     )
     E_in_0_g = np.ones((simu_gpe.NY, simu_gpe.NX), dtype=PRECISION_COMPLEX) * np.exp(
-        -(simu_gpe.XX**2 + simu_gpe.YY**2) / (2 * (1e-4)**2)
+        -(simu_gpe.XX**2 + simu_gpe.YY**2) / (2 * (1e-4) ** 2)
     )
     # A_gpe = simu_gpe.out_field(E_in_0_g, 7e-4, plot=True)
     simu.V *= np.exp(-(simu.XX**2 + simu.YY**2) / (2 * (waist / 3) ** 2))
     E_in_0 *= np.exp(1j * phase_slm)
     E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
-    E_in_0[0: E_in_0.shape[0] // 2 + 20, :] = 1e-10
-    E_in_0[E_in_0.shape[0] // 2 + 225:, :] = 1e-10
+    E_in_0[0 : E_in_0.shape[0] // 2 + 20, :] = 1e-10
+    E_in_0[E_in_0.shape[0] // 2 + 225 :, :] = 1e-10
     E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
     E_in = np.zeros((2, simu.NY, simu.NX), dtype=PRECISION_COMPLEX)
     E_in[0, :, :] = np.exp(-(simu.XX**2 + simu.YY**2) / (2 * waist**2))
-    E_in[1, :, :] = np.exp(-(simu.XX**2 + simu.YY**2) /
-                           (2 * (waist / 6) ** 2))
-    A_c = simu_c.out_field(
-        E_in, L, plot=True, verbose=True)
+    E_in[1, :, :] = np.exp(-(simu.XX**2 + simu.YY**2) / (2 * (waist / 6) ** 2))
+    A_c = simu_c.out_field(E_in, L, plot=True, verbose=True)
     A = simu.out_field(E_in_0, L, plot=True)
     A_1d = simu_1d.out_field(E_in_0[1024:1028, :], L, plot=True)

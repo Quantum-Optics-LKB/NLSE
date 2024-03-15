@@ -68,6 +68,8 @@ The `NLSE` class aims at providing a minimal yet functional toolbox to solve non
 #### Initialization
 
 The physical parameters listed above are defined at the instantiation of the `NLSE` class (`__init__` function).
+The backend (GPU or CPU) is tested when the library is imported, but you can then dynamically switch it when instantiating a `NLSE` class by setting the `self.backend` attribute to `"GPU"` or `"CPU"`. 
+
 
 #### Broadcasting
 

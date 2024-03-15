@@ -9,11 +9,9 @@ tags:
 authors:
   - name: Tangui Aladjidi
     orcid: 0000-0002-3109-9723
-    equal-contrib: true
     affiliation: 1 # (Multiple affiliations must be quoted)
   - name: Clara Piekarski
     orcid: 0000-0001-6871-6003
-    equal-contrib: false # (This is how you can denote equal contributions between multiple authors)
     affiliation: 1
   - name: Quentin Glorieux
     orcid: 0000-0003-0903-0233

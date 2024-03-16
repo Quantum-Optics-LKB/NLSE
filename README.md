@@ -43,6 +43,7 @@ The code offers to solve a typical [non linear Schrödinger](https://en.wikipedi
 $$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$
 
 In this particular instance, we solve in the formalism of the propagation of light in a non linear medium, such that the exact equation for the field $E$ in V/m solved is :
+
 $$
 i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
 $$
@@ -59,10 +60,10 @@ In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{
 This means usually that the response will be described as a convolution by some non-local kernel:
 
 $$
-n_2(\mathbf{r}_\perp)|E|^2(\mathbf{r}_\perp)=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{r}_\perp' K(\mathbf{r}_\perp-\mathbf{r}_\perp')|E|^2(\mathbf{r}_\perp)',
+n_2(\mathbf{r})|E|^2(\mathbf{r})=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{r}' K(\mathbf{r}-\mathbf{r}')|E|^2(\mathbf{r}'),
 $$
 
-where $K(\mathbf{r}_\perp)$ is the non-local kernel, typically the Green function of some diffusion equation.
+where $K(\mathbf{r})$ is the non-local kernel, typically the Green function of some diffusion equation.
 
 Please note that all of the code works with the **"God given" units** i.e **SI units** !
 

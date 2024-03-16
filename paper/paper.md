@@ -48,6 +48,8 @@ This code has been developped during the author's PhD thesis [@aladjidiFullOptic
 
 ![Example of an output of the solver. A shearing layer is observed nucleating vortices, that are attracted towards the center due to an attractive potential. The density and phase of the field are represented as well as the momentum distribution in order to get a quick overview of the state of the field.\label{fig:output}](../img/output.png)
 
+![CPU vs GPU benchmark for 1 cm of propagation (200 evolution steps).\label{fig:bench}](../img/benchmarks.png)
+
 # Acknowledgements
 
 We acknowledge contributions from Myrann Baker-Rasooli as our most faithful beta tester.

@@ -57,7 +57,7 @@ Here, the constants are defined as followed :
 
 In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$. 
 This means usually that the response will be described as a convolution by some non-local kernel:
-$$n_2(\mathbf{r}_\perp)|E|^2(\mathbf{r}_\perp)=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{r}_\perp' K(\mathbf{r}_\perp-\mathbf{r}_\perp')|E|^2(\mathbf{r}_\perp),$$
+$$n_2(\mathbf{r}_\perp)|E|^2(\mathbf{r}_\perp)=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{s}_\perp K(\mathbf{r}_\perp-\mathbf{s}_\perp)|E|^2(\mathbf{s}_\perp),$$
 where $K(\mathbf{r}_\perp)$ is the non-local kernel, typically the Green function of some diffusion equation.
 Please note that all of the code works with the **"God given" units** i.e **SI units** !
 

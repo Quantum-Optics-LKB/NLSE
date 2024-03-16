@@ -43,9 +43,9 @@ The code offers to solve a typical [non linear Schrödinger](https://en.wikipedi
 $$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$
 
 In this particular instance, we solve in the formalism of the propagation of light in a non linear medium, such that the exact equation for the field $E$ in V/m solved is :
- ```math
+$$
 i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
-```
+$$
 
 Here, the constants are defined as followed :
 
@@ -58,9 +58,12 @@ Here, the constants are defined as followed :
 In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$. 
 This means usually that the response will be described as a convolution by some non-local kernel:
 
-$$n_2(\mathbf{r}_\perp)|E|^2(\mathbf{r}_\perp)=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{s}_\perp K(\mathbf{r}_\perp-\mathbf{s}_\perp)|E|^2(\mathbf{s}_\perp),$$
+$$
+n_2(\mathbf{r}_\perp)|E|^2(\mathbf{r}_\perp)=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{r}_\perp' K(\mathbf{r}_\perp-\mathbf{r}_\perp')|E|^2(\mathbf{r}_\perp)',
+$$
 
 where $K(\mathbf{r}_\perp)$ is the non-local kernel, typically the Green function of some diffusion equation.
+
 Please note that all of the code works with the **"God given" units** i.e **SI units** !
 
 ### The `NLSE` class
@@ -198,12 +201,12 @@ The `NLSE_1d` class is a specialization of the `NLSE` class to 1d problems. It a
 
 The `CNLSE` class is a coupled non-linear Schrödinger equation allowing to solve the following equation:
 
-```math
+$$
 \begin{split}
 i\frac{\partial\psi_f}{\partial z} &= -\frac{1}{2k_f}\nabla^2\psi_f -\frac{1}{2}n_2^f k_f c\epsilon_0|\psi_f|^2\psi_f + k_f n_2^{fd}c\epsilon_0|\psi_d|^2\psi_f-\frac{i\alpha_f}{2}\psi_f  \\
 i\frac{\partial\psi_d}{\partial z} &= -\frac{1}{2k_d}\nabla^2\psi_d -\frac{1}{2}n_2^d k_d c\epsilon_0|\psi_d|^2\psi_d + k_d n_2^{fd}c\epsilon_0|\psi_f|^2\psi_d-\frac{i\alpha_d}{2}\psi_d
 \end{split}
-```
+$$
 
 This allows to describe the back reaction of the fluid onto the defect as well as two components scenarii.
 
@@ -211,5 +214,7 @@ This allows to describe the back reaction of the fluid onto the defect as well a
 
 The `GPE` class allows to solve the 2D Gross-Pitaevskii equation describing the temporal evolution of a Bosonic field:
 
-$$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi.$$
+$$
+i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi.
+$$
 It follows exactly the same conventions as the other classes a part from the fact that since it describes atoms, the units are the "atomic" units (masses in kg, times in s).

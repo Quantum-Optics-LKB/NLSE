@@ -37,10 +37,11 @@ $$i\partial_t\psi = -\frac{1}{2m}\nabla^2\psi + V\psi + g|\psi|^2\psi.$$
 
 In order to take advantge of the computing power of modern Graphical Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`cupy`](https://cupy.dev/) package that maps [`numpy`](https://numpy.org/) functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
 It also heavily uses just-in-time compilation using [`numba`](https://numba.pydata.org/) in order to optimize performance while having an easily maintainable Python codebase.
-Compared to CPU implementations, this package provides a 10 to 100 times speedup for typical sizes.
+Compared to CPU implementations, this package provides a 10 to 100 times speedup for typical sizes \autoref{fig:bench}.
 While optimized for the use with GPU, it also provides a performant CPU fallback layer.
 
 The goal of this package is to provide a natural framework for all physicists wishing to model the propagation of light in non-linear media or the temporal evolution of Bose gases. It can also be used to model the propagation of light in general.
+It supports lossy, nonlinear and nonlocal media.
 
 It provides several classes to model 1D, 2D propagation, and leverages the array functionalities of `numpy` like broadcasting in order to allow easily scans of physical parameters to most closely replicate experimental setups.
 

@@ -1,11 +1,10 @@
-# TODO: Add pure numpy implementation
-
-
 import matplotlib.pyplot as plt
 import numpy as np
+import cupy as cp
 from nlse import NLSE
 from cycler import cycler
 import time
+import tqdm
 
 PRECISION = "single"
 if PRECISION == "double":
@@ -14,7 +13,6 @@ if PRECISION == "double":
 else:
     PRECISION_REAL = np.float32
     PRECISION_COMPLEX = np.complex64
-
 # for plots
 tab_colors = [
     "tab:blue",
@@ -66,9 +64,10 @@ dn = None
 N_avg = 10
 sizes = np.logspace(6, 14, 9, base=2, dtype=int)
 times = np.zeros((len(sizes), 2, N_avg))
+pbar = tqdm.tqdm(total=len(sizes) * 2 * N_avg, desc="Benchmarks")
 for i, size in enumerate(sizes):
     for j, backend in enumerate(["GPU", "CPU"]):
-        for k in range(N_avg):
+        if j == 0:
             simu0 = NLSE(
                 alpha,
                 puiss,
@@ -86,9 +85,12 @@ for i, size in enumerate(sizes):
             E_0 = np.exp(-(np.hypot(simu0.XX, simu0.YY) ** 2) / waist**2).astype(
                 PRECISION_COMPLEX
             )
+        for k in range(N_avg):
             t0 = time.perf_counter()
-            simu0.out_field(E_0, L)
+            simu0.out_field(E_0, L, verbose=False)
             times[i, j, k] = time.perf_counter() - t0
+            pbar.update(1)
+pbar.close()
 err_gpu = np.vstack([np.min(times[:, 0, :], axis=-1), np.max(times[:, 0, :], axis=-1)])
 err_cpu = np.vstack([np.min(times[:, 1, :], axis=-1), np.max(times[:, 1, :], axis=-1)])
 fig, ax = plt.subplots()
@@ -98,6 +100,7 @@ ax.errorbar(
     yerr=err_gpu,
     label="GPU",
     marker="o",
+    capsize=4,
 )
 ax.errorbar(
     np.log2(sizes).astype(int),
@@ -105,6 +108,7 @@ ax.errorbar(
     yerr=err_cpu,
     label="CPU",
     marker="s",
+    capsize=4,
 )
 ax.legend()
 ax.set_xticks(np.log2(sizes).astype(int))

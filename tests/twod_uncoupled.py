@@ -24,7 +24,7 @@ def main():
             PRECISION_COMPLEX
         )
 
-        simu.out_field(E_0, L, verbose=True, plot=False, precision="single")
+        simu.out_field(E_0, L, verbose=True, plot=True, precision="single")
 
 
 if __name__ == "__main__":

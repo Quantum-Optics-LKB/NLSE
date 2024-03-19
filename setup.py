@@ -19,7 +19,6 @@ setup(
         "tqdm",
         "pyfftw",
         "numba",
-        "cupy",
     ],
     classifiers=[
         "Development Status :: 1 - Planning",

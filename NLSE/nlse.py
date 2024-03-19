@@ -143,7 +143,16 @@ class NLSE:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=PRECISION_REAL)
 
     def plot_2d(
-        self, ax, Z, X, AMP, title, cmap="viridis", label=r"$X$ (mm)", **kwargs
+        self,
+        ax,
+        Z,
+        X,
+        AMP,
+        title,
+        cmap="viridis",
+        xlabel=r"$X$ (mm)",
+        ylabel=r"$Y (mm)$",
+        **kwargs,
     ):
         """Plots a 2d amplitude on an equidistant Z * X grid.
 
@@ -165,8 +174,8 @@ class NLSE:
             cmap=cmap,
             **kwargs,
         )
-        ax.set_xlabel(label)
-        ax.set_ylabel(r"$Y$ (mm)")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         ax.set_title(title)
         plt.colorbar(im)
         return
@@ -566,19 +575,20 @@ class NLSE:
             len_fft = len(im_fft[0, :])
             self.plot_2d(
                 a3,
-                np.fft.fftshift(Kx_2),
-                np.fft.fftshift(Kx_2),
+                np.fft.fftshift(Kx_2) * 1e-3,
+                np.fft.fftshift(Kx_2) * 1e-3,
                 im_fft,
                 r"$|\mathcal{TF}(E_{out})|^2$",
                 cmap="viridis",
-                label=r"$K_y$",
+                xlabel=r"$K_x$ (mm$^{-1}$)",
+                ylabel=r"$K_y$ (mm$^{-1}$)",
             )
 
             a4 = fig.add_subplot(224)
             self.plot_1d_amp(
                 a4,
                 Kx_2[1 : -len_fft // 2] * 1e-3,
-                r"$K_y (mm^{-1})$",
+                r"$K_x (mm^{-1})$",
                 im_fft[len_fft // 2, len_fft // 2 + 1 :],
                 r"$|\mathcal{TF}(E_{out})|$",
                 np.fft.fftshift(Kx_2)[len_fft // 2 + 1] * 1e-3,

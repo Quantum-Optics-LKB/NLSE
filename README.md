@@ -35,6 +35,16 @@ Other than this, the code relies on these libraries :
 - `scipy`
 - `matplotlib`
 
+## Tests
+
+Tests are included to check functionalities and benchmark performance.
+You can run all tests by executing `tests/run_all_tests.py` (warning: this might take some time !).
+It will test both CPU and GPU backends.
+
+The benchmarks can be run using `tests/benchmarks.py` and compare a "naive" numpy implementation of the main solver loop to our solver.
+On a Nvidia RTX4090 GPU and Ryzen 7950X CPU, we test our solver to the following results:
+![benchmarks](img/benchmarks.png)
+
 ## How does it work ?
 
 ### Physical situation

@@ -10,12 +10,12 @@ authors:
   - name: Tangui Aladjidi
     orcid: 0000-0002-3109-9723
     affiliation: 1 # (Multiple affiliations must be quoted)
+    corresponding: true # (This is how to denote the corresponding author)
   - name: Clara Piekarski
     orcid: 0000-0001-6871-6003
     affiliation: 1
   - name: Quentin Glorieux
     orcid: 0000-0003-0903-0233
-    corresponding: true # (This is how to denote the corresponding author)
     affiliation: 1
 affiliations:
  - name: Laboratoire Kastler Brossel, Sorbonne University, CNRS, ENS-PSL University, Collège de France; 4 Place Jussieu, 75005 Paris, France

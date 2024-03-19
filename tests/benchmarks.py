@@ -140,7 +140,7 @@ ax.errorbar(
 ax.legend()
 ax.set_xticks(np.log2(sizes).astype(int))
 ax.set_xlabel(r"Size of the system $2^N$")
-ax.set_ylabel("Execution time (s)")
+ax.set_ylabel("Execution time in s (lower is better)")
 ax.set_yscale("log")
 fig.savefig("benchmarks.pdf", dpi=300)
 plt.show()

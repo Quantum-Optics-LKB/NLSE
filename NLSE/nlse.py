@@ -1996,7 +1996,7 @@ class GPE:
         Returns:
             list: A list containing the FFT plans
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # plan_fft = fftpack.get_fft_plan(
             #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(

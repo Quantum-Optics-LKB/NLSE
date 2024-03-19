@@ -15,7 +15,7 @@ def main():
     window = N * 5.5e-6
     puiss = 1.05
     Isat = 10e4  # saturation intensity in W/m^2
-    L = 10e-3
+    L = 1e-3
     alpha = 20
     nl_length = 60e-6
     for backend in ["CPU", "GPU"]:
@@ -71,7 +71,7 @@ def main():
             nl_length=nl_length,
             backend=backend,
         )
-        simu_c_1d.delta_z = 1e-6
+        simu_c_1d.delta_z = 1e-5
         simu_c_1d.puiss2 = 10e-3
         simu_c_1d.n22 = 1e-10
         simu_c_1d.k2 = 2 * np.pi / 795e-9

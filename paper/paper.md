@@ -41,7 +41,7 @@ Compared to naive Numpy based CPU implementations, this package provides a 100 t
 While optimized for the use with GPU, it also provides a performant CPU fallback layer.
 
 The goal of this package is to provide a natural framework for all physicists wishing to model the propagation of light in non-linear media or the temporal evolution of Bose gases. It can also be used to model the propagation of light in general.
-It supports lossy, nonlinear and nonlocal media.
+It supports lossy, non-linear and non-local media.
 
 It provides several classes to model 1D, 2D propagation, and leverages the array functionalities of `numpy` like broadcasting in order to allow easy scans of physical parameters to most closely replicate experimental setups.
 

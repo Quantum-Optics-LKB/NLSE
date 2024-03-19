@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import cupy as cp
-from nlse import NLSE
+from NLSE.nlse import NLSE
 from cycler import cycler
 import time
 import tqdm
@@ -94,7 +93,7 @@ for i, size in enumerate(sizes):
     for k in range(N_avg):
         E1 = E_0.copy()
         t0 = time.perf_counter()
-        for l in range(int(L / simu0.delta_z)):
+        for z in range(int(L / simu0.delta_z)):
             E1 = np.fft.fft2(E1)
             E1 *= np.exp(1j * simu0.delta_z * simu0.propagator / (2 * simu0.k))
             E1 = np.fft.ifft2(E1)

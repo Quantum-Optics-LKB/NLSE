@@ -12,7 +12,15 @@ setup(
     author_email="tangui.aladjidi@lkb.upmc.fr",
     license="MIT",
     packages=["NLSE"],
-    install_requires=["numpy", "scipy", "matplotlib", "tqdm", "pyfftw", "numba"],
+    install_requires=[
+        "numpy",
+        "scipy",
+        "matplotlib",
+        "tqdm",
+        "pyfftw",
+        "numba",
+        "cupy",
+    ],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Science/Research",

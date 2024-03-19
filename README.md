@@ -19,6 +19,10 @@ pip install .
 
 ## Requirements
 
+### Supported platforms
+
+This code has been tested on the three main platforms: Linux, MacOs and Windows.
+
 ### GPU computing
 
 For optimal speed, this code uses your GPU (graphics card). For this, you need specific libraries. For Nvidia cards, you need a [CUDA](https://developer.nvidia.com/cuda-toolkit) install. For AMD cards, you need a [ROCm](https://rocmdocs.amd.com/en/latest/) install. Of course, you need to update your graphics driver to take full advantage of these. In any case we use [CuPy](cupy.dev) for the Python interface to these libraries.

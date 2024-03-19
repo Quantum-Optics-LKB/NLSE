@@ -15,7 +15,7 @@ from scipy.ndimage import zoom
 from scipy import signal
 from scipy import special
 from typing import Any
-import kernels_cpu
+from . import kernels_cpu
 
 BACKEND = "GPU"
 PRECISION = "single"
@@ -33,14 +33,15 @@ if BACKEND == "GPU":
         import cupyx.scipy.signal as signal_cp
 
         CUPY_AVAILABLE = True
-        import kernels_gpu
+        from . import kernels_gpu
 
     except ImportError:
         print("CuPy not available, falling back to CPU backend ...")
         CUPY_AVAILABLE = False
+        BACKEND = "CPU"
 
 pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
-pyfftw.config.PLANNER_EFFORT = "FFTW_ESTIMATE"
+pyfftw.config.PLANNER_EFFORT = "FFTW_MEASURE"
 pyfftw.interfaces.cache.enable()
 np.random.seed(1)
 
@@ -83,6 +84,7 @@ class NLSE:
             self.kernels = kernels_gpu
             self.convolution = signal_cp.fftconvolve
         else:
+            self.backend = "CPU"
             self.kernels = kernels_cpu
             self.convolution = signal.fftconvolve
         self.n2 = n2
@@ -254,7 +256,7 @@ class NLSE:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             return cp.asarray(propagator)
         else:
             return propagator
@@ -267,7 +269,7 @@ class NLSE:
         Returns:
             list: A list containing the FFT plans
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # plan_fft = fftpack.get_fft_plan(
             #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
@@ -325,7 +327,7 @@ class NLSE:
             propagation step.
             Defaults to "single".
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -355,7 +357,7 @@ class NLSE:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
@@ -437,7 +439,7 @@ class NLSE:
             E_in.dtype == PRECISION_COMPLEX
         ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(E_in) == np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
@@ -470,7 +472,7 @@ class NLSE:
             A[:] = E_in
         if self.propagator is None:
             self.propagator = self.build_propagator(self.k)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
@@ -487,7 +489,7 @@ class NLSE:
             else:
                 V = self.V.copy()
 
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -507,12 +509,12 @@ class NLSE:
         if verbose:
             pbar.close()
 
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
-            if self.backend == "GPU":
+            if self.backend == "GPU" and CUPY_AVAILABLE:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
                     f" {time.perf_counter()-t0} s (CPU)"
@@ -520,7 +522,7 @@ class NLSE:
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and return_np_array:
+        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
             A = cp.asnumpy(A)
 
         if plot:
@@ -628,6 +630,7 @@ class NLSE_1d:
             self.kernels = kernels_gpu
             self.convolution = signal_cp.fftconvolve
         else:
+            self.backend = "CPU"
             self.kernels = kernels_cpu
             self.convolution = signal.fftconvolve
         # listof physical parameters
@@ -665,7 +668,7 @@ class NLSE_1d:
             d = self.nl_length // self.delta_X
             x = np.arange(-3 * d, 3 * d + 1)
             self.nl_profile = (
-                1 / (np.sqrt(2 * np.pi) * self.nl_length) * special.kn(0, x / d)
+                1 / (np.sqrt(2 * np.pi) * self.nl_length) * special.kn(0, np.abs(x) / d)
             )
             self.nl_profile[x.size // 2] = np.nanmax(
                 self.nl_profile[np.logical_not(np.isinf(self.nl_profile))]
@@ -685,7 +688,7 @@ class NLSE_1d:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(-1j * 0.5 * (self.Kx**2) / k * self.delta_z)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             return cp.asarray(propagator)
         else:
             return propagator
@@ -698,7 +701,7 @@ class NLSE_1d:
         Returns:
             list: A list containing the FFT plans
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft = fftpack.get_fft_plan(A, axes=-1, value_type="C2C")
             return [plan_fft]
         else:
@@ -749,7 +752,7 @@ class NLSE_1d:
             propagation step.
             Defaults to "single".
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -757,9 +760,7 @@ class NLSE_1d:
         if precision == "double":
             A_sq = A.real * A.real + A.imag * A.imag
             if self.nl_length > 0:
-                A_sq = self.convolution(
-                    A_sq, self.nl_profile, mode="same", axes=(-2, -1)
-                )
+                A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-1,))
             if V is None:
                 self.kernels.nl_prop_without_V(
                     A,
@@ -780,7 +781,7 @@ class NLSE_1d:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
@@ -793,7 +794,7 @@ class NLSE_1d:
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         A_sq = A.real * A.real + A.imag * A.imag
         if self.nl_length > 0:
-            A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-2, -1))
+            A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-1,))
         if precision == "double":
             if V is None:
                 self.kernels.nl_prop_without_V(
@@ -866,7 +867,7 @@ class NLSE_1d:
             E_in.dtype == PRECISION_COMPLEX
         ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(E_in) == np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
@@ -887,7 +888,7 @@ class NLSE_1d:
         else:
             A[:] = E_in
         propagator = self.build_propagator(self.k)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) == cp.ndarray:
@@ -902,7 +903,7 @@ class NLSE_1d:
             else:
                 V = self.V.copy()
 
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -921,12 +922,12 @@ class NLSE_1d:
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
-            if self.backend == "GPU":
+            if self.backend == "GPU" and CUPY_AVAILABLE:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
                     f" {time.perf_counter()-t0} s (CPU)"
@@ -934,7 +935,7 @@ class NLSE_1d:
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and return_np_array:
+        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
             A = cp.asnumpy(A)
 
         if plot:
@@ -942,20 +943,23 @@ class NLSE_1d:
                 A_plot = cp.asnumpy(A)
             elif return_np_array or self.backend == "CPU":
                 A_plot = A.copy()
-            fig, ax = plt.subplots(1, 2)
+            fig, ax = plt.subplots(1, 2, layout="constrained")
             if A.ndim == 2:
                 for i in range(A.shape[0]):
-                    ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
-                    ax[1].plot(
-                        self.X,
+                    ax[0].plot(
+                        self.X * 1e3,
                         1e-4 * c / 2 * epsilon_0 * np.abs(A_plot[i, :]) ** 2,
                     )
+                    ax[1].plot(self.X * 1e3, np.unwrap(np.angle(A_plot[i, :])))
             elif A.ndim == 1:
-                ax[0].plot(self.X, np.unwrap(np.angle(A_plot)))
-                ax[1].plot(self.X, 1e-4 * c / 2 * epsilon_0 * np.abs(A_plot) ** 2)
-            ax[0].set_title("Phase")
-            ax[1].set_title(r"Intensity in $W/cm^2$")
-            plt.tight_layout()
+                ax[0].plot(self.X * 1e3, 1e-4 * c / 2 * epsilon_0 * np.abs(A_plot) ** 2)
+                ax[1].plot(self.X * 1e3, np.unwrap(np.angle(A_plot)))
+            ax[0].set_title(r"$|\psi|^2$")
+            ax[0].set_ylabel(r"Intensity $\frac{\epsilon_0 c}{2}|\psi|^2$ in $W/cm^2$")
+            ax[1].set_title(r"Phase $\mathrm{arg}(\psi)$")
+            ax[1].set_ylabel(r"Phase arg$(\psi)$")
+            for a in ax:
+                a.set_xlabel("Position x in mm")
             plt.show()
         return A
 
@@ -1266,7 +1270,7 @@ class CNLSE(NLSE):
             E.dtype == PRECISION_COMPLEX
         ), f"Precision mismatch, E should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(E) == np.ndarray:
                 A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
@@ -1299,7 +1303,7 @@ class CNLSE(NLSE):
         if self.propagator1 is None:
             self.propagator1 = self.build_propagator(self.k)
             self.propagator2 = self.build_propagator(self.k2)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) == cp.ndarray:
@@ -1313,7 +1317,7 @@ class CNLSE(NLSE):
                 V = self.V
             else:
                 V = self.V.copy()
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -1339,13 +1343,13 @@ class CNLSE(NLSE):
             if callback is not None:
                 callback(self, A, z, i)
         t_cpu = time.perf_counter() - t0
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
             pbar.close()
-            if self.backend == "GPU":
+            if self.backend == "GPU" and CUPY_AVAILABLE:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
                     f" {time.perf_counter()-t0} s (CPU)"
@@ -1353,7 +1357,7 @@ class CNLSE(NLSE):
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and return_np_array:
+        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
             A = cp.asnumpy(A)
 
         if plot:
@@ -1431,7 +1435,6 @@ class CNLSE_1d(NLSE_1d):
         self,
         alpha: float,
         puiss: float,
-        waist: float,
         window: float,
         n2: float,
         n12: float,
@@ -1469,7 +1472,6 @@ class CNLSE_1d(NLSE_1d):
         super().__init__(
             alpha=alpha,
             puiss=puiss,
-            waist=waist,
             window=window,
             n2=n2,
             V=V,
@@ -1493,14 +1495,12 @@ class CNLSE_1d(NLSE_1d):
         # powers
         self.puiss2 = self.puiss
         # waists
-        self.waist2 = self.waist
         self.propagator1 = None
         self.propagator2 = None
 
     def split_step(
         self,
         A: np.ndarray,
-        A1_old: np.ndarray,
         V: np.ndarray,
         propagator1: np.ndarray,
         propagator2: np.ndarray,
@@ -1527,7 +1527,7 @@ class CNLSE_1d(NLSE_1d):
         """
         A1 = A[..., 0, :]
         A2 = A[..., 1, :]
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -1587,7 +1587,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A1, propagator1, out=A1)
@@ -1727,37 +1727,33 @@ class CNLSE_1d(NLSE_1d):
             "Input number of dimensions should at least be 2 !" " (2, NX)"
         )
         assert (
-            E_in.dtype == PRECISION_COMPLEX
+            E.dtype == PRECISION_COMPLEX
         ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(E) == np.ndarray:
                 A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
-                integral = np.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
+                integral = np.sum(np.abs(E) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = True
             elif type(E) == cp.ndarray:
                 A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
-                integral = cp.sum(np.abs(E) ** 2 * self.delta_X**2, axis=-1)
+                integral = cp.sum(np.abs(E) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned(E.shape, dtype=PRECISION_COMPLEX)
-        # ndim logic ...
+            integral = np.sum(np.abs(E) ** 2 * self.delta_X, axis=-1) ** 2
         A[:] = E
         if normalize:
             E_00 = np.sqrt(2 * self.puiss / (c * epsilon_0 * integral))
             A[:] = (A.T * E_00.T).T
-        if A.ndim == 2:
-            A1_old = A[0, :].copy()
-        else:
-            A1_old = A[:, 0, :].copy()
         if self.plans is None:
             self.plans = self.build_fft_plan(E)
         if self.propagator1 is None:
-            self.propagator1 = self.build_propagator(self.k, precision)
-            self.propagator2 = self.build_propagator(self.k2, precision)
-        if self.backend == "GPU":
+            self.propagator1 = self.build_propagator(self.k)
+            self.propagator2 = self.build_propagator(self.k2)
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) == cp.ndarray:
@@ -1766,7 +1762,6 @@ class CNLSE_1d(NLSE_1d):
                 V = self.V
             if type(A) != cp.ndarray:
                 A = cp.asarray(A)
-                A1_old = cp.asarray(A1_old)
         else:
             if self.V is None:
                 V = self.V
@@ -1789,7 +1784,6 @@ class CNLSE_1d(NLSE_1d):
                 pbar.update(1)
             self.split_step(
                 A,
-                A1_old,
                 V,
                 self.propagator1,
                 self.propagator2,
@@ -1799,13 +1793,13 @@ class CNLSE_1d(NLSE_1d):
             if callback is not None:
                 callback(self, A, z, i)
         t_cpu = time.perf_counter() - t0
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
             pbar.close()
-            if self.backend == "GPU":
+            if self.backend == "GPU" and CUPY_AVAILABLE:
                 print(
                     print(
                         f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
@@ -1815,38 +1809,43 @@ class CNLSE_1d(NLSE_1d):
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and return_np_array:
+        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
             A = cp.asnumpy(A)
 
-            if plot:
-                if not (return_np_array):
-                    A_1_plot = A[0, :].get()
-                    A_2_plot = A[1, :].get()
-                elif return_np_array or self.backend == "CPU":
-                    A_1_plot = A[0, :].copy()
-                    A_2_plot = A[1, :].copy()
-                fig = plt.figure(layout="constrained")
-                # plot amplitudes and phases
-                a1 = fig.add_subplot(211)
-                self.plot_1d(
-                    a1,
-                    self.X * 1e3,
-                    np.abs(A_1_plot) ** 2,
-                    r"$|\psi_1|^2$",
-                    np.angle(A_1_plot),
-                    r"arg$(\psi_1)$",
-                )
-                a2 = fig.add_subplot(212)
-                self.plot_2d(
-                    a2,
-                    self.X * 1e3,
-                    np.abs(A_2_plot) ** 2,
-                    r"$|\psi_2|^2$",
-                    np.angle(A_2_plot),
-                    r"arg$(\psi_2)$",
-                )
-
-            plt.show()
+        if plot:
+            if not (return_np_array):
+                A_1_plot = A[0, :].get()
+                A_2_plot = A[1, :].get()
+            elif return_np_array or self.backend == "CPU":
+                A_1_plot = A[0, :].copy()
+                A_2_plot = A[1, :].copy()
+            fig, ax = plt.subplots(2, 2, layout="constrained")
+            # plot amplitudes and phases
+            ax[0, 0].plot(
+                self.X * 1e3, np.abs(A_1_plot) ** 2 * epsilon_0 * c / 2 * 1e-4
+            )
+            ax[0, 0].set_title(r"$|\psi_1|^2$")
+            ax[0, 0].set_xlabel("x in mm")
+            ax[0, 0].set_ylabel(
+                r"Intensity $\frac{\epsilon_0 c}{2}|\psi_1|^2$ in $W/cm^2$"
+            )
+            ax[0, 1].plot(self.X * 1e3, np.unwrap(np.angle(A_1_plot)))
+            ax[0, 1].set_title(r"$\mathrm{arg}(\psi_1)$")
+            ax[0, 1].set_xlabel("x in mm")
+            ax[0, 1].set_ylabel(r"Phase in rad")
+            ax[1, 0].plot(
+                self.X * 1e3, np.abs(A_2_plot) ** 2 * epsilon_0 * c / 2 * 1e-4
+            )
+            ax[1, 0].set_title(r"$|\psi_2|^2$")
+            ax[1, 0].set_xlabel("x in mm")
+            ax[1, 0].set_ylabel(
+                r"Intensity $\frac{\epsilon_0 c}{2}|\psi_1|^2$ in $W/cm^2$"
+            )
+            ax[1, 1].plot(self.X * 1e3, np.unwrap(np.angle(A_2_plot)))
+            ax[1, 1].set_title(r"$\mathrm{arg}(\psi_2)$")
+            ax[1, 1].set_xlabel("x in mm")
+            ax[1, 1].set_ylabel(r"Phase in rad")
+        plt.show()
         return A
 
 
@@ -1902,7 +1901,6 @@ class GPE:
         self.NY = NY
         self.window = window
         tau_nl = self.window**2 / (abs(self.g) * self.N)
-        print(f"Non linear time scale : {tau_nl*1e3} ms")
         self.delta_t = tau_nl / 10
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
@@ -1953,7 +1951,7 @@ class GPE:
         propagator = np.exp(
             -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / self.m * self.delta_t
         )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             return cp.asarray(propagator)
         else:
             return propagator
@@ -2021,7 +2019,7 @@ class GPE:
             nonlinear propagation step.
             Defaults to "single".
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -2051,7 +2049,7 @@ class GPE:
                     self.g,
                     self.sat,
                 )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
@@ -2133,10 +2131,10 @@ class GPE:
         """
         assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
         assert (
-            E_in.dtype == PRECISION_COMPLEX
+            psi.dtype == PRECISION_COMPLEX
         ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Ts = np.arange(0, T, step=self.delta_t, dtype=PRECISION_REAL)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(psi) is np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty(psi.shape, dtype=PRECISION_COMPLEX)
@@ -2167,7 +2165,7 @@ class GPE:
             A[:] = psi
         if self.propagator is None:
             self.propagator = self.build_propagator()
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) is cp.ndarray:
@@ -2182,7 +2180,7 @@ class GPE:
             else:
                 V = self.V.copy()
 
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -2198,20 +2196,20 @@ class GPE:
         if verbose:
             pbar.close()
 
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         t_cpu = time.perf_counter() - t0
         if verbose:
-            if self.backend == "GPU":
+            if self.backend == "GPU" and CUPY_AVAILABLE:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
                     f" / {t_cpu} s (CPU)"
                 )
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
-        if self.backend == "GPU" and return_np_array:
+        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
             A = cp.asnumpy(A)
 
         if plot:
@@ -2335,7 +2333,7 @@ class NLSE_1d_adim(NLSE_1d):
             nonlinear propagation step.
             Defaults to "single".
         """
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -2349,7 +2347,7 @@ class NLSE_1d_adim(NLSE_1d):
                 self.kernels.nl_prop(
                     A, self.delta_z / 2, self.alpha / 2, V, -self.n2, self.I_sat
                 )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
@@ -2412,7 +2410,7 @@ class NLSE_1d_adim(NLSE_1d):
             E_in.dtype == PRECISION_COMPLEX
         ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
         Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(E_in) is np.ndarray:
                 A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
                 integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)
@@ -2432,7 +2430,7 @@ class NLSE_1d_adim(NLSE_1d):
         else:
             A[:] = E_in
         propagator = self.build_propagator()
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(self.V) is np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) is cp.ndarray:
@@ -2447,7 +2445,7 @@ class NLSE_1d_adim(NLSE_1d):
             else:
                 V = self.V.copy()
 
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -2466,14 +2464,14 @@ class NLSE_1d_adim(NLSE_1d):
             self.split_step(A, V, propagator, plans, precision)
             if callback is not None:
                 callback(self, A, z, i)
-        if self.backend == "GPU":
+        if self.backend == "GPU" and CUPY_AVAILABLE:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()
-            if self.backend == "GPU":
+            if self.backend == "GPU" and CUPY_AVAILABLE:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
                     f" / {t_cpu} s (CPU)"
@@ -2481,7 +2479,7 @@ class NLSE_1d_adim(NLSE_1d):
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and return_np_array:
+        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
             A = cp.asnumpy(A)
 
         if plot:

@@ -26,7 +26,7 @@ bibliography: paper.bib
 
 # Summary
 
-The non-linear Shcrödinger equation (NLSE) is a general non-linear equation allowing to model the propagation of light in non-linear media.
+The non-linear Schrödinger equation (NLSE) is a general non-linear equation allowing to model the propagation of light in non-linear media.
 This equation is mathematically isomorphic to the Gross-Pitaevskii equation (GPE) describing the evolution of cold atomic ensembles.
 Providing a flexible, modern and performant framework to solve these equations is a crucial need to model realistic experimental scenarii.
 

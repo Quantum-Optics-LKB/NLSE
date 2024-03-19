@@ -18,7 +18,17 @@ def main():
     alpha = 20
     for backend in ["CPU", "GPU"]:
         simu_c = CNLSE_1d(
-            alpha, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+            alpha,
+            puiss,
+            window,
+            n2,
+            n12,
+            None,
+            L,
+            NX=N,
+            Isat=Isat,
+            omega=1,
+            backend=backend,
         )
         simu_c.delta_z = 1e-6
         simu_c.puiss2 = 10e-3

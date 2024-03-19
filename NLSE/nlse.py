@@ -981,6 +981,7 @@ class CNLSE(NLSE):
         Isat: float = np.inf,
         nl_length: float = 0,
         wvl: float = 780e-9,
+        omega: float = None,
         backend: str = BACKEND,
     ) -> object:
         """Instantiates the class with all the relevant physical parameters
@@ -1000,6 +1001,7 @@ class CNLSE(NLSE):
             for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
+            omega (float, optional): Rabi coupling. Defaults to None.
             backend (str, optional): "GPU" or "CPU". Defaults to BACKEND.
         Returns:
             object: CNLSE class instance
@@ -1023,6 +1025,8 @@ class CNLSE(NLSE):
         # initialize intra component 2 interaction parameter
         # to be the same as intra component 1
         self.n22 = self.n2
+        # Rabi coupling
+        self.omega = omega
         # same for the losses, this is to leave separate attributes so
         # the the user can chose whether or not to unbalence the rates
         self.alpha2 = self.alpha
@@ -1123,6 +1127,10 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.omega is not None:
+                A1_old = A1.copy()
+                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
         if self.backend == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
@@ -1191,6 +1199,10 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.omega is not None:
+                A1_old = A1.copy()
+                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
         else:
             if V is None:
                 self.kernels.nl_prop_without_V_c(
@@ -1236,6 +1248,10 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.omega is not None:
+                A1_old = A1.copy()
+                self.kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self.kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
     def out_field(
         self,
@@ -1444,6 +1460,7 @@ class CNLSE_1d(NLSE_1d):
         Isat: float = np.inf,
         nl_length: float = 0,
         wvl: float = 780e-9,
+        omega: float = None,
         backend: str = BACKEND,
     ) -> object:
         """Instantiates the class with all the relevant physical parameters
@@ -1464,6 +1481,7 @@ class CNLSE_1d(NLSE_1d):
             for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
+            omega (float, optional): Rabi coupling. Defaults to None.
             backend (str, optional): "GPU" or "CPU". Defaults to BACKEND.
 
         Returns:
@@ -1487,6 +1505,8 @@ class CNLSE_1d(NLSE_1d):
         # initialize intra component 2 interaction parameter
         # to be the same as intra component 1
         self.n22 = self.n2
+        # Rabi coupling
+        self.omega = omega
         # same for the losses, this is to leave separate attributes so
         # the the user can chose whether or not to unbalence the rates
         self.alpha2 = self.alpha
@@ -1587,6 +1607,10 @@ class CNLSE_1d(NLSE_1d):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.omega is not None:
+                A1_old = A1.copy()
+                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
@@ -1651,6 +1675,10 @@ class CNLSE_1d(NLSE_1d):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.omega is not None:
+                A1_old = A1.copy()
+                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
         else:
             if V is None:
                 self.kernels.nl_prop_without_V_c(
@@ -1696,6 +1724,10 @@ class CNLSE_1d(NLSE_1d):
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.omega is not None:
+                A1_old = A1.copy()
+                self.kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self.kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
     def out_field(
         self,

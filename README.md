@@ -56,7 +56,7 @@ Here, the constants are defined as followed :
 - $n$ is the linear index of refraction. In our case 1.
 - $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
 
-In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$. 
+In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$.
 This means usually that the response will be described as a convolution by some non-local kernel:
 
 $$
@@ -74,8 +74,7 @@ The `NLSE` class aims at providing a minimal yet functional toolbox to solve non
 #### Initialization
 
 The physical parameters listed above are defined at the instantiation of the `NLSE` class (`__init__` function).
-The backend (GPU or CPU) is tested when the library is imported, but you can then dynamically switch it when instantiating a `NLSE` class by setting the `self.backend` attribute to `"GPU"` or `"CPU"`. 
-
+The backend (GPU or CPU) is tested when the library is imported, but you can then dynamically switch it when instantiating a `NLSE` class by setting the `self.backend` attribute to `"GPU"` or `"CPU"`.
 
 #### Broadcasting
 
@@ -204,12 +203,14 @@ The `CNLSE` class is a coupled non-linear Schrödinger equation allowing to solv
 
 $$
 \begin{split}
-i\frac{\partial\psi_f}{\partial z} &= -\frac{1}{2k_f}\nabla^2\psi_f -\frac{1}{2}n_2^f k_f c\epsilon_0|\psi_f|^2\psi_f + k_f n_2^{fd}c\epsilon_0|\psi_d|^2\psi_f-\frac{i\alpha_f}{2}\psi_f  \\
-i\frac{\partial\psi_d}{\partial z} &= -\frac{1}{2k_d}\nabla^2\psi_d -\frac{1}{2}n_2^d k_d c\epsilon_0|\psi_d|^2\psi_d + k_d n_2^{fd}c\epsilon_0|\psi_f|^2\psi_d-\frac{i\alpha_d}{2}\psi_d
+i\frac{\partial\psi_f}{\partial z} &= -\frac{1}{2k_f}\nabla^2\psi_f -\frac{1}{2}n_2^f k_f c\epsilon_0|\psi_f|^2\psi_f + k_f n_2^{fd}c\epsilon_0|\psi_d|^2\psi_f-\frac{i\alpha_f}{2}\psi_f + \frac{\Omega}{2} \psi_d  \\
+i\frac{\partial\psi_d}{\partial z} &= -\frac{1}{2k_d}\nabla^2\psi_d -\frac{1}{2}n_2^d k_d c\epsilon_0|\psi_d|^2\psi_d + k_d n_2^{fd}c\epsilon_0|\psi_f|^2\psi_d-\frac{i\alpha_d}{2}\psi_d + \frac{\Omega}{2} \psi_f
 \end{split}
 $$
 
 This allows to describe the back reaction of the fluid onto the defect as well as two components scenarii.
+In order to "turn on" different terms, it suffices to set the parameters value to something other than `None`.
+When `None`, the solver does not apply the corresponding evolution term for optimal performance.
 
 ### The `GPE` class
 

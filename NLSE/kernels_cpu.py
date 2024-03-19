@@ -2,7 +2,7 @@ import numba
 import numpy as np
 
 
-@numba.njit(parallel=True, fastmath=True, cache=True)
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
 def nl_prop(
     A: np.ndarray,
     A_sq: np.ndarray,
@@ -32,7 +32,7 @@ def nl_prop(
         )
 
 
-@numba.njit(parallel=True, fastmath=True, cache=True)
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
 def nl_prop_without_V(
     A: np.ndarray,
     A_sq: np.ndarray,
@@ -57,7 +57,7 @@ def nl_prop_without_V(
         A[i] *= np.exp(dz * (-alpha / 2 + 1j * g * A_sq[i] / (1 + A_sq[i] / Isat)))
 
 
-@numba.njit(parallel=True, fastmath=True, cache=True)
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
 def nl_prop_c(
     A1: np.ndarray,
     A_sq_1: np.ndarray,
@@ -95,7 +95,7 @@ def nl_prop_c(
         )
 
 
-@numba.njit(parallel=True, fastmath=True, cache=True)
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
 def nl_prop_without_V_c(
     A1: np.ndarray,
     A_sq_1: np.ndarray,
@@ -129,7 +129,25 @@ def nl_prop_without_V_c(
         )
 
 
-@numba.njit(parallel=True, fastmath=True, cache=True)
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
+def rabi_coupling(A1: np.ndarray, A2: np.ndarray, dz: float, omega: float) -> None:
+    """Apply a Rabi coupling term.
+    This function implements the Rabi hopping term.
+    It exchanges density between the two components.
+
+    Args:
+        A1 (np.ndarray): First field / component
+        A2 (np.ndarray): Second field / component
+        dz (float): Solver step
+        omega (float): Rabi coupling strength
+    """
+    A1 = A1.ravel()
+    A2 = A2.ravel()
+    for i in numba.prange(A1.size):
+        A1[i] += 1j * omega * A2[i] * dz
+
+
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
 def vortex(
     im: np.ndarray, i: int, j: int, ii: np.ndarray, jj: np.ndarray, ll: int
 ) -> None:

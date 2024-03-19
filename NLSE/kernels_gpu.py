@@ -1,5 +1,4 @@
 import cupy as cp
-from cupyx.scipy import signal
 
 
 @cp.fuse(kernel_name="nl_prop")
@@ -116,6 +115,21 @@ def nl_prop_without_V_c(
     A1 *= cp.exp(dz * (-alpha / (2 * (1 + A_sq_1 / Isat))))
     # Interactions
     A1 *= cp.exp(dz * (1j * (g11 * A_sq_1 / (1 + A_sq_1 / Isat) + g12 * A_sq_2)))
+
+
+@cp.fuse(kernel_name="rabi_coupling")
+def rabi_coupling(A1: cp.ndarray, A2: cp.ndarray, dz: float, omega: float) -> None:
+    """Apply a Rabi coupling term.
+    This function implements the Rabi hopping term.
+    It exchanges density between the two components.
+
+    Args:
+        A1 (cp.ndarray): First field / component
+        A2 (cp.ndarray): Second field / component
+        dz (float): Solver step
+        omega (float): Rabi coupling strength
+    """
+    A1 += 1j * omega * A2 * dz
 
 
 @cp.fuse(kernel_name="vortex_cp")

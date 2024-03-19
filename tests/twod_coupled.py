@@ -28,6 +28,7 @@ def main():
             NX=N,
             NY=N,
             Isat=Isat,
+            omega=1,
             backend=backend,
         )
         simu_c.delta_z = 1e-5

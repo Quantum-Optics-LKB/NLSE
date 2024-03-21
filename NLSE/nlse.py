@@ -332,7 +332,7 @@ class NLSE:
             plans (list): List of FFT plan objects. Either a single FFT plan for
             both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
+            precision (str, optional): Single or double application of the nonlinear
             propagation step.
             Defaults to "single".
         """
@@ -437,7 +437,8 @@ class NLSE:
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
         Returns:
@@ -758,7 +759,7 @@ class NLSE_1d:
             plans (list): List of FFT plan objects. Either a single FFT plan for both
               directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
+            precision (str, optional): Single or double application of the nonlinear
             propagation step.
             Defaults to "single".
         """
@@ -864,7 +865,8 @@ class NLSE_1d:
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
             normalize (bool, optional): Normalizes the field to V/m. Defaults to True.
@@ -1069,7 +1071,7 @@ class CNLSE(NLSE):
             plans (list): List of FFT plan objects. Either a single FFT plan for
             both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
+            precision (str, optional): Single or double application of the nonlinear
             propagation step.
             Defaults to "single".
         Returns:
@@ -1279,7 +1281,8 @@ class CNLSE(NLSE):
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
         Returns:
@@ -1549,7 +1552,7 @@ class CNLSE_1d(NLSE_1d):
             plans (list): List of FFT plan objects. Either a single FFT plan for
             both directions
             (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the linear
+            precision (str, optional): Single or double application of the nonlinear
             propagation step.
             Defaults to "single".
         Returns:
@@ -1755,7 +1758,8 @@ class CNLSE_1d(NLSE_1d):
             z (float): propagation distance in m
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-            of the propagator. This leads to a dz (single) or dz^3 (double) precision.
+            of the nonlinear term.
+            This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
         Returns:

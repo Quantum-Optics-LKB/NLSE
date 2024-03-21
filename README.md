@@ -7,7 +7,7 @@ A small utility to easily simulate all sorts of non linear Schrödinger equation
 First clone the repository:
 
 ```bash
-git clone https://github.com/Quantum-Optics-LKB/NLSE/tree/main
+git clone https://github.com/Quantum-Optics-LKB/NLSE.git
 cd NLSE
 ```
 

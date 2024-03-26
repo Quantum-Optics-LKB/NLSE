@@ -39,7 +39,9 @@ simu = NLSE(
 E_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2)
 V = -1e-4 * np.exp(-(simu.XX**2 + simu.YY**2) / waist2**2)
 simu.out_field(E_0, L, verbose=True, plot=True, precision="single")
-``````
+```
+
+<!-- TODO ADD IMAGE !!! -->
 
 ## Requirements
 
@@ -130,6 +132,8 @@ a `(N_n2, N_alpha, Ny, Nx)` array.
 
 The take-home message is that the array shape should be compliant with `numpy` [broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html).
 
+**WARNING : For now it is only available on the GPU backend !**
+
 #### Numerical precision
 
 In order to reach the best performance, the numerical precision is hardcoded as a constant variable at the top of `nlse.py`.
@@ -163,78 +167,6 @@ The `out_field` method is the main function of the code that propagates the fiel
 The `precision` argument allows to switch between applicating the nonlinear terms in a single multiplication (`"single"`), or applying a "half" nonlinear term before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is $\mathcal{O}(\delta z)$ in the first case and $\mathcal{O}(\delta z^3)$ in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
 The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $z_{NL}=\frac{1}{k_0 n_2 I}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
 
-#### Simulation of phase or intensity masks
-
-A convenience function `slm` allows to simulate the application of a phase mask or intensity mask using a SLM or DMD of pixel pitch `d_slm` of the screen. This function resizes the picture to match the simulation pixel size.
-
-#### Initial state modelling
-
-In the `__main__` function, we wrote two functions that allow to generate SLM phase patterns for initial fluid of light engineering : `flatTop_super` and `flatTop_tur`. They allow to generate either two counterstreaming shearing (`super`) or colliding (`tur`) components.\
-The documentation describes all the tuning knobs of these functions.
-
-#### Example
-
-A small example is defined in the `main` function of [`nlse.py`](nlse.py).\
-We first create a `NLSE` instance for our simulation with the physical parameters of our experiment :
-
-```python
-trans = 0.5
-n2 = -1.9e-9
-waist = 1e-3
-window = 2048*5.5e-6
-puiss = 500e-3
-L = 5e-2
-dn = 2.5e-4 * np.ones((2048, 2048), dtype=np.complex64)
-simu = NLSE(trans, puiss, waist, window, n2, dn,
-            L, NX=2048, NY=2048)
-```
-
-- `trans` is the transmission accross the non-linear medium sample. Here we lose half of the light in the medium so transmission is 50%.
-- `n2` is the non-linear coefficient in $m^2/W$.
-- `waist` is the beam waist size in m.
-- `window` is the total size of the computational window. Here we specify it as `2048*5.5e-6` as our camera has 2048*2048 pixels of 5.5 microns.
-- `puiss` is the laser power in W.
-- `L` is the length of the medium in m.
-- `dn` is the linear variation of index of refraction (dimensionless).
-  
-Finally we can build the `NLSE` object `simu`. Note that we now have access to the spatial grid of the problem `simu.XX` and `simu.YY` so we can refine our potential to be a small gaussian potential of waist three times smaller than the main beam :
-
-```python
-simu.V *= np.exp(-(simu.XX**2 + simu.YY**2)/(2*(simu.waist/3)**2))
-```
-
-Here this potential is attractive because `dn` is positive.\
-We then define the initial state of our field :
-
-```python
-phase_slm = 2*np.pi * \
-        flatTop_super(1272, 1024, length=1000, width=600)
-phase_slm = simu.slm(phase_slm, 6.25e-6)
-E_in_0 = np.ones((simu.NY, simu.NX), dtype=np.complex64) * \
-    np.exp(-(simu.XX**2 + simu.YY**2)/(2*simu.waist**2))
-E_in_0 *= np.exp(1j*phase_slm)
-E_in_0 = np.fft.fftshift(np.fft.fft2(E_in_0))
-E_in_0[0:E_in_0.shape[0]//2+20, :] = 1e-10
-E_in_0[E_in_0.shape[0]//2+225:, :] = 1e-10
-E_in_0 = np.fft.ifft2(np.fft.ifftshift(E_in_0))
-```
-
-Here we simulate two shearing components that will generate a line of vortices. We do some Fourier filtering to keep only the first order of the generated phase mask.\
-Finally we propagate to the output of the non linear medium (in our case a hot rubidium vapour):
-
-```python
-A = simu.out_field(E_in_0, L, plot=True)
-```
-
-This yields the following plot and output :
-
-```bash
-Iteration 2052/2052
-Time spent to solve : 9.573697265625 s (GPU) / 9.576363077998394 s (CPU)
-```
-
-![output](img/output.png)
-We see that the line of vortices is being pulled into the attractive potential located at the center of the top left image. The other plots allow to visualize the phase or the Fourier spectrum of the image.
 
 ### The `CNLSE` and `NLSE_1d` classes
 

@@ -312,7 +312,7 @@ class NLSE:
             A = cp.empty_like(E_in)
             A[:] = cp.asarray(E_in)
         else:
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=E_in.dtype)
+            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
             A[:] = E_in
         if normalize:
             # normalization of the field
@@ -331,6 +331,14 @@ class NLSE:
             self.V = cp.asarray(self.V)
         self.nl_profile = cp.asarray(self.nl_profile)
         self.propagator = cp.asarray(self.propagator)
+        # for broadcasting of parameters in case they are
+        # not already on the GPU
+        if isinstance(self.n2, np.ndarray):
+            self.n2 = cp.asarray(self.n2)
+        if isinstance(self.alpha, np.ndarray):
+            self.alpha = cp.asarray(self.alpha)
+        if isinstance(self.I_sat, np.ndarray):
+            self.I_sat = cp.asarray(self.I_sat)
 
     def _retrieve_arrays_from_gpu(self) -> None:
         """
@@ -340,6 +348,61 @@ class NLSE:
             self.V = self.V.get()
         self.nl_profile = self.nl_profile.get()
         self.propagator = self.propagator.get()
+        if isinstance(self.n2, cp.ndarray):
+            self.n2 = self.n2.get()
+        if isinstance(self.alpha, cp.ndarray):
+            self.alpha = self.alpha.get()
+        if isinstance(self.I_sat, cp.ndarray):
+            self.I_sat = self.I_sat.get()
+
+    def plot_field(self, A_plot: np.ndarray) -> None:
+        """Plot a field for monitoring.
+
+        Args:
+            A_plot (np.ndarray): Field to plot
+        """
+        # if array is multi-dimensional, drop dims until the shape is 2D
+        if A_plot.ndim > 2:
+            while len(A_plot.shape) > 2:
+                A_plot = A_plot[0]
+        if CUPY_AVAILABLE and isinstance(A_plot, cp.ndarray):
+            A_plot = A_plot.get()
+        fig, ax = plt.subplots(1, 3, layout="constrained")
+        ext_real = [
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
+            self.Y[0] * 1e3,
+            self.Y[-1] * 1e3,
+        ]
+        ext_fourier = [
+            self.Kx[0] * 1e-3,
+            self.Kx[-1] * 1e-3,
+            self.Ky[0] * 1e-3,
+            self.Ky[-1] * 1e-3,
+        ]
+        rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
+        phi = np.angle(A_plot)
+        im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))
+        im0 = ax[0].imshow(rho, extent=ext_real)
+        ax[0].set_title("Intensity")
+        ax[0].set_xlabel("x (mm)")
+        ax[0].set_ylabel("y (mm)")
+        fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
+        im1 = ax[1].imshow(phi, extent=ext_real, cmap="twilight_shifted")
+        ax[1].set_title("Phase")
+        ax[1].set_xlabel("x (mm)")
+        ax[1].set_ylabel("y (mm)")
+        fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
+        im2 = ax[2].imshow(
+            im_fft,
+            extent=ext_fourier,
+            cmap="nipy_spectral",
+        )
+        ax[2].set_title("Fourier space")
+        ax[2].set_xlabel(r"$k_x$ ($mm^{-1}$)")
+        ax[2].set_ylabel(r"$k_y$ ($mm^{-1}$)")
+        fig.colorbar(im2, ax=ax[2], shrink=0.6, label="Intensity (a.u.)")
+        plt.show()
 
     def out_field(
         self,
@@ -383,15 +446,14 @@ class NLSE:
             V = self.V
         else:
             V = self.V.copy()
-
+        if verbose:
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
+        n2_old = self.n2
         if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
         t0 = time.perf_counter()
-        n2_old = self.n2
-        if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -424,52 +486,7 @@ class NLSE:
             self._retrieve_arrays_from_gpu()
 
         if plot:
-            if not (return_np_array):
-                if A.ndim == 2:
-                    A_plot = A.get()
-                elif A.ndim == 3:
-                    A_plot = A[0, :, :].get()
-            elif return_np_array or self.backend == "CPU":
-                if A.ndim == 2:
-                    A_plot = A
-                elif A.ndim == 3:
-                    A_plot = A[0, :, :]
-            fig, ax = plt.subplots(1, 3, layout="constrained")
-            ext_real = [
-                self.X[0] * 1e3,
-                self.X[-1] * 1e3,
-                self.Y[0] * 1e3,
-                self.Y[-1] * 1e3,
-            ]
-            ext_fourier = [
-                self.Kx[0] * 1e-3,
-                self.Kx[-1] * 1e-3,
-                self.Ky[0] * 1e-3,
-                self.Ky[-1] * 1e-3,
-            ]
-            rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
-            phi = np.angle(A_plot)
-            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))
-            im0 = ax[0].imshow(rho, extent=ext_real)
-            ax[0].set_title("Intensity")
-            ax[0].set_xlabel("x (mm)")
-            ax[0].set_ylabel("y (mm)")
-            fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
-            im1 = ax[1].imshow(phi, extent=ext_real, cmap="twilight_shifted")
-            ax[1].set_title("Phase")
-            ax[1].set_xlabel("x (mm)")
-            ax[1].set_ylabel("y (mm)")
-            fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
-            im2 = ax[2].imshow(
-                im_fft,
-                extent=ext_fourier,
-                cmap="nipy_spectral",
-            )
-            ax[2].set_title("Fourier space")
-            ax[2].set_xlabel(r"$k_x$ ($mm^{-1}$)")
-            ax[2].set_ylabel(r"$k_y$ ($mm^{-1}$)")
-            fig.colorbar(im2, ax=ax[2], shrink=0.6, label="Intensity (a.u.)")
-            plt.show()
+            self.plot_field(A)
         return A
 
 

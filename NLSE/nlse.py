@@ -10,21 +10,12 @@ import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import pyfftw
-from scipy.constants import c, epsilon_0, hbar, atomic_mass
-from scipy.ndimage import zoom
+from scipy.constants import c, epsilon_0, hbar
 from scipy import signal
 from scipy import special
-from typing import Any
 from . import kernels_cpu
 
 BACKEND = "GPU"
-PRECISION = "single"
-if PRECISION == "double":
-    PRECISION_REAL = np.float64
-    PRECISION_COMPLEX = np.complex128
-else:
-    PRECISION_REAL = np.float32
-    PRECISION_COMPLEX = np.complex64
 
 if BACKEND == "GPU":
     try:
@@ -109,7 +100,7 @@ class NLSE:
             num=NX,
             endpoint=False,
             retstep=True,
-            dtype=PRECISION_REAL,
+            dtype=np.float32,
         )
         self.Y, self.delta_Y = np.linspace(
             -self.window / 2,
@@ -117,7 +108,7 @@ class NLSE:
             num=NY,
             endpoint=False,
             retstep=True,
-            dtype=PRECISION_REAL,
+            dtype=np.float32,
         )
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
@@ -140,119 +131,7 @@ class NLSE:
             ] = np.nanmax(self.nl_profile[np.logical_not(np.isinf(self.nl_profile))])
             self.nl_profile /= self.nl_profile.sum()
         else:
-            self.nl_profile = np.ones((self.NY, self.NX), dtype=PRECISION_REAL)
-
-    def plot_2d(
-        self,
-        ax,
-        Z,
-        X,
-        AMP,
-        title,
-        cmap="viridis",
-        xlabel=r"$X$ (mm)",
-        ylabel=r"$Y (mm)$",
-        **kwargs,
-    ):
-        """Plots a 2d amplitude on an equidistant Z * X grid.
-
-        Args:
-            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
-            Z (np.ndarray): the X axis values
-            X (np.ndarray): the Y axis values
-            AMP (np.ndarray): The 2D field to plot
-            title (str): Title of the plot
-            cmap (str, optional): Colormap. Defaults to 'viridis'.
-            label (str, optional): Label for the x axis. Defaults to r'$ (mm)'.
-            vmax (int, optional): Maximum value for cmap normalization. Defaults to 1.
-        """
-        im = ax.imshow(
-            AMP,
-            aspect="equal",
-            origin="lower",
-            extent=(Z[0], Z[-1], X[0], X[-1]),
-            cmap=cmap,
-            **kwargs,
-        )
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        ax.set_title(title)
-        plt.colorbar(im)
-        return
-
-    def plot_1d(
-        self, ax, T, labelT, AMP, labelAMP, PHASE, labelPHASE, Tmin, Tmax
-    ) -> None:
-        """Plots a 1D slice of a 2D field with amplitude and phase
-
-        Args:
-            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
-            T (np.ndarray): The x axis
-            labelT (str):  x axis label
-            AMP (np.ndarray): The field slice
-            labelAMP (str): y axis label
-            PHASE (np.ndarray): The corresponding phase for the slice
-            labelPHASE (str): y axis label for the phase
-            Tmin (float): x axis left limit
-            Tmax (float): x axis right limit
-        """
-        ax.plot(T, AMP, "b")
-        ax.set_xlim([Tmin, Tmax])
-        ax.set_xlabel(labelT)
-        ax.set_ylabel(labelAMP, color="b")
-        ax.tick_params(axis="y", labelcolor="b")
-        axbis = ax.twinx()
-        axbis.plot(T, PHASE, "r:")
-        axbis.set_ylabel(labelPHASE, color="r")
-        axbis.tick_params(axis="y", labelcolor="r")
-
-        return
-
-    def plot_1d_amp(self, ax, T, labelT, AMP, labelAMP, Tmin, Tmax, color="b") -> None:
-        """Plots a 1D slice of a 2D field
-
-        Args:
-            ax (matplotlib.Axes): The ax instance on which the plot will be drawn
-            T (np.ndarray): The x axis
-            labelT (str):  x axis label
-            AMP (np.ndarray): The field slice
-            labelAMP (str): y axis label
-            Tmin (float): x axis left limit
-            Tmax (float): x axis right limit
-            color (float): The color of the label
-        """
-        ax.plot(T, AMP, color)
-        ax.set_xlim([Tmin, Tmax])
-        ax.set_xlabel(labelT)
-        ax.set_ylabel(labelAMP, color=color)
-        ax.tick_params(axis="y", labelcolor="b")
-
-        return
-
-    def slm(self, pattern: np.ndarray, d_slm: float) -> np.ndarray:
-        """Resizes the SLM pattern according to the sampling size chosen
-
-        Args:
-            pattern (np.ndarray): Pattern displayed on the SLM
-            d_slm (_type_): Pixel pitch of the SLM
-
-        Returns:
-            np.ndarray: Resized pattern.
-        """
-        phase = np.zeros((self.NY, self.NX))
-        zoom_x = self.delta_X / d_slm
-        zoom_y = self.delta_Y / d_slm
-        phase_zoomed = zoom(pattern, (zoom_y, zoom_x), order=0)
-        # compute center offset
-        x_center = (self.NX - phase_zoomed.shape[1]) // 2
-        y_center = (self.NY - phase_zoomed.shape[0]) // 2
-
-        # copy img image into center of result image
-        phase[
-            y_center : y_center + phase_zoomed.shape[0],
-            x_center : x_center + phase_zoomed.shape[1],
-        ] = phase_zoomed
-        return phase
+            self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
 
     def build_propagator(self, k: float) -> np.ndarray:
         """Builds the linear propagation matrix
@@ -445,22 +324,21 @@ class NLSE:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-2] == self.NY and E_in.shape[-1] == self.NX
-        assert (
-            E_in.dtype == PRECISION_COMPLEX
-        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
+        assert E_in.dtype in [
+            np.complex64,
+            np.complex128,
+        ], "Type mismatch, E_in should be complex64 or complex128"
+        Z = np.arange(0, z, step=self.delta_z, dtype=E_in.real.dtype)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(E_in) == np.ndarray:
-                # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
-                A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
+                A = np.empty_like(E_in)
                 integral = np.sum(
                     np.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
                     axis=(-2, -1),
                 )
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
-                # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
-                A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
+                A = cp.empty_like(E_in)
                 integral = cp.sum(
                     cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
                     axis=(-2, -1),
@@ -468,7 +346,7 @@ class NLSE:
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=E_in.dtype)
             integral = np.sum(
                 np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
             )
@@ -487,7 +365,6 @@ class NLSE:
             if type(self.V) == np.ndarray:
                 V = cp.asarray(self.V)
             elif type(self.V) == cp.ndarray:
-                # V = self.V.copy()
                 V = self.V
             if self.V is None:
                 V = self.V
@@ -546,60 +423,41 @@ class NLSE:
                     A_plot = A
                 elif A.ndim == 3:
                     A_plot = A[0, :, :]
-            fig = plt.figure(3, [9, 8])
-
-            # plot amplitudes and phases
-            a1 = fig.add_subplot(221)
-            self.plot_2d(
-                a1,
-                self.X * 1e3,
-                self.Y * 1e3,
-                np.abs(A_plot) ** 2 * epsilon_0 * c / 2 * 1e-4,
-                r"I in $W/cm^{-2}$",
-            )
-            a2 = fig.add_subplot(222)
-            self.plot_2d(
-                a2,
-                self.X * 1e3,
-                self.Y * 1e3,
-                np.angle(A_plot),
-                r"arg$(\psi)$",
-                cmap="twilight",
-                vmin=-np.pi,
-                vmax=np.pi,
-            )
-
-            a3 = fig.add_subplot(223)
-            lim = 1
-            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot[lim:-lim, lim:-lim])))
-            Kx_2 = 2 * np.pi * np.fft.fftfreq(self.NX - 2 * lim, d=self.delta_X)
-            len_fft = len(im_fft[0, :])
-            self.plot_2d(
-                a3,
-                np.fft.fftshift(Kx_2) * 1e-3,
-                np.fft.fftshift(Kx_2) * 1e-3,
+            fig, ax = plt.subplots(1, 3, layout="constrained")
+            ext_real = [
+                self.X[0] * 1e3,
+                self.X[-1] * 1e3,
+                self.Y[0] * 1e3,
+                self.Y[-1] * 1e3,
+            ]
+            ext_fourier = [
+                self.Kx[0] * 1e-3,
+                self.Kx[-1] * 1e-3,
+                self.Ky[0] * 1e-3,
+                self.Ky[-1] * 1e-3,
+            ]
+            rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
+            phi = np.angle(A_plot)
+            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))
+            im0 = ax[0].imshow(rho, extent=ext_real)
+            ax[0].set_title("Intensity")
+            ax[0].set_xlabel("x (mm)")
+            ax[0].set_ylabel("y (mm)")
+            fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
+            im1 = ax[1].imshow(phi, extent=ext_real, cmap="twilight_shifted")
+            ax[1].set_title("Phase")
+            ax[1].set_xlabel("x (mm)")
+            ax[1].set_ylabel("y (mm)")
+            fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
+            im2 = ax[2].imshow(
                 im_fft,
-                r"$|\mathcal{TF}(E_{out})|^2$",
-                cmap="viridis",
-                xlabel=r"$K_x$ (mm$^{-1}$)",
-                ylabel=r"$K_y$ (mm$^{-1}$)",
+                extent=ext_fourier,
+                cmap="nipy_spectral",
             )
-
-            a4 = fig.add_subplot(224)
-            self.plot_1d_amp(
-                a4,
-                Kx_2[1 : -len_fft // 2] * 1e-3,
-                r"$K_x (mm^{-1})$",
-                im_fft[len_fft // 2, len_fft // 2 + 1 :],
-                r"$|\mathcal{TF}(E_{out})|$",
-                np.fft.fftshift(Kx_2)[len_fft // 2 + 1] * 1e-3,
-                np.fft.fftshift(Kx_2)[-1] * 1e-3,
-                color="b",
-            )
-            a4.set_yscale("log")
-            a4.set_xscale("log")
-
-            plt.tight_layout()
+            ax[2].set_title("Fourier space")
+            ax[2].set_xlabel(r"$k_x$ ($mm^{-1}$)")
+            ax[2].set_ylabel(r"$k_y$ ($mm^{-1}$)")
+            fig.colorbar(im2, ax=ax[2], shrink=0.6, label="Intensity (a.u.)")
             plt.show()
         return A
 
@@ -668,7 +526,7 @@ class NLSE_1d:
             num=NX,
             endpoint=False,
             retstep=True,
-            dtype=PRECISION_REAL,
+            dtype=np.float32,
         )
         # definition of the Fourier frequencies for the linear step
         self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
@@ -686,7 +544,7 @@ class NLSE_1d:
             )
             self.nl_profile /= self.nl_profile.sum()
         else:
-            self.nl_profile = np.ones(self.NX, dtype=PRECISION_REAL)
+            self.nl_profile = np.ones(self.NX, dtype=np.float32)
 
     def build_propagator(self, k: float) -> np.ndarray:
         """Builds the linear propagation matrix
@@ -875,24 +733,25 @@ class NLSE_1d:
             np.ndarray: Propagated field in proper units V/m
         """
         assert E_in.shape[-1] == self.NX, "Shape mismatch"
-        assert (
-            E_in.dtype == PRECISION_COMPLEX
-        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
+        assert E_in.dtype in [
+            np.complex64,
+            np.complex128,
+        ], "Type mismatch, E_in should be complex64 or complex128"
+        Z = np.arange(0, z, step=self.delta_z, dtype=E_in.real.dtype)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(E_in) == np.ndarray:
-                A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
+                A = np.empty_like(E_in)
                 integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
-                A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
+                A = cp.empty_like(E_in)
                 integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = False
         else:
             integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1) ** 2
             return_np_array = True
-            A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
         plans = self.build_fft_plan(A)
         if normalize:
             E_00 = np.sqrt(2 * self.puiss / (c * epsilon_0 * integral))
@@ -1295,21 +1154,22 @@ class CNLSE(NLSE):
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
-        assert (
-            E.dtype == PRECISION_COMPLEX
-        ), f"Precision mismatch, E should be {PRECISION_COMPLEX}"
-        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
+        assert E.dtype in [
+            np.complex64,
+            np.complex128,
+        ], "Precision mismatch, E should be np.complex64 or np.complex128"
+        Z = np.arange(0, z, step=self.delta_z, dtype=E.real.dtype)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(E) == np.ndarray:
-                A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
+                A = np.empty_like(E)
                 integral = np.sum(
                     np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
                 )
                 puiss_arr = np.array([self.puiss, self.puiss2])
                 return_np_array = True
             elif type(E) == cp.ndarray:
-                A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
+                A = cp.empty_like(E)
                 integral = cp.sum(
                     np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
                 )
@@ -1321,7 +1181,7 @@ class CNLSE(NLSE):
             )
             puiss_arr = np.array([self.puiss, self.puiss2])
             return_np_array = True
-            A = pyfftw.empty_aligned(E.shape, dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
         # ndim logic ...
         A[:] = E
         if normalize:
@@ -1772,23 +1632,24 @@ class CNLSE_1d(NLSE_1d):
         assert E.ndim >= 2, (
             "Input number of dimensions should at least be 2 !" " (2, NX)"
         )
-        assert (
-            E.dtype == PRECISION_COMPLEX
-        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
+        assert E.dtype in [
+            np.complex64,
+            np.complex128,
+        ], "Precision mismatch, E_in should be np.complex64 or np.complex128"
+        Z = np.arange(0, z, step=self.delta_z, dtype=E.real.dtype)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             self.nl_profile = cp.asarray(self.nl_profile)
             if type(E) == np.ndarray:
-                A = np.empty(E.shape, dtype=PRECISION_COMPLEX)
+                A = np.empt_like(E)
                 integral = np.sum(np.abs(E) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = True
             elif type(E) == cp.ndarray:
-                A = cp.empty(E.shape, dtype=PRECISION_COMPLEX)
+                A = cp.empty_like(E)
                 integral = cp.sum(np.abs(E) ** 2 * self.delta_X, axis=-1) ** 2
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned(E.shape, dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
             integral = np.sum(np.abs(E) ** 2 * self.delta_X, axis=-1) ** 2
         A[:] = E
         if normalize:
@@ -1955,7 +1816,7 @@ class GPE:
             num=NX,
             endpoint=False,
             retstep=True,
-            dtype=PRECISION_REAL,
+            dtype=np.float32,
         )
         self.Y, self.delta_Y = np.linspace(
             -self.window / 2,
@@ -1963,7 +1824,7 @@ class GPE:
             num=NY,
             endpoint=False,
             retstep=True,
-            dtype=PRECISION_REAL,
+            dtype=np.float32,
         )
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
@@ -1986,7 +1847,7 @@ class GPE:
             ] = np.nanmax(self.nl_profile[np.logical_not(np.isinf(self.nl_profile))])
             self.nl_profile /= self.nl_profile.sum()
         else:
-            self.nl_profile = np.ones((self.NY, self.NX), dtype=PRECISION_REAL)
+            self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
 
     def build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.
@@ -2176,28 +2037,29 @@ class GPE:
             np.ndarray: Propagated field in proper units atoms/m
         """
         assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
-        assert (
-            psi.dtype == PRECISION_COMPLEX
-        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        Ts = np.arange(0, T, step=self.delta_t, dtype=PRECISION_REAL)
+        assert psi.dtype in [
+            np.complex64,
+            np.complex128,
+        ], "Precision mismatch, E_in should be np.complex64 or np.complex128"
+        Ts = np.arange(0, T, step=self.delta_t, dtype=psi.real.dtype)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             if type(psi) is np.ndarray:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
-                A = np.empty(psi.shape, dtype=PRECISION_COMPLEX)
+                A = np.empty_like(psi)
                 integral = np.sum(
                     np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = True
             elif type(psi) is cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
-                A = cp.empty(psi.shape, dtype=PRECISION_COMPLEX)
+                A = cp.empty_like(psi)
                 integral = cp.sum(
                     cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
                 )
                 return_np_array = False
         else:
             return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=PRECISION_COMPLEX)
+            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=psi.dtype)
             integral = np.sum(
                 np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
             )
@@ -2306,320 +2168,3 @@ class GPE:
             fig.colorbar(im, ax=ax[2], label="Density")
             plt.show()
         return A
-
-
-class NLSE_1d_adim(NLSE_1d):
-    """A class to solve the 1D NLSE in adimensional units."""
-
-    def __init__(
-        self,
-        alpha: float,
-        puiss: float,
-        window: float,
-        n2: float,
-        V: np.ndarray,
-        L: float,
-        NX: int = 1024,
-        Isat: float = np.inf,
-        wvl: float = 1,
-        backend: str = BACKEND,
-    ) -> object:
-        """Instantiate the simulation."""
-        super().__init__(
-            alpha=alpha,
-            puiss=puiss,
-            window=window,
-            n2=n2,
-            V=V,
-            L=L,
-            NX=NX,
-            Isat=Isat,
-            wvl=wvl,
-            backend=backend,
-        )
-        self.m = 2 * np.pi / self.wl
-        self.rho0 = self.puiss / self.window
-        self.c = np.sqrt(self.n2 * self.rho0 / self.m)
-        self.xi = 1 / np.sqrt(4 * self.n2 * self.rho0 * self.m)
-
-    def build_propagator(self) -> np.ndarray:
-        """Build the linear propagation matrix.
-
-        Args:
-            precision (str, optional): "single" or "double" application of the
-            propagator.
-            Defaults to "single".
-        Returns:
-            propagator (np.ndarray): the propagator matrix
-        """
-        propagator = np.exp(-1j * self.delta_z * (self.Kx**2) / (2 * self.m))
-        if self.backend == "GPU":
-            return cp.asarray(propagator)
-        else:
-            return propagator
-
-    def split_step(
-        self,
-        A: np.ndarray,
-        V: np.ndarray,
-        propagator: np.ndarray,
-        plans: list,
-        precision: str = "single",
-    ):
-        """Split step function for one propagation step.
-
-        Args:
-            A (np.ndarray): Field to propagate
-            V (np.ndarray): Potential field (can be None).
-            propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects.
-            Either a single FFT plan for both directions
-            (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the
-            nonlinear propagation step.
-            Defaults to "single".
-        """
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            # on GPU, only one plan for both FFT directions
-            plan_fft = plans[0]
-        else:
-            plan_fft, plan_ifft = plans
-        if precision == "double":
-            if V is None:
-                self.kernels.nl_prop_without_V(
-                    A, self.delta_z / 2, self.alpha / 2, -self.n2, self.I_sat
-                )
-            else:
-                self.kernels.nl_prop(
-                    A, self.delta_z / 2, self.alpha / 2, V, -self.n2, self.I_sat
-                )
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-            # linear step in Fourier domain (shifted)
-            cp.multiply(A, propagator, out=A)
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-            # fft normalization
-            A /= A.shape[-1]
-        else:
-            plan_fft(input_array=A, output_array=A)
-            np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
-        if precision == "double":
-            if V is None:
-                self.kernels.nl_prop_without_V(
-                    A, self.delta_z / 2, self.alpha / 2, -self.n2, self.I_sat
-                )
-            else:
-                self.kernels.nl_prop(
-                    A, self.delta_z, self.alpha / 2, V, -self.n2, self.I_sat
-                )
-        else:
-            if V is None:
-                self.kernels.nl_prop_without_V(
-                    A, self.delta_z, self.alpha / 2, -self.n2, self.I_sat
-                )
-            else:
-                self.kernels.nl_prop(
-                    A, self.delta_z, self.alpha / 2, V, -self.n2, self.I_sat
-                )
-
-    def out_field(
-        self,
-        E_in: np.ndarray,
-        z: float,
-        plot=False,
-        precision: str = "single",
-        verbose: bool = True,
-        normalize: bool = True,
-        callback: callable = None,
-    ) -> np.ndarray:
-        """Propagate the field at a distance z.
-
-        Args:
-            E_in (np.ndarray): Normalized input field (between 0 and 1)
-            z (float): propagation distance in m
-            plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single"
-            application of the nonlinear term.
-            This leads to a dz (single) or dz^3 (double) precision.
-            Defaults to "single".
-            verbose (bool, optional): Prints progress and time.
-            Defaults to True.
-            normalize (bool, optional): Normalizes the field to V/m.
-            Defaults to True.
-            Used to be able to reuse fields that have already been propagated.
-        Returns:
-            np.ndarray: Propagated field in proper units V/m
-        """
-        assert E_in.shape[-1] == self.NX
-        assert (
-            E_in.dtype == PRECISION_COMPLEX
-        ), f"Precision mismatch, E_in should be {PRECISION_COMPLEX}"
-        Z = np.arange(0, z, step=self.delta_z, dtype=PRECISION_REAL)
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            if type(E_in) is np.ndarray:
-                A = np.empty(E_in.shape, dtype=PRECISION_COMPLEX)
-                integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)
-                return_np_array = True
-            elif type(E_in) is cp.ndarray:
-                A = cp.empty(E_in.shape, dtype=PRECISION_COMPLEX)
-                integral = cp.sum(cp.abs(E_in) ** 2 * self.delta_X, axis=-1)
-                return_np_array = False
-        else:
-            integral = np.sum(np.abs(E_in) ** 2 * self.delta_X, axis=-1)
-            return_np_array = True
-            A = pyfftw.empty_aligned(E_in.shape, dtype=PRECISION_COMPLEX)
-        plans = self.build_fft_plan(A)
-        if normalize:
-            E_00 = np.sqrt(self.puiss / integral)
-            A[:] = (E_00.T * E_in.T).T
-        else:
-            A[:] = E_in
-        propagator = self.build_propagator()
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            if type(self.V) is np.ndarray:
-                V = cp.asarray(self.V)
-            elif type(self.V) is cp.ndarray:
-                V = self.V.copy()
-            if self.V is None:
-                V = self.V
-            if type(A) is not cp.ndarray:
-                A = cp.asarray(A)
-        else:
-            if self.V is None:
-                V = self.V
-            else:
-                V = self.V.copy()
-
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            start_gpu = cp.cuda.Event()
-            end_gpu = cp.cuda.Event()
-            start_gpu.record()
-        t0 = time.perf_counter()
-        n2_old = self.n2
-        if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
-        # dz = self.delta_z
-        for i, z in enumerate(Z):
-            # eps = 1-2*np.random.random()
-            # self.delta_z = dz*(1+1e-2*eps)
-            if z > self.L:
-                self.n2 = 0
-            if verbose:
-                pbar.update(1)
-            self.split_step(A, V, propagator, plans, precision)
-            if callback is not None:
-                callback(self, A, z, i)
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            end_gpu.record()
-            end_gpu.synchronize()
-            t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        t_cpu = time.perf_counter() - t0
-        if verbose:
-            pbar.close()
-            if self.backend == "GPU" and CUPY_AVAILABLE:
-                print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    f" / {t_cpu} s (CPU)"
-                )
-            else:
-                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
-        self.n2 = n2_old
-        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
-            A = cp.asnumpy(A)
-
-        if plot:
-            if not (return_np_array):
-                A_plot = cp.asnumpy(A)
-            elif return_np_array or self.backend == "CPU":
-                A_plot = A.copy()
-            fig, ax = plt.subplots(1, 2)
-            if A.ndim == 2:
-                for i in range(A.shape[0]):
-                    ax[0].plot(self.X, np.unwrap(np.angle(A_plot[i, :])))
-                    ax[1].plot(self.X, np.abs(A_plot[i, :]) ** 2)
-            elif A.ndim == 1:
-                ax[0].plot(self.X, np.unwrap(np.angle(A_plot)))
-                ax[1].plot(self.X, np.abs(A_plot) ** 2)
-            ax[0].set_title("Phase")
-            ax[1].set_title(r"Density")
-            plt.tight_layout()
-            plt.show()
-        return A
-
-    def bogo_disp(self, q: Any) -> Any:
-        """Return the dispersion.
-
-        Return the Bogoliubov dispersion relation assuming
-        a constant density.
-
-        Args:
-            q (Any): Wavenumber
-
-        Returns:
-            Any: The corresponding Bogoliubov frequency
-        """
-        # return self.c*np.abs(q)*np.sqrt(1 + self.xi**2 * q**2)
-        return np.sqrt(
-            (q**2 / (2 * self.m)) * (q**2 / (2 * self.m) + 2 * self.n2 * self.rho0)
-        )
-
-    def thermal_state(self, T: float, nb_real: int = 1) -> Any:
-        """Define a thermal state of Bogoliubov excitations.
-
-        Args:
-            T (float): The temperature of the state
-            nb_real (int, optional): Number of realizations. Defaults to 1.
-
-        Returns:
-            Any: The thermal state of shape (n_real, NX) psi_x and the
-            corresponding Bogoliubov modes bq
-        """
-        eps_q = self.bogo_disp(self.Kx)
-        eps_q[0] = 1
-        E_q = self.Kx**2 / (2 * self.m)
-        E_q[0] = 1
-        var_X = T / eps_q
-        var_X[0] = 0
-        sigma = np.sqrt(0.5 * var_X)
-        Re_X = np.random.normal(0, sigma, (nb_real, self.NX))
-        Im_X = np.random.normal(0, sigma, (nb_real, self.NX))
-
-        bq = Re_X + 1j * Im_X
-
-        bmq = np.roll(bq[:, ::-1], 1, axis=1)
-        theta_q = (1j / 2) * np.sqrt(eps_q / E_q) * (bq - np.conj(bmq))
-        theta_q[..., 0] = 1.0
-
-        delta_rho_q = np.sqrt(E_q / eps_q) * (np.conj(bmq) + bq)
-        delta_rho_q[..., 0] = 1.0
-        delta_rho_x = np.real(np.fft.ifft(delta_rho_q))
-        theta_x = np.real(np.fft.ifft(theta_q))
-
-        rho_x = self.rho0 + delta_rho_x
-        psi_x = np.sqrt(rho_x) * np.exp(1j * theta_x)
-        return psi_x, bq
-
-    def get_bq(self, psi_x: Any) -> Any:
-        """Retrieve the distribution of Bogoliubov modes from a field.
-
-        Args:
-            psi_x (Any): The field
-
-        Returns:
-            Any: The distribution of Bogoliubov modes in momentum space bq
-        """
-        eps_q = self.bogo_disp(self.Kx)
-        eps_q[0] = 1
-        E_q = self.Kx**2 / (2 * self.m)
-        E_q[0] = 1
-        theta_x = np.unwrap(np.angle(psi_x))
-        delta_rho_x = np.abs(psi_x) ** 2
-        theta_q = np.fft.fft(theta_x)
-        delta_rho_q = np.fft.fft(delta_rho_x)
-        bq = 0.5 * (
-            -2 * 1j * np.sqrt(E_q / eps_q) * theta_q
-            + np.sqrt(eps_q / E_q) * delta_rho_q
-        )
-        bq[..., 0] = 0
-        return bq

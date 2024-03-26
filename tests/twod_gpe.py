@@ -1,4 +1,4 @@
-from NLSE.nlse import GPE
+from NLSE import GPE
 from scipy.constants import atomic_mass
 import numpy as np
 

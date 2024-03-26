@@ -1,4 +1,4 @@
-from NLSE.nlse import NLSE_1d
+from NLSE import NLSE_1d
 import numpy as np
 
 PRECISION_COMPLEX = np.complex64

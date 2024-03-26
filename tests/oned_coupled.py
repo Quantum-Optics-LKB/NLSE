@@ -1,4 +1,4 @@
-from NLSE.nlse import CNLSE_1d
+from NLSE import CNLSE_1d
 import numpy as np
 
 PRECISION_COMPLEX = np.complex64
@@ -11,7 +11,7 @@ def main():
     n12 = -1e-10
     waist = 2.23e-3
     waist2 = 70e-6
-    window = N * 5.5e-6
+    window = 4 * waist
     puiss = 1.05
     Isat = 10e4  # saturation intensity in W/m^2
     L = 1e-3

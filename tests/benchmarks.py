@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from NLSE.nlse import NLSE
-from cycler import cycler
+from NLSE import NLSE
 import time
 import tqdm
 
@@ -12,39 +11,6 @@ if PRECISION == "double":
 else:
     PRECISION_REAL = np.float32
     PRECISION_COMPLEX = np.complex64
-# for plots
-tab_colors = [
-    "tab:blue",
-    "tab:orange",
-    "forestgreen",
-    "tab:red",
-    "tab:purple",
-    "tab:brown",
-    "tab:pink",
-    "tab:gray",
-    "tab:olive",
-    "teal",
-]
-fills = [
-    "lightsteelblue",
-    "navajowhite",
-    "darkseagreen",
-    "lightcoral",
-    "violet",
-    "indianred",
-    "lavenderblush",
-    "lightgray",
-    "darkkhaki",
-    "darkturquoise",
-]
-edges = tab_colors
-custom_cycler = (
-    (cycler(color=tab_colors))
-    + (cycler(markeredgecolor=edges))
-    + (cycler(markerfacecolor=fills))
-)
-plt.rc("axes", prop_cycle=custom_cycler)
-plt.rcParams.update({"text.usetex": True, "font.family": "serif", "font.size": 12})
 
 n2 = -1.99e-9
 n12 = -0.75e-10

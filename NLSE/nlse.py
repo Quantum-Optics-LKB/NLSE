@@ -464,7 +464,7 @@ class NLSE:
         return A
 
 
-class NLSE_1d:
+class NLSE_1d(NLSE):
     """A class to solve NLSE in 1d"""
 
     def __init__(
@@ -496,57 +496,21 @@ class NLSE_1d:
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             backend (str, optional): "GPU" or "CPU". Defaults to BACKEND.
         """
-        self.backend = backend
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            self._kernels = kernels_gpu
-            self._convolution = signal_cp.fftconvolve
-        else:
-            self.backend = "CPU"
-            self._kernels = kernels_cpu
-            self._convolution = signal.fftconvolve
-        # listof physical parameters
-        self.n2 = n2
-        self.V = V
-        self.wl = wvl
-        self.k = 2 * np.pi / self.wl
-        self.L = L  # length of the non linear medium
-        self.alpha = alpha
-        self.puiss = puiss
-        self.I_sat = Isat
-
-        # number of grid points in X (even, best is power of 2 or low prime factors)
-        self.NX = NX
-        self.window = window
-        rho0 = puiss / L**2
-        Dn = self.n2 * rho0
-        z_nl = 1 / (self.k * abs(Dn))
-        self.delta_z = 0.1 * z_nl
-        # transverse coordinate
-        self.X, self.delta_X = np.linspace(
-            -self.window / 2,
-            self.window / 2,
-            num=NX,
-            endpoint=False,
-            retstep=True,
-            dtype=np.float32,
+        super().__init__(
+            alpha=alpha,
+            puiss=puiss,
+            window=window,
+            n2=n2,
+            V=V,
+            L=L,
+            NX=NX,
+            Isat=Isat,
+            nl_length=nl_length,
+            wvl=wvl,
+            backend=backend,
         )
-        # definition of the Fourier frequencies for the linear step
-        self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
-        self.propagator = None
-        self.plans = None
-        self.nl_length = nl_length
-        if self.nl_length > 0:
-            d = self.nl_length // self.delta_X
-            x = np.arange(-3 * d, 3 * d + 1)
-            self.nl_profile = (
-                1 / (np.sqrt(2 * np.pi) * self.nl_length) * special.kn(0, np.abs(x) / d)
-            )
-            self.nl_profile[x.size // 2] = np.nanmax(
-                self.nl_profile[np.logical_not(np.isinf(self.nl_profile))]
-            )
-            self.nl_profile /= self.nl_profile.sum()
-        else:
-            self.nl_profile = np.ones(self.NX, dtype=np.float32)
+        self.nl_profile = self.nl_profile[0]
+        self.nl_profile /= self.nl_profile.sum()
 
     def build_propagator(self, k: float) -> np.ndarray:
         """Builds the linear propagation matrix

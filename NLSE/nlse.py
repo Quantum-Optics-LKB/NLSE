@@ -880,7 +880,7 @@ class CNLSE(NLSE):
         if self.backend == "GPU" and CUPY_AVAILABLE:
             A = cp.empty_like(E)
             A[:] = cp.asarray(E)
-            puiss_arr = cp.array([self.puiss, self.puiss2])
+            puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
         else:
             A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
             A[:] = E
@@ -893,6 +893,40 @@ class CNLSE(NLSE):
             E_00 = (2 * puiss_arr / (c * epsilon_0 * integral)) ** 0.5
             A = (E_00.T * A.T).T
         return A
+
+    def _send_arrays_to_gpu(self) -> None:
+        """
+        Send arrays to GPU.
+        """
+        if self.V is not None:
+            self.V = cp.asarray(self.V)
+        self.nl_profile = cp.asarray(self.nl_profile)
+        self.propagator1 = cp.asarray(self.propagator1)
+        self.propagator2 = cp.asarray(self.propagator2)
+        # for broadcasting of parameters in case they are
+        # not already on the GPU
+        if isinstance(self.n2, np.ndarray):
+            self.n2 = cp.asarray(self.n2)
+        if isinstance(self.alpha, np.ndarray):
+            self.alpha = cp.asarray(self.alpha)
+        if isinstance(self.I_sat, np.ndarray):
+            self.I_sat = cp.asarray(self.I_sat)
+
+    def _retrieve_arrays_from_gpu(self) -> None:
+        """
+        Retrieve arrays from GPU.
+        """
+        if self.V is not None:
+            self.V = self.V.get()
+        self.nl_profile = self.nl_profile.get()
+        self.propagator1 = self.propagator1.get()
+        self.propagator2 = self.propagator2.get()
+        if isinstance(self.n2, cp.ndarray):
+            self.n2 = self.n2.get()
+        if isinstance(self.alpha, cp.ndarray):
+            self.alpha = self.alpha.get()
+        if isinstance(self.I_sat, cp.ndarray):
+            self.I_sat = self.I_sat.get()
 
     def plot_field(self, A_plot: np.ndarray) -> None:
         """Plot the field.

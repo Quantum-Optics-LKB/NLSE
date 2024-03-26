@@ -15,10 +15,10 @@ def main():
         simu_gpe = GPE(
             gamma=0,
             N=N_at,
-            m=87 * atomic_mass,
             window=1e-3,
             g=g,
             V=None,
+            m=87 * atomic_mass,
             NX=N,
             NY=N,
             backend=backend,

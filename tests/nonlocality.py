@@ -1,6 +1,5 @@
-from NLSE import CNLSE, CNLSE_1d, NLSE, NLSE_1d
+from NLSE import CNLSE, CNLSE_1d, NLSE, NLSE_1d, GPE
 import numpy as np
-import matplotlib.pyplot as plt
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
@@ -71,6 +70,19 @@ def main():
             nl_length=nl_length,
             backend=backend,
         )
+        simu_gpe = GPE(
+            alpha,
+            puiss,
+            window,
+            n2,
+            None,
+            L,
+            NX=N,
+            NY=N,
+            sat=Isat,
+            nl_length=nl_length,
+            backend=backend,
+        )
         simu_c_1d.delta_z = 1e-5
         simu_c_1d.puiss2 = 10e-3
         simu_c_1d.n22 = 1e-10
@@ -109,6 +121,13 @@ def main():
             precision="single",
         )
         E = simu_2d.out_field(
+            E_0,
+            L,
+            verbose=True,
+            plot=False,
+            precision="single",
+        )
+        E = simu_gpe.out_field(
             E_0,
             L,
             verbose=True,

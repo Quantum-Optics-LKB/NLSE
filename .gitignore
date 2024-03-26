@@ -39,3 +39,12 @@ tex/paper.tex
 tex/paperNotes.bib
 .DS_Store
 fft.wisdom
+build/lib/NLSE/__init__.py
+build/lib/NLSE/kernels_cpu.py
+build/lib/NLSE/kernels_gpu.py
+build/lib/NLSE/nlse.py
+NLSE.egg-info/dependency_links.txt
+NLSE.egg-info/PKG-INFO
+NLSE.egg-info/requires.txt
+NLSE.egg-info/SOURCES.txt
+NLSE.egg-info/top_level.txt

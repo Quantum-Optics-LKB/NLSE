@@ -10,7 +10,7 @@ import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 import pyfftw
-from scipy.constants import c, epsilon_0, hbar
+from scipy.constants import c, epsilon_0, hbar, atomic_mass
 from scipy import signal
 from scipy import special
 from . import kernels_cpu
@@ -72,12 +72,12 @@ class NLSE:
         # listof physical parameters
         self.backend = backend
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            self.kernels = kernels_gpu
-            self.convolution = signal_cp.fftconvolve
+            self._kernels = kernels_gpu
+            self._convolution = signal_cp.fftconvolve
         else:
             self.backend = "CPU"
-            self.kernels = kernels_cpu
-            self.convolution = signal.fftconvolve
+            self._kernels = kernels_cpu
+            self._convolution = signal.fftconvolve
         self.n2 = n2
         self.V = V
         self.wl = wvl
@@ -110,6 +110,8 @@ class NLSE:
             retstep=True,
             dtype=np.float32,
         )
+        # define last axes for broadcasting operations
+        self._last_axes = (-2, -1)
 
         self.XX, self.YY = np.meshgrid(self.X, self.Y)
         # definition of the Fourier frequencies for the linear step
@@ -158,12 +160,10 @@ class NLSE:
             list: A list containing the FFT plans
         """
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            # plan_fft = fftpack.get_fft_plan(
-            #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
                 A,
                 shape=(A.shape[-2], A.shape[-1]),
-                axes=(-2, -1),
+                axes=self._last_axes,
                 value_type="C2C",
             )
             return [plan_fft]
@@ -180,14 +180,14 @@ class NLSE:
                 A,
                 direction="FFTW_FORWARD",
                 threads=multiprocessing.cpu_count(),
-                axes=(-2, -1),
+                axes=self._last_axes,
             )
             plan_ifft = pyfftw.FFTW(
                 A,
                 A,
                 direction="FFTW_BACKWARD",
                 threads=multiprocessing.cpu_count(),
-                axes=(-2, -1),
+                axes=self._last_axes,
             )
             with open("fft.wisdom", "wb") as file:
                 wisdom = pyfftw.export_wisdom()
@@ -223,11 +223,11 @@ class NLSE:
         if precision == "double":
             A_sq = A.real * A.real + A.imag * A.imag
             if self.nl_length > 0:
-                A_sq = self.convolution(
-                    A_sq, self.nl_profile, mode="same", axes=(-2, -1)
+                A_sq = self._convolution(
+                    A_sq, self.nl_profile, mode="same", axes=self._last_axes
                 )
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -236,7 +236,7 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
-                self.self.kernels.nl_prop(
+                self.self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -258,10 +258,12 @@ class NLSE:
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         A_sq = A.real * A.real + A.imag * A.imag
         if self.nl_length > 0:
-            A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-2, -1))
+            A_sq = self._convolution(
+                A_sq, self.nl_profile, mode="same", axes=self._last_axes
+            )
         if precision == "double":
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -270,7 +272,7 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -281,7 +283,7 @@ class NLSE:
                 )
         else:
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_z,
@@ -290,7 +292,7 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z,
@@ -334,21 +336,21 @@ class NLSE:
                 A = np.empty_like(E_in)
                 integral = np.sum(
                     np.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
-                    axis=(-2, -1),
+                    axis=self._last_axes,
                 )
                 return_np_array = True
             elif type(E_in) == cp.ndarray:
                 A = cp.empty_like(E_in)
                 integral = cp.sum(
                     cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
-                    axis=(-2, -1),
+                    axis=self._last_axes,
                 )
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned((self.NX, self.NY), dtype=E_in.dtype)
             integral = np.sum(
-                np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
             )
         if self.plans is None:
             self.plans = self.build_fft_plan(A)
@@ -496,12 +498,12 @@ class NLSE_1d:
         """
         self.backend = backend
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            self.kernels = kernels_gpu
-            self.convolution = signal_cp.fftconvolve
+            self._kernels = kernels_gpu
+            self._convolution = signal_cp.fftconvolve
         else:
             self.backend = "CPU"
-            self.kernels = kernels_cpu
-            self.convolution = signal.fftconvolve
+            self._kernels = kernels_cpu
+            self._convolution = signal.fftconvolve
         # listof physical parameters
         self.n2 = n2
         self.V = V
@@ -629,9 +631,9 @@ class NLSE_1d:
         if precision == "double":
             A_sq = A.real * A.real + A.imag * A.imag
             if self.nl_length > 0:
-                A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-1,))
+                A_sq = self._convolution(A_sq, self.nl_profile, mode="same", axes=(-1,))
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -641,7 +643,7 @@ class NLSE_1d:
                 )
 
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -663,10 +665,10 @@ class NLSE_1d:
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         A_sq = A.real * A.real + A.imag * A.imag
         if self.nl_length > 0:
-            A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-1,))
+            A_sq = self._convolution(A_sq, self.nl_profile, mode="same", axes=(-1,))
         if precision == "double":
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -676,7 +678,7 @@ class NLSE_1d:
                 )
 
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -687,7 +689,7 @@ class NLSE_1d:
                 )
         else:
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_z,
@@ -697,7 +699,7 @@ class NLSE_1d:
                 )
 
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z,
@@ -947,15 +949,15 @@ class CNLSE(NLSE):
             A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
             A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
             if self.nl_length > 0:
-                A_sq_1 = self.convolution(
-                    A_sq_1, self.nl_profile, mode="same", axes=(-2, -1)
+                A_sq_1 = self._convolution(
+                    A_sq_1, self.nl_profile, mode="same", axes=self._last_axes
                 )
-                A_sq_2 = self.convolution(
-                    A_sq_2, self.nl_profile, mode="same", axes=(-2, -1)
+                A_sq_2 = self._convolution(
+                    A_sq_2, self.nl_profile, mode="same", axes=self._last_axes
                 )
 
             if V is None:
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -965,7 +967,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -976,7 +978,7 @@ class CNLSE(NLSE):
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -987,7 +989,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1000,8 +1002,10 @@ class CNLSE(NLSE):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(
+                    A2, A1_old, self.delta_z / 2, self.omega / 2
+                )
         if self.backend == "GPU":
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
@@ -1019,15 +1023,15 @@ class CNLSE(NLSE):
         A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
         A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
         if self.nl_length > 0:
-            A_sq_1 = self.convolution(
-                A_sq_1, self.nl_profile, mode="same", axes=(-2, -1)
+            A_sq_1 = self._convolution(
+                A_sq_1, self.nl_profile, mode="same", axes=self._last_axes
             )
-            A_sq_2 = self.convolution(
-                A_sq_2, self.nl_profile, mode="same", axes=(-2, -1)
+            A_sq_2 = self._convolution(
+                A_sq_2, self.nl_profile, mode="same", axes=self._last_axes
             )
         if precision == "double":
             if V is None:
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1037,7 +1041,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1048,7 +1052,7 @@ class CNLSE(NLSE):
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1059,7 +1063,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1072,11 +1076,13 @@ class CNLSE(NLSE):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(
+                    A2, A1_old, self.delta_z / 2, self.omega / 2
+                )
         else:
             if V is None:
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1086,7 +1092,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1097,7 +1103,7 @@ class CNLSE(NLSE):
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1108,7 +1114,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1121,8 +1127,8 @@ class CNLSE(NLSE):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self.kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
-                self.kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
     def out_field(
         self,
@@ -1429,15 +1435,15 @@ class CNLSE_1d(NLSE_1d):
             A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
             A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
             if self.nl_length > 0:
-                A_sq_1 = self.convolution(
+                A_sq_1 = self._convolution(
                     A_sq_1, self.nl_profile, mode="same", axes=(-1,)
                 )
-                A_sq_2 = self.convolution(
+                A_sq_2 = self._convolution(
                     A_sq_2, self.nl_profile, mode="same", axes=(-1,)
                 )
 
             if V is None:
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1447,7 +1453,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1458,7 +1464,7 @@ class CNLSE_1d(NLSE_1d):
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1469,7 +1475,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1482,8 +1488,10 @@ class CNLSE_1d(NLSE_1d):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(
+                    A2, A1_old, self.delta_z / 2, self.omega / 2
+                )
         if self.backend == "GPU" and CUPY_AVAILABLE:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
@@ -1501,11 +1509,11 @@ class CNLSE_1d(NLSE_1d):
         A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
         A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
         if self.nl_length > 0:
-            A_sq_1 = self.convolution(A_sq_1, self.nl_profile, mode="same", axes=(-1,))
-            A_sq_2 = self.convolution(A_sq_2, self.nl_profile, mode="same", axes=(-1,))
+            A_sq_1 = self._convolution(A_sq_1, self.nl_profile, mode="same", axes=(-1,))
+            A_sq_2 = self._convolution(A_sq_2, self.nl_profile, mode="same", axes=(-1,))
         if precision == "double":
             if V is None:
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1515,7 +1523,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1526,7 +1534,7 @@ class CNLSE_1d(NLSE_1d):
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1537,7 +1545,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1550,11 +1558,13 @@ class CNLSE_1d(NLSE_1d):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self.kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self.kernels.rabi_coupling(A2, A1_old, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
+                self._kernels.rabi_coupling(
+                    A2, A1_old, self.delta_z / 2, self.omega / 2
+                )
         else:
             if V is None:
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1564,7 +1574,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_without_V_c(
+                self._kernels.nl_prop_without_V_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1575,7 +1585,7 @@ class CNLSE_1d(NLSE_1d):
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
             else:
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A1,
                     A_sq_1,
                     A_sq_2,
@@ -1586,7 +1596,7 @@ class CNLSE_1d(NLSE_1d):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-                self.kernels.nl_prop_c(
+                self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
                     A_sq_1,
@@ -1599,8 +1609,8 @@ class CNLSE_1d(NLSE_1d):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self.kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
-                self.kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
     def out_field(
         self,
@@ -1763,10 +1773,10 @@ class GPE:
         self,
         gamma: float,
         N: float,
-        m: float,
         window: float,
         g: float,
         V: np.ndarray,
+        m: float = 87 * atomic_mass,
         NX: int = 1024,
         NY: int = 1024,
         sat: float = np.inf,
@@ -1780,10 +1790,11 @@ class GPE:
         Args:
             gamma (float): Losses in Hz
             N (float): Total number of atoms
-            m (float): mass of one atom in kg
             window (float): Window size in m
             g (float): Interaction energy in Hz*m^2
             V (np.ndarray): Potential in Hz
+            m (float, optionnal): mass of one atom in kg. Defaults to 87*atomic_mass for
+            Rubidium 87.
             NX (int, optional): Number of points in x. Defaults to 1024.
             NY (int, optional): Number of points in y. Defaults to 1024.
             sat (float): Saturation parameter in Hz/m^2.
@@ -1792,9 +1803,11 @@ class GPE:
         """
         self.backend = backend
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            self.kernels = kernels_gpu
+            self._kernels = kernels_gpu
+            self._convolution = signal_cp.fftconvolve
         else:
-            self.kernels = kernels_cpu
+            self._kernels = kernels_cpu
+            self._convolution = signal.fftconvolve
         # listof physical parameters
         self.g = g
         self.V = V
@@ -1848,6 +1861,7 @@ class GPE:
             self.nl_profile /= self.nl_profile.sum()
         else:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
+        self._last_axes = (-2, -1)
 
     def build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.
@@ -1872,10 +1886,11 @@ class GPE:
             list: A list containing the FFT plans
         """
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            # plan_fft = fftpack.get_fft_plan(
-            #     A, shape=A.shape, axes=(-2, -1), value_type='C2C')
             plan_fft = fftpack.get_fft_plan(
-                A, shape=(A.shape[-2], A.shape[-1]), axes=(-2, -1), value_type="C2C"
+                A,
+                shape=(A.shape[-2], A.shape[-1]),
+                axes=self._last_axes,
+                value_type="C2C",
             )
             return [plan_fft]
         else:
@@ -1891,14 +1906,14 @@ class GPE:
                 A,
                 direction="FFTW_FORWARD",
                 threads=multiprocessing.cpu_count(),
-                axes=(-2, -1),
+                axes=self._last_axes,
             )
             plan_ifft = pyfftw.FFTW(
                 A,
                 A,
                 direction="FFTW_BACKWARD",
                 threads=multiprocessing.cpu_count(),
-                axes=(-2, -1),
+                axes=self._last_axes,
             )
             with open("fft.wisdom", "wb") as file:
                 wisdom = pyfftw.export_wisdom()
@@ -1934,11 +1949,11 @@ class GPE:
         if precision == "double":
             A_sq = A.real * A.real + A.imag * A.imag
             if self.nl_length > 0:
-                A_sq = self.convolution(
-                    A_sq, self.nl_profile, mode="same", axes=(-2, -1)
+                A_sq = self._convolution(
+                    A_sq, self.nl_profile, mode="same", axes=self._last_axes
                 )
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_t / 2,
@@ -1947,7 +1962,7 @@ class GPE:
                     self.sat,
                 )
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_t / 2,
@@ -1969,10 +1984,12 @@ class GPE:
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         A_sq = A.real * A.real + A.imag * A.imag
         if self.nl_length > 0:
-            A_sq = self.convolution(A_sq, self.nl_profile, mode="same", axes=(-2, -1))
+            A_sq = self._convolution(
+                A_sq, self.nl_profile, mode="same", axes=self._last_axes
+            )
         if precision == "double":
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_t / 2,
@@ -1981,7 +1998,7 @@ class GPE:
                     self.sat,
                 )
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_t / 2,
@@ -1992,7 +2009,7 @@ class GPE:
                 )
         else:
             if V is None:
-                self.kernels.nl_prop_without_V(
+                self._kernels.nl_prop_without_V(
                     A,
                     A_sq,
                     self.delta_t,
@@ -2001,7 +2018,7 @@ class GPE:
                     self.sat,
                 )
             else:
-                self.kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_t,
@@ -2047,21 +2064,21 @@ class GPE:
                 # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = np.empty_like(psi)
                 integral = np.sum(
-                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
                 )
                 return_np_array = True
             elif type(psi) is cp.ndarray:
                 # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
                 A = cp.empty_like(psi)
                 integral = cp.sum(
-                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
                 )
                 return_np_array = False
         else:
             return_np_array = True
             A = pyfftw.empty_aligned((self.NX, self.NY), dtype=psi.dtype)
             integral = np.sum(
-                np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=(-2, -1)
+                np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
             )
         if self.plans is None:
             self.plans = self.build_fft_plan(A)

@@ -310,9 +310,10 @@ class NLSE:
         """
         if self.backend == "GPU" and CUPY_AVAILABLE:
             A = cp.empty_like(E_in)
+            A[:] = cp.asarray(E_in)
         else:
             A = pyfftw.empty_aligned((self.NX, self.NY), dtype=E_in.dtype)
-        A[:] = E_in
+            A[:] = E_in
         if normalize:
             # normalization of the field
             integral = (

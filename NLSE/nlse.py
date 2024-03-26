@@ -880,7 +880,7 @@ class CNLSE(NLSE):
         if self.backend == "GPU" and CUPY_AVAILABLE:
             A = cp.empty_like(E)
             A[:] = cp.asarray(E)
-            puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = cp.array([self.puiss, self.puiss2])
         else:
             A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
             A[:] = E

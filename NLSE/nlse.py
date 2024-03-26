@@ -875,6 +875,72 @@ class CNLSE(NLSE):
                 self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
                 self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
+    def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
+        """Prepare the output array depending on backend."""
+        if self.backend == "GPU" and CUPY_AVAILABLE:
+            A = cp.empty_like(E)
+            A[:] = cp.asarray(E)
+            puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
+        else:
+            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
+            A[:] = E
+            puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
+        if normalize:
+            # normalization of the field
+            integral = (
+                (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
+            ).sum(axis=self._last_axes)
+            E_00 = (2 * puiss_arr / (c * epsilon_0 * integral)) ** 0.5
+            A = (E_00.T * A.T).T
+        return A
+
+    def plot_field(self, A_plot: np.ndarray) -> None:
+        """Plot the field.
+
+        Args:
+            A_plot (np.ndarray): The field to plot
+        """
+        # if array is multi-dimensional, drop dims until the shape is 2D
+        if A_plot.ndim > 3:
+            while len(A_plot.shape) > 3:
+                A_plot = A_plot[0]
+        if CUPY_AVAILABLE and isinstance(A_plot, cp.ndarray):
+            A_plot = A_plot.get()
+        fig = plt.figure(layout="constrained")
+        fig, ax = plt.subplots(2, 2, layout="constrained")
+        ext_real = [
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
+            self.Y[0] * 1e3,
+            self.Y[-1] * 1e3,
+        ]
+        rho0 = np.abs(A_plot[0]) ** 2 * 1e-4 * c / 2 * epsilon_0
+        phi0 = np.angle(A_plot[0])
+        rho1 = np.abs(A_plot[1]) ** 2 * 1e-4 * c / 2 * epsilon_0
+        phi1 = np.angle(A_plot[1])
+        # plot amplitudes and phases
+        im0 = ax[0, 0].imshow(rho0, extent=ext_real)
+        ax[0, 0].set_title(r"$|\psi_1|^2$")
+        ax[0, 0].set_xlabel("x (mm)")
+        ax[0, 0].set_ylabel("y (mm)")
+        fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label="Intensity (W/cm^2)")
+        im1 = ax[0, 1].imshow(phi0, extent=ext_real, cmap="twilight_shifted")
+        ax[0, 1].set_title(r"Phase $\mathrm{arg}(\psi_1)$")
+        ax[0, 1].set_xlabel("x (mm)")
+        ax[0, 1].set_ylabel("y (mm)")
+        fig.colorbar(im1, ax=ax[0, 1], shrink=0.6, label="Phase (rad)")
+        im2 = ax[1, 0].imshow(rho1, extent=ext_real)
+        ax[1, 0].set_title(r"$|\psi_2|^2$")
+        ax[1, 0].set_xlabel("x (mm)")
+        ax[1, 0].set_ylabel("y (mm)")
+        fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label="Intensity (W/cm^2)")
+        im3 = ax[1, 1].imshow(phi1, extent=ext_real, cmap="twilight_shifted")
+        ax[1, 1].set_title(r"Phase $\mathrm{arg}(\psi_2)$")
+        ax[1, 1].set_xlabel("x (mm)")
+        ax[1, 1].set_ylabel("y (mm)")
+        fig.colorbar(im3, ax=ax[1, 1], shrink=0.6, label="Phase (rad)")
+        plt.show()
+
     def out_field(
         self,
         E: np.ndarray,
@@ -898,10 +964,9 @@ class CNLSE(NLSE):
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
-        assert E.shape[-2] == self.NY and E.shape[-1] == self.NX, (
-            f"Shape mismatch ! Simulation grid size is {(self.NY, self.NX)}"
-            f" and array shape is {(E.shape[-2], E.shape[-1])}"
-        )
+        assert (
+            E.shape[self._last_axes[0] :] == self.XX.shape[self._last_axes[0] :]
+        ), "Shape mismatch"
         assert E.ndim >= 3, (
             "Input number of dimensions should at least be 3 !" " (2, NY, NX)"
         )
@@ -910,61 +975,26 @@ class CNLSE(NLSE):
             np.complex128,
         ], "Precision mismatch, E should be np.complex64 or np.complex128"
         Z = np.arange(0, z, step=self.delta_z, dtype=E.real.dtype)
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            self.nl_profile = cp.asarray(self.nl_profile)
-            if type(E) == np.ndarray:
-                A = np.empty_like(E)
-                integral = np.sum(
-                    np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
-                )
-                puiss_arr = np.array([self.puiss, self.puiss2])
-                return_np_array = True
-            elif type(E) == cp.ndarray:
-                A = cp.empty_like(E)
-                integral = cp.sum(
-                    np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
-                )
-                puiss_arr = cp.array([self.puiss, self.puiss2])
-                return_np_array = False
-        else:
-            integral = np.sum(
-                np.abs(E) ** 2 * self.delta_X * self.delta_Y, axis=(-1, -2)
-            )
-            puiss_arr = np.array([self.puiss, self.puiss2])
-            return_np_array = True
-            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
-        # ndim logic ...
-        A[:] = E
-        if normalize:
-            E_00 = np.sqrt(2 * puiss_arr / (c * epsilon_0 * integral))
-            A[:] = (A.T * E_00.T).T
+        A = self._prepare_output_array(E, normalize)
         if self.plans is None:
             self.plans = self.build_fft_plan(E)
         if self.propagator1 is None:
             self.propagator1 = self.build_propagator(self.k)
             self.propagator2 = self.build_propagator(self.k2)
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            if type(self.V) == np.ndarray:
-                V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
-                V = self.V.copy()
-            if self.V is None:
-                V = self.V
-            if type(A) != cp.ndarray:
-                A = cp.asarray(A)
+            self._send_arrays_to_gpu()
+        if self.V is None:
+            V = self.V
         else:
-            if self.V is None:
-                V = self.V
-            else:
-                V = self.V.copy()
+            V = self.V.copy()
+        if verbose:
+            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
         t0 = time.perf_counter()
         n2_old = self.n2
-        if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         for i, z in enumerate(Z):
             if z > self.L:
                 self.n2 = 0
@@ -997,68 +1027,13 @@ class CNLSE(NLSE):
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
-            A = cp.asnumpy(A)
-
+        return_np_array = isinstance(E, np.ndarray)
+        if self.backend == "GPU" and CUPY_AVAILABLE:
+            if return_np_array:
+                A = cp.asnumpy(A)
+            self._retrieve_arrays_from_gpu()
         if plot:
-            if A.ndim == 3:
-                if not (return_np_array):
-                    A_1_plot = A[0, :, :].get()
-                    A_2_plot = A[1, :, :].get()
-                elif return_np_array or self.backend == "CPU":
-                    A_1_plot = A[0, :, :].copy()
-                    A_2_plot = A[1, :, :].copy()
-            else:
-                if not (return_np_array):
-                    A_1_plot = A[-1, 0, :, :].get()
-                    A_2_plot = A[-1, 1, :, :].get()
-                elif return_np_array or self.backend == "CPU":
-                    A_1_plot = A[-1, 0, :, :].copy()
-                    A_2_plot = A[-1, 1, :, :].copy()
-            fig = plt.figure(layout="constrained")
-            # plot amplitudes and phases
-            a1 = fig.add_subplot(221)
-            self.plot_2d(
-                a1,
-                self.X * 1e3,
-                self.Y * 1e3,
-                np.abs(A_1_plot) ** 2,
-                r"$|\psi_1|^2$",
-            )
-
-            a2 = fig.add_subplot(222)
-            self.plot_2d(
-                a2,
-                self.X * 1e3,
-                self.Y * 1e3,
-                np.angle(A_1_plot),
-                r"arg$(\psi_1)$",
-                cmap="twilight_shifted",
-                vmin=-np.pi,
-                vmax=np.pi,
-            )
-
-            a3 = fig.add_subplot(223)
-            self.plot_2d(
-                a3,
-                self.X * 1e3,
-                self.Y * 1e3,
-                np.abs(A_2_plot) ** 2,
-                r"$|\psi_2|^2$",
-            )
-
-            a4 = fig.add_subplot(224)
-            self.plot_2d(
-                a4,
-                self.X * 1e3,
-                self.Y * 1e3,
-                np.angle(A_2_plot),
-                r"arg$(\psi_2)$",
-                cmap="twilight_shifted",
-                vmin=-np.pi,
-                vmax=np.pi,
-            )
-            plt.show()
+            self.plot_field(A)
         # some more ndim logic to unpack along the right axes
         if A.ndim == 3:
             return A

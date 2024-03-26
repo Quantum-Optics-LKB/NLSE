@@ -201,7 +201,7 @@ class NLSE:
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",
-    ):
+    ) -> None:
         """Split step function for one propagation step
 
         Args:
@@ -609,7 +609,7 @@ class NLSE_1d:
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",
-    ):
+    ) -> None:
         """Split step function for one propagation step
 
         Args:

@@ -19,12 +19,13 @@ def main():
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
+        simu.delta_z = 1e-4
         E_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2).astype(PRECISION_COMPLEX)
         simu.V = -1e-4 * np.exp(-(simu.XX**2 + simu.YY**2) / waist2**2).astype(
             PRECISION_COMPLEX
         )
 
-        simu.out_field(E_0, L, verbose=True, plot=False, precision="single")
+        simu.out_field(E_0, L, verbose=True, plot=True, precision="single")
 
 
 if __name__ == "__main__":

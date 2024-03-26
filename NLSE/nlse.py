@@ -146,10 +146,7 @@ class NLSE:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z)
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            return cp.asarray(propagator)
-        else:
-            return propagator
+        return propagator
 
     def build_fft_plan(self, A: np.ndarray) -> list:
         """Builds the FFT plan objects for propagation
@@ -302,6 +299,47 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
 
+    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+        """Prepare the output array depending on backend.
+
+        Args:
+            E_in (np.ndarray): Input array
+            normalize (bool): Normalize the field to the total power.
+        Returns:
+            np.ndarray: Output array
+        """
+        if self.backend == "GPU" and CUPY_AVAILABLE:
+            A = cp.empty_like(E_in)
+        else:
+            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=E_in.dtype)
+        A[:] = E_in
+        if normalize:
+            # normalization of the field
+            integral = (
+                (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
+            ).sum(axis=self._last_axes)
+            E_00 = (2 * self.puiss / (c * epsilon_0 * integral)) ** 0.5
+            A = (E_00.T * A.T).T
+        return A
+
+    def _send_arrays_to_gpu(self) -> None:
+        """
+        Send arrays to GPU.
+        """
+        if self.V is not None:
+            self.V = cp.asarray(self.V)
+        self.nl_profile = cp.asarray(self.nl_profile)
+        self.propagator = cp.asarray(self.propagator)
+
+    def _retrieve_arrays_from_gpu(self) -> None:
+        """
+        Retrieve arrays from GPU.
+        """
+        if self.V is not None:
+            self.V = self.V.get()
+        self.nl_profile = self.nl_profile.get()
+        self.propagator = self.propagator.get()
+
     def out_field(
         self,
         E_in: np.ndarray,
@@ -331,52 +369,19 @@ class NLSE:
             np.complex128,
         ], "Type mismatch, E_in should be complex64 or complex128"
         Z = np.arange(0, z, step=self.delta_z, dtype=E_in.real.dtype)
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            if type(E_in) == np.ndarray:
-                A = np.empty_like(E_in)
-                integral = np.sum(
-                    np.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
-                    axis=self._last_axes,
-                )
-                return_np_array = True
-            elif type(E_in) == cp.ndarray:
-                A = cp.empty_like(E_in)
-                integral = cp.sum(
-                    cp.abs(E_in) ** 2 * self.delta_X * self.delta_Y,
-                    axis=self._last_axes,
-                )
-                return_np_array = False
-        else:
-            return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=E_in.dtype)
-            integral = np.sum(
-                np.abs(E_in) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
-            )
+        A = self._prepare_output_array(E_in, normalize)
+        # define plans if not already done
         if self.plans is None:
             self.plans = self.build_fft_plan(A)
-        if normalize:
-            # normalization of the field
-            E_00 = np.sqrt(2 * self.puiss / (c * epsilon_0 * integral))
-            A[:] = (E_00.T * E_in.T).T
-        else:
-            A[:] = E_in
+        # define propagator if not already done
         if self.propagator is None:
             self.propagator = self.build_propagator(self.k)
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            self.nl_profile = cp.asarray(self.nl_profile)
-            if type(self.V) == np.ndarray:
-                V = cp.asarray(self.V)
-            elif type(self.V) == cp.ndarray:
-                V = self.V
-            if self.V is None:
-                V = self.V
-            if type(A) != cp.ndarray:
-                A = cp.asarray(A)
+            self._send_arrays_to_gpu()
+        if self.V is None:
+            V = self.V
         else:
-            if self.V is None:
-                V = self.V
-            else:
-                V = self.V.copy()
+            V = self.V.copy()
 
         if self.backend == "GPU" and CUPY_AVAILABLE:
             start_gpu = cp.cuda.Event()
@@ -411,8 +416,11 @@ class NLSE:
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
-        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
-            A = cp.asnumpy(A)
+        return_np_array = isinstance(E_in, np.ndarray)
+        if self.backend == "GPU" and CUPY_AVAILABLE:
+            if return_np_array:
+                A = cp.asnumpy(A)
+            self._retrieve_arrays_from_gpu()
 
         if plot:
             if not (return_np_array):

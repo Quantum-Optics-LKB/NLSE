@@ -1135,6 +1135,8 @@ class CNLSE_1d(CNLSE):
             backend=backend,
         )
         self._last_axes = (-1,)
+        self.nl_profile = self.nl_profile[0]
+        self.nl_profile /= self.nl_profile.sum()
 
     def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output array depending on backend."""

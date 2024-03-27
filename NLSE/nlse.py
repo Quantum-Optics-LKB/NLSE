@@ -139,9 +139,7 @@ class NLSE:
         """Builds the linear propagation matrix
 
         Args:
-            precision (str, optional): "single" or "double" application of the
-            propagator.
-            Defaults to "single".
+            k (float): Wavenumber
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
@@ -544,9 +542,7 @@ class NLSE_1d(NLSE):
         """Builds the linear propagation matrix
 
         Args:
-            precision (str, optional): "single" or "double" application of the
-            propagator.
-            Defaults to "single".
+            k (float): Wavenumber
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
@@ -1217,8 +1213,7 @@ class CNLSE_1d(CNLSE):
         plt.show()
 
 
-# TODO(Tangui): Setup inheritance from NLSE
-class GPE:
+class GPE(NLSE):
     """A class to solve GPE."""
 
     def __init__(
@@ -1253,387 +1248,111 @@ class GPE:
             nl_length (float, optional): Non local length scale in m. Defaults to 0.
             backend (str, optional): "GPU" or "CPU". Defaults to BACKEND.
         """
-        self.backend = backend
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            self._kernels = kernels_gpu
-            self._convolution = signal_cp.fftconvolve
-        else:
-            self._kernels = kernels_cpu
-            self._convolution = signal.fftconvolve
+        super().__init__(
+            alpha=gamma,
+            puiss=N,
+            window=window,
+            n2=g,
+            V=V,
+            L=0,
+            NX=NX,
+            NY=NY,
+            Isat=sat,
+            nl_length=nl_length,
+            wvl=2 * np.pi / m,
+            backend=backend,
+        )
         # listof physical parameters
         self.g = g
         self.V = V
-        self.gamma = gamma
-        self.N = N
-        self.m = m
+        self.gamma = self.alpha
+        self.N = self.puiss
+        self.m = self.k
         self.sat = sat
-        # number of grid points in X (even, best is power of 2 or
-        # low prime factors)
-        self.NX = NX
-        self.NY = NY
-        self.window = window
-        tau_nl = self.window**2 / (abs(self.g) * self.N)
-        self.delta_t = tau_nl / 10
-        # transverse coordinate
-        self.X, self.delta_X = np.linspace(
-            -self.window / 2,
-            self.window / 2,
-            num=NX,
-            endpoint=False,
-            retstep=True,
-            dtype=np.float32,
-        )
-        self.Y, self.delta_Y = np.linspace(
-            -self.window / 2,
-            self.window / 2,
-            num=NY,
-            endpoint=False,
-            retstep=True,
-            dtype=np.float32,
-        )
+        self.delta_t = self.delta_z
+        # do some conversion for the units
+        self.I_sat *= epsilon_0 * c / 2
 
-        self.XX, self.YY = np.meshgrid(self.X, self.Y)
-        # definition of the Fourier frequencies for the linear step
-        self.Kx = 2 * np.pi * np.fft.fftfreq(self.NX, d=self.delta_X)
-        self.Ky = 2 * np.pi * np.fft.fftfreq(self.NY, d=self.delta_Y)
-        self.Kxx, self.Kyy = np.meshgrid(self.Kx, self.Ky)
-        self.propagator = None
-        self.plans = None
-        self.nl_length = nl_length
-        if self.nl_length > 0:
-            d = self.nl_length // self.delta_X
-            x = np.arange(-3 * d, 3 * d + 1)
-            y = np.arange(-3 * d, 3 * d + 1)
-            XX, YY = np.meshgrid(x, y)
-            R = np.hypot(XX, YY)
-            self.nl_profile = 1 / (2 * np.pi * self.nl_length**2) * special.kn(0, R / d)
-            self.nl_profile[
-                self.nl_profile.shape[0] // 2, self.nl_profile.shape[1] // 2
-            ] = np.nanmax(self.nl_profile[np.logical_not(np.isinf(self.nl_profile))])
-            self.nl_profile /= self.nl_profile.sum()
-        else:
-            self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
-        self._last_axes = (-2, -1)
-
-    def build_propagator(self) -> np.ndarray:
+    def _build_propagator(self, m: float) -> np.ndarray:
         """Build the linear propagation matrix.
 
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(
-            -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / self.m * self.delta_t
+            -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / m * self.delta_t
         )
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            return cp.asarray(propagator)
-        else:
-            return propagator
+        return propagator
 
-    def build_fft_plan(self, A: np.ndarray) -> list:
-        """Build the FFT plan objects for propagation.
+    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+        """Prepare the output array depending on backend.
 
         Args:
-            A (np.ndarray): Array to transform.
+            E_in (np.ndarray): Input array
+            normalize (bool): Normalize the field to the total power.
         Returns:
-            list: A list containing the FFT plans
+            np.ndarray: Output array
         """
         if self.backend == "GPU" and CUPY_AVAILABLE:
-            plan_fft = fftpack.get_fft_plan(
-                A,
-                shape=(A.shape[-2], A.shape[-1]),
-                axes=self._last_axes,
-                value_type="C2C",
-            )
-            return [plan_fft]
+            A = cp.empty_like(E_in)
+            A[:] = cp.asarray(E_in)
         else:
-            # try to load previous fftw wisdom
-            try:
-                with open("fft.wisdom", "rb") as file:
-                    wisdom = pickle.load(file)
-                    pyfftw.import_wisdom(wisdom)
-            except FileNotFoundError:
-                print("No FFT wisdom found, starting over ...")
-            plan_fft = pyfftw.FFTW(
-                A,
-                A,
-                direction="FFTW_FORWARD",
-                threads=multiprocessing.cpu_count(),
-                axes=self._last_axes,
-            )
-            plan_ifft = pyfftw.FFTW(
-                A,
-                A,
-                direction="FFTW_BACKWARD",
-                threads=multiprocessing.cpu_count(),
-                axes=self._last_axes,
-            )
-            with open("fft.wisdom", "wb") as file:
-                wisdom = pyfftw.export_wisdom()
-                pickle.dump(wisdom, file)
-            return [plan_fft, plan_ifft]
-
-    def split_step(
-        self,
-        A: np.ndarray,
-        V: np.ndarray,
-        propagator: np.ndarray,
-        plans: list,
-        precision: str = "single",
-    ) -> None:
-        """Split step function for one propagation step.
-
-        Args:
-            A (np.ndarray): Field to propagate
-            V (np.ndarray): Potential field (can be None).
-            propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects.
-            Either a single FFT plan for both directions
-            (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the
-            nonlinear propagation step.
-            Defaults to "single".
-        """
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            # on GPU, only one plan for both FFT directions
-            plan_fft = plans[0]
-        else:
-            plan_fft, plan_ifft = plans
-        if precision == "double":
-            A_sq = A.real * A.real + A.imag * A.imag
-            if self.nl_length > 0:
-                A_sq = self._convolution(
-                    A_sq, self.nl_profile, mode="same", axes=self._last_axes
-                )
-            if V is None:
-                self._kernels.nl_prop_without_V(
-                    A,
-                    A_sq,
-                    self.delta_t / 2,
-                    self.gamma,
-                    self.g,
-                    self.sat,
-                )
-            else:
-                self._kernels.nl_prop(
-                    A,
-                    A_sq,
-                    self.delta_t / 2,
-                    self.gamma,
-                    V,
-                    self.g,
-                    self.sat,
-                )
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
-            # linear step in Fourier domain (shifted)
-            cp.multiply(A, propagator, out=A)
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-            A /= A.shape[-2] * A.shape[-1]
-        else:
-            plan_fft, plan_ifft = plans
-            plan_fft(input_array=A, output_array=A)
-            np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
-        A_sq = A.real * A.real + A.imag * A.imag
-        if self.nl_length > 0:
-            A_sq = self._convolution(
-                A_sq, self.nl_profile, mode="same", axes=self._last_axes
-            )
-        if precision == "double":
-            if V is None:
-                self._kernels.nl_prop_without_V(
-                    A,
-                    A_sq,
-                    self.delta_t / 2,
-                    self.gamma,
-                    self.g,
-                    self.sat,
-                )
-            else:
-                self._kernels.nl_prop(
-                    A,
-                    A_sq,
-                    self.delta_t / 2,
-                    self.gamma,
-                    V,
-                    self.g,
-                    self.sat,
-                )
-        else:
-            if V is None:
-                self._kernels.nl_prop_without_V(
-                    A,
-                    A_sq,
-                    self.delta_t,
-                    self.gamma,
-                    self.g,
-                    self.sat,
-                )
-            else:
-                self._kernels.nl_prop(
-                    A,
-                    A_sq,
-                    self.delta_t,
-                    self.gamma,
-                    V,
-                    self.g,
-                    self.sat,
-                )
-
-    def out_field(
-        self,
-        psi: np.ndarray,
-        T: float,
-        plot=False,
-        precision: str = "single",
-        verbose: bool = True,
-        normalize: bool = True,
-        callback: callable = None,
-    ) -> np.ndarray:
-        """Propagate the field at a time T.
-
-        Args:
-            psi (np.ndarray): Normalized input field (between 0 and 1)
-            T (float): propagation time in s
-            plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single"
-            application of the nonlinear term.
-            This leads to a dz (single) or dz^3 (double) precision.
-            Defaults to "single".
-            verbose (bool, optional): Prints progress and time.
-            Defaults to True.
-        Returns:
-            np.ndarray: Propagated field in proper units atoms/m
-        """
-        assert psi.shape[-2] == self.NY and psi.shape[-1] == self.NX
-        assert psi.dtype in [
-            np.complex64,
-            np.complex128,
-        ], "Precision mismatch, E_in should be np.complex64 or np.complex128"
-        Ts = np.arange(0, T, step=self.delta_t, dtype=psi.real.dtype)
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            if type(psi) is np.ndarray:
-                # A = np.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
-                A = np.empty_like(psi)
-                integral = np.sum(
-                    np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
-                )
-                return_np_array = True
-            elif type(psi) is cp.ndarray:
-                # A = cp.empty((self.NX, self.NY), dtype=PRECISION_COMPLEX)
-                A = cp.empty_like(psi)
-                integral = cp.sum(
-                    cp.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
-                )
-                return_np_array = False
-        else:
-            return_np_array = True
-            A = pyfftw.empty_aligned((self.NX, self.NY), dtype=psi.dtype)
-            integral = np.sum(
-                np.abs(psi) ** 2 * self.delta_X * self.delta_Y, axis=self._last_axes
-            )
-        if self.plans is None:
-            self.plans = self.build_fft_plan(A)
+            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
+            A[:] = E_in
         if normalize:
             # normalization of the field
-            E_00 = np.sqrt(self.N / integral)
-            A[:] = (E_00.T * psi.T).T
-        else:
-            A[:] = psi
-        if self.propagator is None:
-            self.propagator = self.build_propagator()
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            if type(self.V) is np.ndarray:
-                V = cp.asarray(self.V)
-            elif type(self.V) is cp.ndarray:
-                V = self.V
-            if self.V is None:
-                V = self.V
-            if type(A) is not cp.ndarray:
-                A = cp.asarray(A)
-        else:
-            if self.V is None:
-                V = self.V
-            else:
-                V = self.V.copy()
-
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            start_gpu = cp.cuda.Event()
-            end_gpu = cp.cuda.Event()
-            start_gpu.record()
-        t0 = time.perf_counter()
-        if verbose:
-            pbar = tqdm.tqdm(total=len(Ts), position=4, desc="Iteration", leave=False)
-        for _ in Ts:
-            if verbose:
-                pbar.update(1)
-            self.split_step(A, V, self.propagator, self.plans, precision)
-            if callback is not None:
-                callback(self, A, _)
-        if verbose:
-            pbar.close()
-
-        if self.backend == "GPU" and CUPY_AVAILABLE:
-            end_gpu.record()
-            end_gpu.synchronize()
-            t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        t_cpu = time.perf_counter() - t0
-        if verbose:
-            if self.backend == "GPU" and CUPY_AVAILABLE:
-                print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU)"
-                    f" / {t_cpu} s (CPU)"
-                )
-            else:
-                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
-        if self.backend == "GPU" and CUPY_AVAILABLE and return_np_array:
-            A = cp.asnumpy(A)
-
-        if plot:
-            if not (return_np_array):
-                if A.ndim == 2:
-                    A_plot = A.get()
-                elif A.ndim == 3:
-                    A_plot = A[0, :, :].get()
-            elif return_np_array or self.backend == "CPU":
-                if A.ndim == 2:
-                    A_plot = A
-                elif A.ndim == 3:
-                    A_plot = A[0, :, :]
-            im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot))) ** 2
-            ext_real = [
-                self.X[0] * 1e3,
-                self.X[-1] * 1e3,
-                self.Y[0] * 1e3,
-                self.Y[-1] * 1e3,
-            ]
-            ext_fft = [
-                self.Kx[self.Kx.size // 2] * 1e-3,
-                self.Kx[self.Kx.size // 2 - 1] * 1e-3,
-                self.Ky[self.Ky.size // 2] * 1e-3,
-                self.Ky[self.Ky.size // 2 - 1] * 1e-3,
-            ]
-            fig, ax = plt.subplots(1, 3)
-            im = ax[0].imshow(np.abs(A_plot) ** 2, cmap="viridis", extent=ext_real)
-            ax[0].set_title(r"Density in atoms/$m^2$")
-            ax[0].set_xlabel("x (mm)")
-            ax[0].set_ylabel("y (mm)")
-            fig.colorbar(im, ax=ax[0], label="Density")
-            im = ax[1].imshow(
-                np.angle(A_plot),
-                cmap="twilight_shifted",
-                vmin=-np.pi,
-                vmax=np.pi,
-                extent=ext_real,
-            )
-            ax[1].set_title("Phase")
-            ax[1].set_xlabel("x (mm)")
-            ax[1].set_ylabel("y (mm)")
-            fig.colorbar(im, ax=ax[1], label="Phase")
-            im = ax[2].imshow(im_fft, cmap="nipy_spectral", extent=ext_fft)
-            ax[2].set_title("Momentum space")
-            ax[2].set_xlabel(r"kx ($mm^{-1}$)")
-            ax[2].set_ylabel(r"ky ($mm^{-1}$)")
-            fig.colorbar(im, ax=ax[2], label="Density")
-            plt.show()
+            integral = (
+                (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
+            ).sum(axis=self._last_axes)
+            E_00 = self.N / integral
+            A = (E_00.T * A.T).T
         return A
+
+    def plot_field(self, A_plot) -> None:
+        """Plot a field for monitoring.
+
+        Args:
+            A_plot (np.ndarray): Field to plot
+        """
+        # if array is multi-dimensional, drop dims until the shape is 2D
+        if A_plot.ndim > 2:
+            while len(A_plot.shape) > 2:
+                A_plot = A_plot[0]
+        if CUPY_AVAILABLE and isinstance(A_plot, cp.ndarray):
+            A_plot = A_plot.get()
+        fig, ax = plt.subplots(1, 3, layout="constrained")
+        ext_real = [
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
+            self.Y[0] * 1e3,
+            self.Y[-1] * 1e3,
+        ]
+        ext_fourier = [
+            self.Kx[0] * 1e-3,
+            self.Kx[-1] * 1e-3,
+            self.Ky[0] * 1e-3,
+            self.Ky[-1] * 1e-3,
+        ]
+        rho = np.abs(A_plot) ** 2
+        phi = np.angle(A_plot)
+        im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))
+        im0 = ax[0].imshow(rho, extent=ext_real)
+        ax[0].set_title("Intensity")
+        ax[0].set_xlabel("x (mm)")
+        ax[0].set_ylabel("y (mm)")
+        fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Density (at/m^2)")
+        im1 = ax[1].imshow(phi, extent=ext_real, cmap="twilight_shifted")
+        ax[1].set_title("Phase")
+        ax[1].set_xlabel("x (mm)")
+        ax[1].set_ylabel("y (mm)")
+        fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
+        im2 = ax[2].imshow(
+            im_fft,
+            extent=ext_fourier,
+            cmap="nipy_spectral",
+        )
+        ax[2].set_title("Fourier space")
+        ax[2].set_xlabel(r"$k_x$ ($mm^{-1}$)")
+        ax[2].set_ylabel(r"$k_y$ ($mm^{-1}$)")
+        fig.colorbar(im2, ax=ax[2], shrink=0.6, label="Intensity (a.u.)")
+        plt.show()

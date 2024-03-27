@@ -1,14 +1,14 @@
-import oned_coupled
-import twod_coupled
-import oned_uncoupled
-import twod_uncoupled
-import twod_gpe
-import nonlocality
+import test_cnles_1d
+import test_cnlse
+import test_nlse_1d
+import test_nlse
+import test_gpe
+import test_nonlocality
 
 if __name__ == "__main__":
-    oned_coupled.main()
-    twod_coupled.main()
-    oned_uncoupled.main()
-    twod_uncoupled.main()
-    twod_gpe.main()
-    nonlocality.main()
+    test_cnles_1d.main()
+    test_cnlse.main()
+    test_nlse_1d.main()
+    test_nlse.main()
+    test_gpe.main()
+    test_nonlocality.main()

@@ -53,3 +53,9 @@ build/lib/NLSE/cnlse.py
 build/lib/NLSE/gpe.py
 build/lib/NLSE/nlse_1d.py
 build/lib/NLSE/utils.py
+tests/__pycache__/test_cnles_1d.cpython-310.pyc
+tests/__pycache__/test_cnlse.cpython-310.pyc
+tests/__pycache__/test_gpe.cpython-310.pyc
+tests/__pycache__/test_nlse_1d.cpython-310.pyc
+tests/__pycache__/test_nlse.cpython-310.pyc
+tests/__pycache__/test_nonlocality.cpython-310.pyc

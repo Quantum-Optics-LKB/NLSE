@@ -5,16 +5,18 @@ PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
 
+N = 2048
+n2 = -1.6e-9
+waist = 2.23e-3
+waist2 = 70e-6
+window = 4 * waist
+puiss = 1.05
+Isat = 10e4  # saturation intensity in W/m^2
+L = 10e-3
+alpha = 20
+
+
 def main():
-    N = 2048
-    n2 = -1.6e-9
-    waist = 2.23e-3
-    waist2 = 70e-6
-    window = 4 * waist
-    puiss = 1.05
-    Isat = 10e4  # saturation intensity in W/m^2
-    L = 10e-3
-    alpha = 20
     for backend in ["CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend

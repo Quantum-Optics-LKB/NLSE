@@ -37,7 +37,11 @@ def main():
         E_0 = np.exp(-(simu_c.X**2) / waist**2).astype(PRECISION_COMPLEX)
         V = np.exp(-(simu_c.X**2) / waist2**2).astype(PRECISION_COMPLEX)
         E, V = simu_c.out_field(
-            np.array([E_0, V]), L, verbose=True, plot=False, precision="single"
+            np.array([E_0, V]),
+            L,
+            verbose=True,
+            plot=False,
+            precision="single",
         )
 
 

@@ -48,3 +48,8 @@ NLSE.egg-info/PKG-INFO
 NLSE.egg-info/requires.txt
 NLSE.egg-info/SOURCES.txt
 NLSE.egg-info/top_level.txt
+build/lib/NLSE/cnlse_1d.py
+build/lib/NLSE/cnlse.py
+build/lib/NLSE/gpe.py
+build/lib/NLSE/nlse_1d.py
+build/lib/NLSE/utils.py

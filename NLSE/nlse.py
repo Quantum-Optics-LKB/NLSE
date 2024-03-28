@@ -465,10 +465,10 @@ class NLSE:
             if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
-                    f" {time.perf_counter()-t0} s (CPU)"
+                    f" {time.perf_counter()-t0} s (CPU)\n"
                 )
             else:
-                print(f"\nTime spent to solve : {t_cpu} s (CPU)")
+                print(f"\nTime spent to solve : {t_cpu} s (CPU)\n")
         self.n2 = n2_old
         return_np_array = isinstance(E_in, np.ndarray)
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:

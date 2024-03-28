@@ -87,7 +87,7 @@ class CNLSE(NLSE):
 
     def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__."""
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E)
             A[:] = cp.asarray(E)
             puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
@@ -177,7 +177,7 @@ class CNLSE(NLSE):
         Returns:
             None
         """
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -378,7 +378,7 @@ class CNLSE(NLSE):
         if A_plot.ndim > 3:
             while len(A_plot.shape) > 3:
                 A_plot = A_plot[0]
-        if __CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(2, 2, layout="constrained")
         ext_real = [
@@ -452,7 +452,7 @@ class CNLSE(NLSE):
         if self.propagator1 is None:
             self.propagator1 = self._build_propagator(self.k)
             self.propagator2 = self._build_propagator(self.k2)
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             self._send_arrays_to_gpu()
         if self.V is None:
             V = self.V
@@ -460,7 +460,7 @@ class CNLSE(NLSE):
             V = self.V.copy()
         if verbose:
             pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -484,13 +484,13 @@ class CNLSE(NLSE):
             if callback is not None:
                 callback(self, A, z, i)
         t_cpu = time.perf_counter() - t0
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
             pbar.close()
-            if self.backend == "GPU" and __CUPY_AVAILABLE__:
+            if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
                     f" {time.perf_counter()-t0} s (CPU)"
@@ -499,7 +499,7 @@ class CNLSE(NLSE):
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         return_np_array = isinstance(E, np.ndarray)
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             if return_np_array:
                 A = cp.asnumpy(A)
             self._retrieve_arrays_from_gpu()

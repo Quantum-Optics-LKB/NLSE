@@ -30,6 +30,8 @@ pyfftw.interfaces.cache.enable()
 class NLSE:
     """A class to solve NLSE"""
 
+    __CUPY_AVAILABLE__ = __CUPY_AVAILABLE__
+
     def __init__(
         self,
         alpha: float,
@@ -60,9 +62,8 @@ class NLSE:
             __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         # listof physical parameters
-        global __CUPY_AVAILABLE__
         self.backend = backend
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             self._kernels = kernels_gpu
             self._convolution = signal_cp.fftconvolve
         else:
@@ -145,7 +146,7 @@ class NLSE:
         Returns:
             list: A list containing the FFT plans
         """
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft = fftpack.get_fft_plan(
                 A,
                 axes=self._last_axes,
@@ -188,7 +189,7 @@ class NLSE:
         Returns:
             np.ndarray: Output array
         """
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
             A[:] = cp.asarray(E_in)
         else:
@@ -256,7 +257,7 @@ class NLSE:
             propagation step.
             Defaults to "single".
         """
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -286,7 +287,7 @@ class NLSE:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
@@ -353,7 +354,7 @@ class NLSE:
         if A_plot.ndim > 2:
             while len(A_plot.shape) > 2:
                 A_plot = A_plot[0]
-        if __CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(1, 3, layout="constrained")
         ext_real = [
@@ -430,7 +431,7 @@ class NLSE:
         # define propagator if not already done
         if self.propagator is None:
             self.propagator = self._build_propagator(self.k)
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             self._send_arrays_to_gpu()
         if self.V is None:
             V = self.V
@@ -439,7 +440,7 @@ class NLSE:
         if verbose:
             pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
         n2_old = self.n2
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
@@ -456,12 +457,12 @@ class NLSE:
         if verbose:
             pbar.close()
 
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             end_gpu.record()
             end_gpu.synchronize()
             t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
         if verbose:
-            if self.backend == "GPU" and __CUPY_AVAILABLE__:
+            if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
                 print(
                     f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
                     f" {time.perf_counter()-t0} s (CPU)"
@@ -470,7 +471,7 @@ class NLSE:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)")
         self.n2 = n2_old
         return_np_array = isinstance(E_in, np.ndarray)
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             if return_np_array:
                 A = cp.asnumpy(A)
             self._retrieve_arrays_from_gpu()

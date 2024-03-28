@@ -89,7 +89,7 @@ class GPE(NLSE):
         Returns:
             np.ndarray: Output array
         """
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
             A[:] = cp.asarray(E_in)
         else:
@@ -114,7 +114,7 @@ class GPE(NLSE):
         if A_plot.ndim > 2:
             while len(A_plot.shape) > 2:
                 A_plot = A_plot[0]
-        if __CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(1, 3, layout="constrained")
         ext_real = [

@@ -73,7 +73,7 @@ class CNLSE_1d(CNLSE):
 
     def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__."""
-        if self.backend == "GPU" and __CUPY_AVAILABLE__:
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E)
             A[:] = cp.asarray(E)
             puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
@@ -125,7 +125,7 @@ class CNLSE_1d(CNLSE):
         if A_plot.ndim > 2:
             while len(A_plot.shape) > 2:
                 A_plot = A_plot[0]
-        if __CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         A_1_plot = A_plot[0]
         A_2_plot = A_plot[1]

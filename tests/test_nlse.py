@@ -1,6 +1,7 @@
 from NLSE import NLSE
 import numpy as np
 import pyfftw
+from scipy.constants import c, epsilon_0
 
 if NLSE.__CUPY_AVAILABLE__:
     import cupy as cp
@@ -82,9 +83,9 @@ def test_prepare_output_array() -> None:
 
 def test_send_arrays_to_gpu() -> None:
     if NLSE.__CUPY_AVAILABLE__:
-        global alpha
-        global n2
-        global Isat
+        alpha = 20
+        Isat = 10e4
+        n2 = -1.6e-9
         V = np.random.random((N, N)) + 1j * np.random.random((N, N))
         alpha = np.repeat(alpha, 2)
         alpha = alpha[..., cp.newaxis, cp.newaxis]
@@ -107,19 +108,62 @@ def test_send_arrays_to_gpu() -> None:
 
 
 def test_retrieve_arrays_from_gpu() -> None:
-    pass
+    if NLSE.__CUPY_AVAILABLE__:
+        alpha = 20
+        Isat = 10e4
+        n2 = -1.6e-9
+        V = np.random.random((N, N)) + 1j * np.random.random((N, N))
+        alpha = np.repeat(alpha, 2)
+        alpha = alpha[..., cp.newaxis, cp.newaxis]
+        n2 = np.repeat(n2, 2)
+        n2 = n2[..., cp.newaxis, cp.newaxis]
+        Isat = np.repeat(Isat, 2)
+        Isat = Isat[..., cp.newaxis, cp.newaxis]
+        simu = NLSE(
+            alpha, puiss, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
+        )
+        simu.propagator = simu._build_propagator(simu.k)
+        simu._send_arrays_to_gpu()
+        simu._retrieve_arrays_from_gpu()
+        assert isinstance(simu.propagator, np.ndarray)
+        assert isinstance(simu.V, np.ndarray)
+        assert isinstance(simu.alpha, np.ndarray)
+        assert isinstance(simu.n2, np.ndarray)
+        assert isinstance(simu.I_sat, np.ndarray)
+    else:
+        pass
 
 
 def test_split_step() -> None:
-    pass
-
-
-def test_plot_field() -> None:
-    pass
+    for backend in ["CPU", "GPU"]:
+        simu = NLSE(
+            alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+        )
+        simu.delta_z = 0
+        simu.propagator = simu._build_propagator(simu.k)
+        E = np.ones((N, N), dtype=PRECISION_COMPLEX)
+        A = simu._prepare_output_array(E, normalize=False)
+        simu.plans = simu._build_fft_plan(A)
+        simu.propagator = simu._build_propagator(simu.k)
+        if backend == "GPU":
+            E = cp.asarray(E)
+            simu._send_arrays_to_gpu()
+        simu.split_step(E, simu.V, simu.propagator, simu.plans, precision="double")
+        if backend == "CPU":
+            assert np.allclose(E, np.ones((N, N), dtype=PRECISION_COMPLEX))
+        else:
+            assert cp.allclose(E, cp.ones((N, N), dtype=PRECISION_COMPLEX))
 
 
 def test_out_field() -> None:
-    pass
+    E = np.ones((N, N), dtype=PRECISION_COMPLEX)
+    for backend in ["CPU", "GPU"]:
+        simu = NLSE(
+            0, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+        )
+        E = simu.out_field(E, L, verbose=False, plot=False, precision="single")
+        norm = np.sum(np.abs(E) ** 2 * simu.delta_X * simu.delta_Y * c * epsilon_0 / 2)
+        assert abs(norm - simu.puiss) / simu.puiss < 1e-3
 
 
 # for integration testing

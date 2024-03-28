@@ -51,7 +51,6 @@ def nl_prop_without_V(
         g (float): Interactions
         Isat (float): Saturation
     """
-    A_sq = cp.abs(A) ** 2
     A *= cp.exp(
         dz * (-alpha / (2 * (1 + A_sq / Isat)) + 1j * g * A_sq / (1 + A_sq / Isat))
     )

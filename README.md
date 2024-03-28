@@ -167,6 +167,10 @@ The `out_field` method is the main function of the code that propagates the fiel
 The `precision` argument allows to switch between applicating the nonlinear terms in a single multiplication (`"single"`), or applying a "half" nonlinear term before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is $\mathcal{O}(\delta z)$ in the first case and $\mathcal{O}(\delta z^3)$ in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
 The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $z_{NL}=\frac{1}{k_0 n_2 I}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
 
+### Inheritance 
+
+In order to minimize duplication, all classes inherit from the main `NLSE` class according to the following graph:
+![inheritance](img/inheritance_graph.png)
 
 ### The `CNLSE` and `NLSE_1d` classes
 

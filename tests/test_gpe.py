@@ -5,20 +5,24 @@ import numpy as np
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
+N = 2048
+N_at = 1e6
+g = 1e3 / (N_at / 1e-3**2)
+waist = 250e-6
+window = 1e-3
+m = 87 * atomic_mass
+
 
 def main():
-    N = 2048
-    N_at = 1e6
-    g = 1e3 / (N_at / 1e-3**2)
-    waist = 250e-6
+    print("Testing GPE class")
     for backend in ["CPU", "GPU"]:
         simu_gpe = GPE(
             gamma=0,
             N=N_at,
-            window=1e-3,
+            window=window,
             g=g,
             V=None,
-            m=87 * atomic_mass,
+            m=m,
             NX=N,
             NY=N,
             backend=backend,

@@ -3,19 +3,20 @@ import numpy as np
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
+N = 2048
+n2 = -1.6e-9
+n12 = -1e-10
+waist = 2.23e-3
+waist2 = 70e-6
+window = 4 * waist
+puiss = 1.05
+Isat = 10e4  # saturation intensity in W/m^2
+L = 1e-3
+alpha = 20
 
 
 def main():
-    N = 2048
-    n2 = -1.6e-9
-    n12 = -1e-10
-    waist = 2.23e-3
-    waist2 = 70e-6
-    window = 4 * waist
-    puiss = 1.05
-    Isat = 10e4  # saturation intensity in W/m^2
-    L = 1e-3
-    alpha = 20
+    print("Testing CNLSE_1d class")
     for backend in ["CPU", "GPU"]:
         simu_c = CNLSE_1d(
             alpha,

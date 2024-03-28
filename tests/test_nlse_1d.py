@@ -3,18 +3,19 @@ import numpy as np
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
+N = 2048
+n2 = -1.6e-9
+waist = 2.23e-3
+waist2 = 70e-6
+window = N * 5.5e-6
+puiss = 1.05
+Isat = 10e4  # saturation intensity in W/m^2
+L = 1e-3
+alpha = 20
 
 
 def main():
-    N = 2048
-    n2 = -1.6e-9
-    waist = 2.23e-3
-    waist2 = 70e-6
-    window = N * 5.5e-6
-    puiss = 1.05
-    Isat = 10e4  # saturation intensity in W/m^2
-    L = 1e-3
-    alpha = 20
+    print("Testing NLSE_1d class")
     for backend in ["CPU", "GPU"]:
         simu = NLSE_1d(
             alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend=backend

@@ -31,7 +31,7 @@ def test_build_propagator() -> None:
                 prop,
                 np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
             )
-        else:
+        elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert cp.allclose(
                 prop,
                 np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
@@ -52,7 +52,7 @@ def test_build_fft_plan() -> None:
             assert len(plans) == 2
             assert isinstance(plans[0], pyfftw.FFTW)
             assert plans[0].output_shape == (N, N)
-        else:
+        elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert len(plans) == 1
             assert isinstance(plans[0], cp.cuda.cufft.PlanNd)
             assert plans[0].shape == (N, N)
@@ -73,7 +73,7 @@ def test_prepare_output_array() -> None:
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
             assert np.allclose(out, A)
-        else:
+        elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert isinstance(out, cp.ndarray)
             assert out.shape == (N, N)
             out /= cp.max(cp.abs(out))
@@ -145,13 +145,13 @@ def test_split_step() -> None:
         A = simu._prepare_output_array(E, normalize=False)
         simu.plans = simu._build_fft_plan(A)
         simu.propagator = simu._build_propagator(simu.k)
-        if backend == "GPU":
+        if backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             E = cp.asarray(E)
             simu._send_arrays_to_gpu()
         simu.split_step(E, simu.V, simu.propagator, simu.plans, precision="double")
         if backend == "CPU":
             assert np.allclose(E, np.ones((N, N), dtype=PRECISION_COMPLEX))
-        else:
+        elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert cp.allclose(E, cp.ones((N, N), dtype=PRECISION_COMPLEX))
 
 

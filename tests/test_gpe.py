@@ -2,6 +2,8 @@ from NLSE import GPE
 from scipy.constants import atomic_mass, hbar
 import numpy as np
 
+if GPE.__CUPY_AVAILABLE__:
+    import cupy as cp
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
@@ -53,12 +55,25 @@ def test_prepare_output_array() -> None:
             NY=N,
             backend=backend,
         )
-        E_in = np.ones((N, N), dtype=PRECISION_COMPLEX)
+        if backend == "CPU":
+            E_in = np.random.random((N, N)) + 1j * np.random.random((N, N))
+        elif backend == "GPU" and GPE.__CUPY_AVAILABLE__:
+            E_in = cp.random.random((N, N)) + 1j * cp.random.random((N, N))
         A = simu._prepare_output_array(E_in, normalize=True)
         integral = (
             (A.real * A.real + A.imag * A.imag) * simu.delta_X * simu.delta_Y
         ).sum(axis=simu._last_axes)
         assert np.allclose(integral, simu.N)
+        if backend == "CPU":
+            assert isinstance(A, np.ndarray)
+            A /= np.max(np.abs(A))
+            E_in /= np.max(np.abs(E_in))
+            assert np.allclose(E_in, A)
+        elif backend == "GPU" and GPE.__CUPY_AVAILABLE__:
+            assert isinstance(A, cp.ndarray)
+            A /= cp.max(cp.abs(A))
+            E_in /= cp.max(cp.abs(E_in))
+            assert cp.allclose(E_in, A)
 
 
 def main():

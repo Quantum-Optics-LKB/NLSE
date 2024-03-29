@@ -200,7 +200,8 @@ class NLSE:
             integral = (
                 (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
             ).sum(axis=self._last_axes)
-            E_00 = (2 * self.puiss / (c * epsilon_0 * integral)) ** 0.5
+            integral *= c * epsilon_0 / 2
+            E_00 = (self.puiss / integral) ** 0.5
             A = (E_00.T * A.T).T
         return A
 

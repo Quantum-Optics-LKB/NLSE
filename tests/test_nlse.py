@@ -62,6 +62,11 @@ def test_prepare_output_array() -> None:
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             A = cp.random.random((N, N)) + 1j * cp.random.random((N, N))
         out = simu._prepare_output_array(A, normalize=True)
+        integral = (
+            (out.real * out.real + out.imag * out.imag) * simu.delta_X * simu.delta_Y
+        ).sum(axis=simu._last_axes)
+        integral *= c * epsilon_0 / 2
+        assert np.allclose(integral, simu.puiss)
         if backend == "CPU":
             assert isinstance(out, np.ndarray)
             out /= np.max(np.abs(out))

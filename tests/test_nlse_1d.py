@@ -14,6 +14,17 @@ L = 1e-3
 alpha = 20
 
 
+def test_build_propagator() -> None:
+    for backend in ["CPU", "GPU"]:
+        simu = NLSE_1d(
+            alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend=backend
+        )
+        prop = simu._build_propagator(simu.k)
+        assert np.allclose(
+            prop, np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
+        )
+
+
 def main():
     print("Testing NLSE_1d class")
     for backend in ["CPU", "GPU"]:

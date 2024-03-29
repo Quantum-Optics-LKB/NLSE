@@ -26,16 +26,10 @@ def test_build_propagator() -> None:
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         prop = simu._build_propagator(simu.k)
-        if backend == "CPU":
-            assert np.allclose(
-                prop,
-                np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
-            )
-        elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
-            assert cp.allclose(
-                prop,
-                np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
-            )
+        assert np.allclose(
+            prop,
+            np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
+        )
 
 
 def test_build_fft_plan() -> None:
@@ -155,6 +149,7 @@ def test_split_step() -> None:
             assert cp.allclose(E, cp.ones((N, N), dtype=PRECISION_COMPLEX))
 
 
+# tests for convergence of the solver : the norm of the field should be conserved
 def test_out_field() -> None:
     E = np.ones((N, N), dtype=PRECISION_COMPLEX)
     for backend in ["CPU", "GPU"]:

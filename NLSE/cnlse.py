@@ -249,14 +249,14 @@ class CNLSE(NLSE):
                 self._kernels.rabi_coupling(
                     A2, A1_old, self.delta_z / 2, self.omega / 2
                 )
-        if self.backend == "GPU":
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
             cp.multiply(A1, propagator1, out=A1)
             cp.multiply(A2, propagator2, out=A2)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
-            A /= A.shape[-2] * A.shape[-1]
+            A /= np.prod(A.shape[self._last_axes[0] :])
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)

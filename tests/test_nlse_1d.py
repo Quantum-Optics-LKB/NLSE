@@ -74,7 +74,6 @@ def test_out_field() -> None:
         rho = A.real * A.real + A.imag * A.imag
         norm = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         norm *= c * epsilon_0 / 2
-        print(norm)
         assert A.shape == (N,), "Output array has wrong shape."
         assert np.allclose(norm, puiss, rtol=1e-4), "Normalization failed."
 

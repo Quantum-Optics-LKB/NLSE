@@ -174,7 +174,8 @@ def test_out_field() -> None:
             0, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         E = simu.out_field(E, L, verbose=False, plot=False, precision="single")
-        norm = np.sum(np.abs(E) ** 2 * simu.delta_X * simu.delta_Y * c * epsilon_0 / 2)
+        norm = np.sum(np.abs(E) ** 2 * simu.delta_X * simu.delta_Y)
+        norm *= c * epsilon_0 / 2
         assert E.shape == (N, N), "Output array has wrong shape."
         assert np.allclose(norm, simu.puiss, rtol=1e-4), "Norm not conserved."
 

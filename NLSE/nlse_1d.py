@@ -2,7 +2,11 @@ from .nlse import NLSE
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import c, epsilon_0
-from .utils import __BACKEND__
+import pyfftw
+from .utils import __BACKEND__, __CUPY_AVAILABLE__
+
+if __CUPY_AVAILABLE__:
+    import cupy as cp
 
 
 class NLSE_1d(NLSE):
@@ -53,6 +57,31 @@ class NLSE_1d(NLSE):
         self._last_axes = (-1,)
         self.nl_profile = self.nl_profile[0]
         self.nl_profile /= self.nl_profile.sum()
+
+    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+        """Prepare the output array depending on __BACKEND__.
+
+        Args:
+            E_in (np.ndarray): Input array
+            normalize (bool): Normalize the field to the total power.
+        Returns:
+            np.ndarray: Output array
+        """
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+            A = cp.empty_like(E_in)
+            A[:] = cp.asarray(E_in)
+        else:
+            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
+            A[:] = E_in
+        if normalize:
+            # normalization of the field
+            integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X).sum(
+                axis=self._last_axes
+            ) ** 2
+            integral *= c * epsilon_0 / 2
+            E_00 = (self.puiss / integral) ** 0.5
+            A = (E_00.T * A.T).T
+        return A
 
     def _build_propagator(self, k: float) -> np.ndarray:
         """Builds the linear propagation matrix

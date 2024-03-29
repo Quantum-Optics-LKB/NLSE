@@ -48,9 +48,9 @@ def test_prepare_output_array() -> None:
         elif backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
             A = cp.ones((2, N), dtype=PRECISION_COMPLEX)
         out = simu._prepare_output_array(A, normalize=True)
-        integral = ((out.real * out.real + out.imag * out.imag) * simu.delta_X).sum(
+        integral = ((out.real * out.real + out.imag * out.imag) * simu.delta_X**2).sum(
             axis=simu._last_axes
-        ) ** 2
+        )
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
@@ -81,7 +81,7 @@ def test_out_field() -> None:
         )
         E0 = np.ones((2, N), dtype=PRECISION_COMPLEX)
         A = simu.out_field(E0, L, verbose=False, plot=False, precision="single")
-        integral = ((A.real * A.real + A.imag * A.imag) * simu.delta_X).sum(
+        integral = ((A.real * A.real + A.imag * A.imag) * simu.delta_X**2).sum(
             axis=simu._last_axes
         )
         integral *= c * epsilon_0 / 2

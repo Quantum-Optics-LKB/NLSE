@@ -75,9 +75,9 @@ class NLSE_1d(NLSE):
             A[:] = E_in
         if normalize:
             # normalization of the field
-            integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X).sum(
+            integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X**2).sum(
                 axis=self._last_axes
-            ) ** 2
+            )
             integral *= c * epsilon_0 / 2
             E_00 = (self.puiss / integral) ** 0.5
             A = (E_00.T * A.T).T

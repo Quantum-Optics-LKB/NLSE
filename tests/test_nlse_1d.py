@@ -46,10 +46,10 @@ def test_prepare_output_array() -> None:
         elif backend == "GPU" and NLSE_1d.__CUPY_AVAILABLE__:
             A = cp.ones(N, dtype=PRECISION_COMPLEX)
         out = simu._prepare_output_array(A, normalize=True)
-        integral = (np.abs(out) ** 2 * simu.delta_X).sum() ** 2
+        integral = (np.abs(out) ** 2 * simu.delta_X**2).sum()
         integral *= c * epsilon_0 / 2
         assert np.allclose(integral, simu.puiss), "Normalization failed."
-        assert out.shape == (N, N), "Output array has wrong shape."
+        assert out.shape == (N,), "Output array has wrong shape."
         if backend == "CPU":
             assert isinstance(
                 out, np.ndarray
@@ -72,7 +72,7 @@ def test_out_field() -> None:
         E0 = np.ones(N, dtype=PRECISION_COMPLEX)
         A = simu.out_field(E0, L, verbose=False, plot=False, precision="single")
         rho = A.real * A.real + A.imag * A.imag
-        norm = (rho * simu.delta_X).sum(axis=simu._last_axes) ** 2
+        norm = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         norm *= c * epsilon_0 / 2
         print(norm)
         assert A.shape == (N,), "Output array has wrong shape."

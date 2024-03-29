@@ -83,9 +83,9 @@ class CNLSE_1d(CNLSE):
             puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
-            integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X).sum(
+            integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X**2).sum(
                 axis=self._last_axes
-            ) ** 2
+            )
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
             A = (E_00.T * A.T).T

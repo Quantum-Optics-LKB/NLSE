@@ -1,4 +1,4 @@
-import tests.test_cnlse_1d as test_cnlse_1d
+import test_cnlse_1d as test_cnlse_1d
 import test_cnlse
 import test_nlse_1d
 import test_nlse

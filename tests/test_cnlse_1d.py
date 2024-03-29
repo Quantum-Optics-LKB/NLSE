@@ -26,7 +26,7 @@ def test_build_propagator() -> None:
         prop = simu._build_propagator(simu.k)
         assert np.allclose(
             prop, np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
-        ), "Propagator is wrong."
+        ), f"Propagator is wrong. (Backend {backend})"
 
 
 def test_prepare_output_array() -> None:
@@ -56,22 +56,26 @@ def test_prepare_output_array() -> None:
             integral,
             np.array([simu.puiss, simu.puiss2]),
             rtol=1e-4,
-        ), "Normalization failed."
-        assert out.shape == (2, N), "Output array has wrong shape."
+        ), f"Normalization failed. (Backend {backend})"
+        assert out.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(
                 out, np.ndarray
-            ), "Ouptut array type does not match backend."
+            ), f"Ouptut array type does not match backend. (Backend {backend})"
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
-            assert np.allclose(out, A), "Output array does not match input array."
+            assert np.allclose(
+                out, A
+            ), f"Output array does not match input array. (Backend {backend})"
         elif backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
             assert isinstance(
                 out, cp.ndarray
-            ), "Ouptut array type does not match backend."
+            ), f"Ouptut array type does not match backend. (Backend {backend})"
             out /= cp.max(cp.abs(out))
             A /= cp.max(cp.abs(A))
-            assert cp.allclose(out, A), "Output array does not match input array."
+            assert cp.allclose(
+                out, A
+            ), f"Output array does not match input array. (Backend {backend})"
 
 
 def test_out_field() -> None:
@@ -85,10 +89,10 @@ def test_out_field() -> None:
             axis=simu._last_axes
         )
         integral *= c * epsilon_0 / 2
-        assert A.shape == (2, N), "Output array has wrong shape."
+        assert A.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
             integral, [simu.puiss, simu.puiss2], rtol=1e-4
-        ), "Normalization failed."
+        ), f"Normalization failed. (Backend {backend})"
 
 
 def main() -> None:

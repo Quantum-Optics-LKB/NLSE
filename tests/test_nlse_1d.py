@@ -25,7 +25,7 @@ def test_build_propagator() -> None:
         prop = simu._build_propagator(simu.k)
         assert np.allclose(
             prop, np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
-        ), "Propagator is wrong."
+        ), f"Propagator is wrong. (Backend {backend})"
 
 
 def test_prepare_output_array() -> None:
@@ -48,22 +48,28 @@ def test_prepare_output_array() -> None:
         out = simu._prepare_output_array(A, normalize=True)
         integral = (np.abs(out) ** 2 * simu.delta_X**2).sum()
         integral *= c * epsilon_0 / 2
-        assert np.allclose(integral, simu.puiss), "Normalization failed."
-        assert out.shape == (N,), "Output array has wrong shape."
+        assert np.allclose(
+            integral, simu.puiss
+        ), f"Normalization failed. (Backend {backend})"
+        assert out.shape == (N,), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(
                 out, np.ndarray
-            ), "Output array type does not match backend."
+            ), f"Output array type does not match backend. (Backend {backend})"
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
-            assert np.allclose(out, A), "Output array does not match input array."
+            assert np.allclose(
+                out, A
+            ), f"Output array does not match input array. (Backend {backend})"
         elif backend == "GPU" and NLSE_1d.__CUPY_AVAILABLE__:
             assert isinstance(
                 out, cp.ndarray
-            ), "Output array type does not match backend."
+            ), f"Output array type does not match backend. (Backend {backend})"
             out /= cp.max(cp.abs(out))
             A /= cp.max(cp.abs(A))
-            assert cp.allclose(out, A), "Output array does not match input array."
+            assert cp.allclose(
+                out, A
+            ), f"Output array does not match input array. (Backend {backend})"
 
 
 def test_out_field() -> None:
@@ -74,13 +80,13 @@ def test_out_field() -> None:
         rho = A.real * A.real + A.imag * A.imag
         norm = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         norm *= c * epsilon_0 / 2
-        assert A.shape == (N,), "Output array has wrong shape."
+        assert A.shape == (N,), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
             norm, puiss, rtol=1e-4
-        ), f"Normalization failed. (Backend : {backend})"
+        ), f"Normalization failed. (Backend {backend})"
 
 
-def main():
+def main() -> None:
     print("Testing NLSE_1d class")
     for backend in ["CPU", "GPU"]:
         simu = NLSE_1d(

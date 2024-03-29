@@ -39,7 +39,7 @@ def test_build_propagator() -> None:
                 / simu_gpe.m
                 * simu_gpe.delta_t
             ),
-        )
+        ), f"Propagator is wrong. (Backend {backend})"
 
 
 def test_prepare_output_array() -> None:
@@ -63,17 +63,27 @@ def test_prepare_output_array() -> None:
         integral = (
             (A.real * A.real + A.imag * A.imag) * simu.delta_X * simu.delta_Y
         ).sum(axis=simu._last_axes)
-        assert np.allclose(integral, simu.N)
+        assert np.allclose(
+            integral, simu.N
+        ), f"Normalization failed. (Backend {backend})"
         if backend == "CPU":
-            assert isinstance(A, np.ndarray)
+            assert isinstance(
+                A, np.ndarray
+            ), f"Output array type does not match backend. (Backend {backend})"
             A /= np.max(np.abs(A))
             E_in /= np.max(np.abs(E_in))
-            assert np.allclose(E_in, A)
+            assert np.allclose(
+                E_in, A
+            ), f"Output array does not match input array. (Backend {backend})"
         elif backend == "GPU" and GPE.__CUPY_AVAILABLE__:
-            assert isinstance(A, cp.ndarray)
+            assert isinstance(
+                A, cp.ndarray
+            ), f"Output array type does not match backend. (Backend {backend})"
             A /= cp.max(cp.abs(A))
             E_in /= cp.max(cp.abs(E_in))
-            assert cp.allclose(E_in, A)
+            assert cp.allclose(
+                E_in, A
+            ), f"Output array does not match input array. (Backend {backend})"
 
 
 def main():

@@ -48,22 +48,30 @@ def test_prepare_output_array() -> None:
             integral,
             np.array([simu.puiss, simu.puiss2]),
             rtol=1e-4,
-        ), "Normalization failed."
-        assert out.shape == (2, N, N), "Output array has wrong shape."
+        ), f"Normalization failed. (Backend {backend})"
+        assert out.shape == (
+            2,
+            N,
+            N,
+        ), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(
                 out, np.ndarray
-            ), "Ouptut array type does not match backend."
+            ), f"Ouptut array type does not match backend. (Backend {backend})"
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
-            assert np.allclose(out, A), "Output array does not match input array."
+            assert np.allclose(
+                out, A
+            ), f"Output array does not match input array. (Backend {backend})"
         elif backend == "GPU" and CNLSE.__CUPY_AVAILABLE__:
             assert isinstance(
                 out, cp.ndarray
-            ), "Ouptut array type does not match backend."
+            ), f"Ouptut array type does not match backend. (Backend {backend})"
             out /= cp.max(cp.abs(out))
             A /= cp.max(cp.abs(A))
-            assert cp.allclose(out, A), "Output array does not match input array."
+            assert cp.allclose(
+                out, A
+            ), f"Output array does not match input array. (Backend {backend})"
 
 
 def test_send_arrays_to_gpu() -> None:
@@ -99,15 +107,21 @@ def test_send_arrays_to_gpu() -> None:
         simu._send_arrays_to_gpu()
         assert isinstance(
             simu.propagator1, cp.ndarray
-        ), "propagator1 is not a cp.ndarray."
+        ), "propagator1 is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.propagator2, cp.ndarray
-        ), "propagator2 is not a cp.ndarray."
-        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray."
-        assert isinstance(simu.alpha, cp.ndarray), "alpha is not a cp.ndarray."
-        assert isinstance(simu.n2, cp.ndarray), "n2 is not a cp.ndarray."
-        assert isinstance(simu.n12, cp.ndarray), "n12 is not a cp.ndarray."
-        assert isinstance(simu.I_sat, cp.ndarray), "I_sat is not a cp.ndarray."
+        ), "propagator2 is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.alpha, cp.ndarray
+        ), "alpha is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.n2, cp.ndarray), "n2 is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.n12, cp.ndarray
+        ), "n12 is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.I_sat, cp.ndarray
+        ), "I_sat is not a cp.ndarray. (Backend GPU)"
     else:
         pass
 
@@ -146,15 +160,21 @@ def test_retrieve_arrays_from_gpu() -> None:
         simu._retrieve_arrays_from_gpu()
         assert isinstance(
             simu.propagator1, np.ndarray
-        ), "propagator1 is not a np.ndarray."
+        ), "propagator1 is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.propagator2, np.ndarray
-        ), "propagator2 is not a np.ndarray."
-        assert isinstance(simu.V, np.ndarray), "V is not a np.ndarray."
-        assert isinstance(simu.alpha, np.ndarray), "alpha is not a np.ndarray."
-        assert isinstance(simu.n2, np.ndarray), "n2 is not a np.ndarray."
-        assert isinstance(simu.n12, np.ndarray), "n12 is not a np.ndarray."
-        assert isinstance(simu.I_sat, np.ndarray), "I_sat is not a np.ndarray."
+        ), "propagator2 is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.V, np.ndarray), "V is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.alpha, np.ndarray
+        ), "alpha is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.n2, np.ndarray), "n2 is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.n12, np.ndarray
+        ), "n12 is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.I_sat, np.ndarray
+        ), "I_sat is not a np.ndarray. (Backend GPU)"
     else:
         pass
 
@@ -177,11 +197,19 @@ def test_take_components() -> None:
         # create a larger array to test the fancy indexing
         A = np.ones((3, 2, N, N), dtype=PRECISION_COMPLEX)
         A1, A2 = simu._take_components(A)
-        assert A1.shape[-2:] == (N, N), "A1 has wrong last dimensions."
-        assert A2.shape[-2:] == (N, N), "A2 has wrong last dimensions."
-        assert A1.shape == A2.shape, "A1 and A2 have different shapes."
-        assert A1.shape[0] == 3, "A1 has wrong first dimensions."
-        assert A2.shape[0] == 3, "A2 has wrong first dimensions."
+        assert A1.shape[-2:] == (
+            N,
+            N,
+        ), f"A1 has wrong last dimensions. (Backend {backend})"
+        assert A2.shape[-2:] == (
+            N,
+            N,
+        ), f"A2 has wrong last dimensions. (Backend {backend})"
+        assert (
+            A1.shape == A2.shape
+        ), f"A1 and A2 have different shapes. (Backend {backend})"
+        assert A1.shape[0] == 3, f"A1 has wrong first dimensions. (Backend {backend})"
+        assert A2.shape[0] == 3, f"A2 has wrong first dimensions. (Backend {backend})"
 
 
 def test_split_step() -> None:
@@ -219,11 +247,11 @@ def test_split_step() -> None:
         if backend == "CPU":
             assert np.allclose(
                 E, np.ones((2, N, N), dtype=PRECISION_COMPLEX)
-            ), "Split-step is not unitary"
+            ), f"Split-step is not unitary. (Backend {backend})"
         elif backend == "GPU" and CNLSE.__CUPY_AVAILABLE__:
             assert cp.allclose(
                 E, cp.ones((2, N, N), dtype=PRECISION_COMPLEX)
-            ), "Split-step is not unitary"
+            ), f"Split-step is not unitary. (Backend {backend})"
 
 
 # tests for convergence of the solver : the norm of the field should be conserved

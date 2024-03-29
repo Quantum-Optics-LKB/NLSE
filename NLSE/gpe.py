@@ -100,7 +100,7 @@ class GPE(NLSE):
             integral = (
                 (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
             ).sum(axis=self._last_axes)
-            E_00 = self.N / integral
+            E_00 = (self.N / integral) ** 0.5
             A = (E_00.T * A.T).T
         return A
 

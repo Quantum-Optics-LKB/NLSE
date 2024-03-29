@@ -1,5 +1,6 @@
 from NLSE import NLSE_1d
 import numpy as np
+from scipy.constants import c, epsilon_0
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
@@ -22,7 +23,17 @@ def test_build_propagator() -> None:
         prop = simu._build_propagator(simu.k)
         assert np.allclose(
             prop, np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
-        )
+        ), "Propagator is wrong."
+
+
+def test_out_field() -> None:
+    for backend in ["CPU", "GPU"]:
+        simu = NLSE_1d(0, puiss, window, n2, None, L, NX=N, Isat=Isat, backend=backend)
+        E0 = np.ones(N, dtype=PRECISION_COMPLEX)
+        A = simu.out_field(E0, L, verbose=False, plot=False, precision="single")
+        norm = np.sum(np.abs(A) ** 2 * simu.delta_X * simu.delta_Y * c * epsilon_0 / 2)
+        assert A.shape == (N,), "Output array has wrong shape."
+        assert np.allclose(norm, puiss, rtol=1e-4), "Normalization failed."
 
 
 def main():

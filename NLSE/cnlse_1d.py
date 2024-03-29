@@ -86,7 +86,8 @@ class CNLSE_1d(CNLSE):
             integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X).sum(
                 axis=self._last_axes
             ) ** 2
-            E_00 = (2 * puiss_arr / (c * epsilon_0 * integral)) ** 0.5
+            integral *= c * epsilon_0 / 2
+            E_00 = (puiss_arr / integral) ** 0.5
             A = (E_00.T * A.T).T
         return A
 

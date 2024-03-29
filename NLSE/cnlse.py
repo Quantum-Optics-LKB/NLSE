@@ -100,7 +100,8 @@ class CNLSE(NLSE):
             integral = (
                 (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
             ).sum(axis=self._last_axes)
-            E_00 = (2 * puiss_arr / (c * epsilon_0 * integral)) ** 0.5
+            integral *= c * epsilon_0 / 2
+            E_00 = (puiss_arr / integral) ** 0.5
             A = (E_00.T * A.T).T
         return A
 
@@ -117,6 +118,8 @@ class CNLSE(NLSE):
         # not already on the GPU
         if isinstance(self.n2, np.ndarray):
             self.n2 = cp.asarray(self.n2)
+        if isinstance(self.n12, np.ndarray):
+            self.n12 = cp.asarray(self.n12)
         if isinstance(self.alpha, np.ndarray):
             self.alpha = cp.asarray(self.alpha)
         if isinstance(self.I_sat, np.ndarray):
@@ -133,6 +136,8 @@ class CNLSE(NLSE):
         self.propagator2 = self.propagator2.get()
         if isinstance(self.n2, cp.ndarray):
             self.n2 = self.n2.get()
+        if isinstance(self.n12, cp.ndarray):
+            self.n12 = self.n12.get()
         if isinstance(self.alpha, cp.ndarray):
             self.alpha = self.alpha.get()
         if isinstance(self.I_sat, cp.ndarray):

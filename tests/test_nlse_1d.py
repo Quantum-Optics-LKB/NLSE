@@ -75,7 +75,9 @@ def test_out_field() -> None:
         norm = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         norm *= c * epsilon_0 / 2
         assert A.shape == (N,), "Output array has wrong shape."
-        assert np.allclose(norm, puiss, rtol=1e-4), "Normalization failed."
+        assert np.allclose(
+            norm, puiss, rtol=1e-4
+        ), f"Normalization failed. (Backend : {backend})"
 
 
 def main():

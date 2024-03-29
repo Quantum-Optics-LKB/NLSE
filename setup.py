@@ -20,6 +20,7 @@ setup(
         "pyfftw",
         "numba",
     ],
+    extra_requires=["cupy"],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Science/Research",

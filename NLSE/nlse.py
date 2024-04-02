@@ -53,13 +53,16 @@ class NLSE:
         Args:
             alpha (float): alpha
             puiss (float): Power in W
-            waist (float): Waist size in m
+            window (float): Computational window in the transverse plane in m.
             n2 (float): Non linear coeff in m^2/W
-            V (np.ndarray): Potential
+            V (np.ndarray): Potential.
+            L (float): Length in m of the nonlinear medium
+            NX (int, optional): Number of points in the x direction. Defaults to 1024.
+            NY (int, optional): Number of points in the y direction. Defaults to 1024.
             Isat (float): Saturation intensity in W/m^2
             nl_length (float): Non linear length in m
             wvl (float): Wavelength in m
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         # listof physical parameters
         self.backend = backend

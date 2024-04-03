@@ -137,7 +137,9 @@ class GPE(NLSE):
         ax[0].set_xlabel("x (mm)")
         ax[0].set_ylabel("y (mm)")
         fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Density (at/m^2)")
-        im1 = ax[1].imshow(phi, extent=ext_real, cmap="twilight_shifted")
+        im1 = ax[1].imshow(
+            phi, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+        )
         ax[1].set_title("Phase")
         ax[1].set_xlabel("x (mm)")
         ax[1].set_ylabel("y (mm)")

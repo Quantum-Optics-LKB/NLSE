@@ -400,7 +400,9 @@ class CNLSE(NLSE):
         ax[0, 0].set_xlabel("x (mm)")
         ax[0, 0].set_ylabel("y (mm)")
         fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
-        im1 = ax[0, 1].imshow(phi0, extent=ext_real, cmap="twilight_shifted")
+        im1 = ax[0, 1].imshow(
+            phi0, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+        )
         ax[0, 1].set_title(r"Phase $\mathrm{arg}(\psi_1)$")
         ax[0, 1].set_xlabel("x (mm)")
         ax[0, 1].set_ylabel("y (mm)")
@@ -410,7 +412,9 @@ class CNLSE(NLSE):
         ax[1, 0].set_xlabel("x (mm)")
         ax[1, 0].set_ylabel("y (mm)")
         fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
-        im3 = ax[1, 1].imshow(phi1, extent=ext_real, cmap="twilight_shifted")
+        im3 = ax[1, 1].imshow(
+            phi1, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+        )
         ax[1, 1].set_title(r"Phase $\mathrm{arg}(\psi_2)$")
         ax[1, 1].set_xlabel("x (mm)")
         ax[1, 1].set_ylabel("y (mm)")

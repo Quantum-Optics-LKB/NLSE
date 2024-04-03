@@ -10,6 +10,10 @@ if __CUPY_AVAILABLE__:
 
 
 class NLSE_3d(NLSE):
+    """A class to solve the 3D NLSE i.e propagation of pulses
+    of light in nonlinear media.
+    """
+
     def __init__(
         self,
         alpha: float,

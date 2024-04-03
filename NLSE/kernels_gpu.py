@@ -149,3 +149,17 @@ def vortex_cp(
         None
     """
     im += cp.angle(((ii - i) + 1j * (jj - j)) ** ll)
+
+
+@cp.fuse(kernel_name="square_mod_cp")
+def square_mod(A: cp.ndarray, A_sq: cp.ndarray) -> None:
+    """Compute the square modulus of the field
+
+    Args:
+        A (cp.ndarray): The field
+        A_sq (cp.ndarray): The modulus squared of the field
+
+    Returns:
+        None
+    """
+    A_sq = A.real * A.real + A.imag * A.imag

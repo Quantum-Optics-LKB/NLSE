@@ -167,3 +167,20 @@ def vortex(
     for i in numba.prange(im.shape[0]):
         for j in numba.prange(im.shape[1]):
             im[i, j] += np.angle(((ii[i, j] - i) + 1j * (jj[i, j] - j)) ** ll)
+
+
+@numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
+def square_mod(A: np.ndarray, A_sq: np.ndarray) -> None:
+    """Compute the square modulus of the field
+
+    Args:
+        A (np.ndarray): The field
+        A_sq (np.ndarray): The modulus squared of the field
+
+    Returns:
+        None
+    """
+    A = A.ravel()
+    A_sq = A_sq.ravel()
+    for i in numba.prange(A.size):
+        A_sq[i] = A[i].real * A[i].real + A[i].imag * A[i].imag

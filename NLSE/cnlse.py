@@ -254,7 +254,7 @@ class CNLSE(NLSE):
             # A = cp.fft.ifftn(A, axes=self._last_axes)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
-            A /= np.prod(A.shape[self._last_axes[0] :])
+            A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)

@@ -138,7 +138,9 @@ class NLSE:
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        propagator = np.exp(-1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z)
+        propagator = np.exp(
+            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z
+        ).astype(np.complex64)
         return propagator
 
     def _build_fft_plan(self, A: np.ndarray) -> list:
@@ -300,7 +302,7 @@ class NLSE:
             cp.multiply(A, propagator, out=A)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
-            A /= np.prod(A.shape[self._last_axes[0] :])
+            A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         else:
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)

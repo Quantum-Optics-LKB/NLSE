@@ -273,7 +273,7 @@ def test_out_field() -> None:
 
 def main():
     print("Testing CNLSE class")
-    for backend in ["CPU", "GPU"]:
+    for backend in ["GPU", "CPU"]:
         simu_c = CNLSE(
             alpha,
             puiss,
@@ -297,7 +297,11 @@ def main():
         )
         V = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist2**2).astype(PRECISION_COMPLEX)
         E, V = simu_c.out_field(
-            np.array([E_0, V]), L, verbose=True, plot=False, precision="single"
+            np.array([E_0, V]),
+            L,
+            verbose=True,
+            plot=False,
+            precision="single",
         )
 
 

@@ -194,18 +194,21 @@ class NLSE:
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
-            A[:] = cp.asarray(E_in)
+            E_in = cp.asarray(E_in)
         else:
-            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
-            A[:] = E_in
+            A = pyfftw.empty_aligned(
+                E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
+            )
         if normalize:
             # normalization of the field
             integral = (
-                (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
+                (E_in.real * E_in.real + E_in.imag * E_in.imag)
+                * self.delta_X
+                * self.delta_Y
             ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
             E_00 = (self.puiss / integral) ** 0.5
-            A = (E_00.T * A.T).T
+            A[:] = (E_00.T * E_in.T).T
         return A
 
     def _send_arrays_to_gpu(self) -> None:

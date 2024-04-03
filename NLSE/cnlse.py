@@ -89,20 +89,19 @@ class CNLSE(NLSE):
         """Prepare the output array depending on __BACKEND__."""
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E)
-            A[:] = cp.asarray(E)
+            E = cp.asarray(E)
             puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
         else:
-            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
-            A[:] = E
+            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
             puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
             integral = (
-                (A.real * A.real + A.imag * A.imag) * self.delta_X * self.delta_Y
+                (E.real * E.real + E.imag * E.imag) * self.delta_X * self.delta_Y
             ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
-            A = (E_00.T * A.T).T
+            A[:] = (E_00.T * E.T).T
         return A
 
     def _send_arrays_to_gpu(self) -> None:
@@ -168,8 +167,6 @@ class CNLSE(NLSE):
 
         Args:
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
-            A1_old (np.ndarray): Array to store copy of A1 at start of function
-            to symetrize the evolution term
             V (np.ndarray): Potential field (can be None).
             propagator1 (np.ndarray): Propagator matrix for field 1.
             propagator2 (np.ndarray): Propagator matrix for field 2.
@@ -254,6 +251,7 @@ class CNLSE(NLSE):
             # linear step in Fourier domain (shifted)
             cp.multiply(A1, propagator1, out=A1)
             cp.multiply(A2, propagator2, out=A2)
+            # A = cp.fft.ifftn(A, axes=self._last_axes)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
             A /= np.prod(A.shape[self._last_axes[0] :])
@@ -401,7 +399,7 @@ class CNLSE(NLSE):
         ax[0, 0].set_title(r"$|\psi_1|^2$")
         ax[0, 0].set_xlabel("x (mm)")
         ax[0, 0].set_ylabel("y (mm)")
-        fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label="Intensity (W/cm^2)")
+        fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
         im1 = ax[0, 1].imshow(phi0, extent=ext_real, cmap="twilight_shifted")
         ax[0, 1].set_title(r"Phase $\mathrm{arg}(\psi_1)$")
         ax[0, 1].set_xlabel("x (mm)")
@@ -411,7 +409,7 @@ class CNLSE(NLSE):
         ax[1, 0].set_title(r"$|\psi_2|^2$")
         ax[1, 0].set_xlabel("x (mm)")
         ax[1, 0].set_ylabel("y (mm)")
-        fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label="Intensity (W/cm^2)")
+        fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
         im3 = ax[1, 1].imshow(phi1, extent=ext_real, cmap="twilight_shifted")
         ax[1, 1].set_title(r"Phase $\mathrm{arg}(\psi_2)$")
         ax[1, 1].set_xlabel("x (mm)")

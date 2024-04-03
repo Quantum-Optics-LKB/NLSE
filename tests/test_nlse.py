@@ -206,7 +206,7 @@ def test_out_field() -> None:
 # for integration testing
 def main():
     print("Testing NLSE class")
-    for backend in ["CPU", "GPU"]:
+    for backend in ["GPU", "CPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )

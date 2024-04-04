@@ -78,8 +78,8 @@ class NLSE_3d(NLSE):
         self.Kxx, self.Kyy, self.Omega = np.meshgrid(self.Kx, self.Ky, self.omega)
         self._last_axes = (-3, -2, -1)  # Axes are x, y, t
 
-    def _build_propagator(self, k: float) -> np.ndarray:
-        prop_2d = super()._build_propagator(k)
+    def _build_propagator(self) -> np.ndarray:
+        prop_2d = super()._build_propagator()
         prop_t = np.exp(-1j * self.D0 / 2 * self.Omega**2)
         prop_t *= np.exp(1 / self.vg * self.Omega)
         return prop_2d * prop_t

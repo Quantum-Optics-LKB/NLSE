@@ -17,7 +17,7 @@ class NLSE_3d(NLSE):
     def __init__(
         self,
         alpha: float,
-        puiss: float,
+        energy: float,
         window: np.ndarray,
         n2: float,
         D0: float,
@@ -37,7 +37,7 @@ class NLSE_3d(NLSE):
           k0 n2 psi**2 psi
         Args:
             alpha (float): alpha
-            puiss (float): Power in W
+            energy (float): Total energy in J
             window (np.ndarray): Computanional window in the transverse plane (index 0) in m
             and longitudinal direction (index 1) in s.
             n2 (float): Non linear coeff in m^2/W.
@@ -55,7 +55,7 @@ class NLSE_3d(NLSE):
         """
         super().__init__(
             alpha=alpha,
-            puiss=puiss,
+            puiss=energy,
             window=window[0],
             n2=n2,
             V=V,
@@ -67,6 +67,7 @@ class NLSE_3d(NLSE):
             wvl=wvl,
             backend=backend,
         )
+        self.energy = self.puiss
         self.NZ = NZ
         self.window_t = window[1]
         self.T, self.delta_T = np.linspace(
@@ -75,6 +76,7 @@ class NLSE_3d(NLSE):
         self.omega = 2 * np.pi * np.fft.fftfreq(self.NZ, self.delta_T)
         self.D0 = D0
         self.vg = vg
+        self.XX, self.YY, self.TT = np.meshgrid(self.X, self.Y, self.T)
         self.Kxx, self.Kyy, self.Omega = np.meshgrid(self.Kx, self.Ky, self.omega)
         self._last_axes = (-3, -2, -1)  # Axes are x, y, t
 
@@ -83,6 +85,35 @@ class NLSE_3d(NLSE):
         prop_t = np.exp(-1j * self.D0 / 2 * self.Omega**2)
         # prop_t *= np.exp(1 / self.vg * self.Omega)
         return prop_2d * prop_t
+
+    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+        """Prepare the output array depending on __BACKEND__.
+
+        Args:
+            E_in (np.ndarray): Input array
+            normalize (bool): Normalize the field to the total power.
+        Returns:
+            np.ndarray: Output array
+        """
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+            A = cp.empty_like(E_in)
+            E_in = cp.asarray(E_in)
+        else:
+            A = pyfftw.empty_aligned(
+                E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
+            )
+        if normalize:
+            # normalization of the field
+            integral = (
+                (E_in.real * E_in.real + E_in.imag * E_in.imag)
+                * self.delta_X
+                * self.delta_Y
+                * self.delta_T
+            ).sum(axis=self._last_axes)
+            integral *= c * epsilon_0 / 2
+            E_00 = (self.energy / integral) ** 0.5
+            A[:] = (E_00.T * E_in.T).T
+        return A
 
     def plot_field(self, A_plot: np.ndarray) -> None:
         # if array is multi-dimensional, drop dims until the shape is 2D
@@ -99,10 +130,10 @@ class NLSE_3d(NLSE):
             self.Y[-1] * 1e3,
         ]
         ext_time = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
             self.T[0] * 1e6,
             self.T[-1] * 1e6,
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
         ]
         rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
         phi = np.angle(A_plot)
@@ -114,22 +145,24 @@ class NLSE_3d(NLSE):
         ax[0, 0].set_title(r"Intensity in $xy$ plane at $t$=0")
         ax[0, 0].set_xlabel("x (mm)")
         ax[0, 0].set_ylabel("y (mm)")
-        fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
-        im1 = ax[1].imshow(
+        fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label="Intensity (W/cm^2)")
+        im1 = ax[0, 1].imshow(
             phi_xy, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
         )
         ax[0, 1].set_title(r"Phase in $xy$ plane at $t$=0")
         ax[0, 1].set_xlabel("x (mm)")
         ax[0, 1].set_ylabel("y (mm)")
-        fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
+        fig.colorbar(im1, ax=ax[0, 1], shrink=0.6, label="Phase (rad)")
         im2 = ax[1, 0].imshow(rho_xt, extent=ext_time)
         ax[1, 0].set_title(r"Intensity in $xt$ plane at $y$=0")
-        ax[1, 0].set_xlabel(r"$x$ ($mm$)")
-        ax[1, 0].set_ylabel(r"$t$ ($\mu s$)")
+        ax[1, 0].set_ylabel(r"$x$ ($mm$)")
+        ax[1, 0].set_xlabel(r"$t$ ($\mu s$)")
         fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label="Intensity (a.u.)")
-        im3 = ax[1, 1].imshow(phi_xt, extent=ext_time)
-        ax[1, 1].set_title(r"Intensity in $xt$ plane at $y$=0")
-        ax[1, 1].set_xlabel(r"$x$ ($mm$)")
-        ax[1, 1].set_ylabel(r"$t$ ($\mu s$)")
+        im3 = ax[1, 1].imshow(
+            phi_xt, extent=ext_time, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+        )
+        ax[1, 1].set_title(r"Phase in $xt$ plane at $y$=0")
+        ax[1, 1].set_ylabel(r"$x$ ($mm$)")
+        ax[1, 1].set_xlabel(r"$t$ ($\mu s$)")
         fig.colorbar(im3, ax=ax[1, 1], shrink=0.6, label="Intensity (a.u.)")
         plt.show()

@@ -68,11 +68,11 @@ class NLSE:
         self.backend = backend
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             self._kernels = kernels_gpu
-            self._convolution = signal_cp.fftconvolve
+            self._convolution = signal_cp.oaconvolve
         else:
             self.backend = "CPU"
             self._kernels = kernels_cpu
-            self._convolution = signal.fftconvolve
+            self._convolution = signal.oaconvolve
         self.n2 = n2
         self.V = V
         self.wl = wvl
@@ -118,11 +118,11 @@ class NLSE:
         self.nl_length = nl_length
         if self.nl_length > 0:
             d = self.nl_length // self.delta_X
-            x = np.arange(-3 * d, 3 * d + 1)
-            y = np.arange(-3 * d, 3 * d + 1)
+            x = np.arange(-2 * d, 2 * d + 1)
+            y = np.arange(-2 * d, 2 * d + 1)
             XX, YY = np.meshgrid(x, y)
             R = np.hypot(XX, YY)
-            self.nl_profile = 1 / (2 * np.pi * self.nl_length**2) * special.kn(0, R / d)
+            self.nl_profile = special.kn(0, R / d)
             self.nl_profile[
                 self.nl_profile.shape[0] // 2, self.nl_profile.shape[1] // 2
             ] = np.nanmax(self.nl_profile[np.logical_not(np.isinf(self.nl_profile))])

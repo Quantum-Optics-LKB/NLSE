@@ -81,9 +81,55 @@ class NLSE_3d(NLSE):
     def _build_propagator(self) -> np.ndarray:
         prop_2d = super()._build_propagator()
         prop_t = np.exp(-1j * self.D0 / 2 * self.Omega**2)
-        prop_t *= np.exp(1 / self.vg * self.Omega)
+        # prop_t *= np.exp(1 / self.vg * self.Omega)
         return prop_2d * prop_t
 
     def plot_field(self, A_plot: np.ndarray) -> None:
-        # TODO: Implement plot_field
-        pass
+        # if array is multi-dimensional, drop dims until the shape is 2D
+        if A_plot.ndim > 3:
+            while len(A_plot.shape) > 3:
+                A_plot = A_plot[0]
+        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+            A_plot = A_plot.get()
+        fig, ax = plt.subplots(2, 2, layout="constrained")
+        ext_real = [
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
+            self.Y[0] * 1e3,
+            self.Y[-1] * 1e3,
+        ]
+        ext_time = [
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
+            self.T[0] * 1e6,
+            self.T[-1] * 1e6,
+        ]
+        rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
+        phi = np.angle(A_plot)
+        rho_xy = rho[:, :, self.NZ // 2]
+        phi_xy = phi[:, :, self.NZ // 2]
+        rho_xt = rho[:, self.NY // 2, :]
+        phi_xt = phi[:, self.NY // 2, :]
+        im0 = ax[0, 0].imshow(rho_xy, extent=ext_real)
+        ax[0, 0].set_title(r"Intensity in $xy$ plane at $t$=0")
+        ax[0, 0].set_xlabel("x (mm)")
+        ax[0, 0].set_ylabel("y (mm)")
+        fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
+        im1 = ax[1].imshow(
+            phi_xy, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+        )
+        ax[0, 1].set_title(r"Phase in $xy$ plane at $t$=0")
+        ax[0, 1].set_xlabel("x (mm)")
+        ax[0, 1].set_ylabel("y (mm)")
+        fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
+        im2 = ax[1, 0].imshow(rho_xt, extent=ext_time)
+        ax[1, 0].set_title(r"Intensity in $xt$ plane at $y$=0")
+        ax[1, 0].set_xlabel(r"$x$ ($mm$)")
+        ax[1, 0].set_ylabel(r"$t$ ($\mu s$)")
+        fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label="Intensity (a.u.)")
+        im3 = ax[1, 1].imshow(phi_xt, extent=ext_time)
+        ax[1, 1].set_title(r"Intensity in $xt$ plane at $y$=0")
+        ax[1, 1].set_xlabel(r"$x$ ($mm$)")
+        ax[1, 1].set_ylabel(r"$t$ ($\mu s$)")
+        fig.colorbar(im3, ax=ax[1, 1], shrink=0.6, label="Intensity (a.u.)")
+        plt.show()

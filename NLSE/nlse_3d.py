@@ -153,13 +153,18 @@ class NLSE_3d(NLSE):
         ax[0, 1].set_xlabel("x (mm)")
         ax[0, 1].set_ylabel("y (mm)")
         fig.colorbar(im1, ax=ax[0, 1], shrink=0.6, label="Phase (rad)")
-        im2 = ax[1, 0].imshow(rho_xt, extent=ext_time)
+        im2 = ax[1, 0].imshow(rho_xt, extent=ext_time, aspect="auto")
         ax[1, 0].set_title(r"Intensity in $xt$ plane at $y$=0")
         ax[1, 0].set_ylabel(r"$x$ ($mm$)")
         ax[1, 0].set_xlabel(r"$t$ ($\mu s$)")
         fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label="Intensity (a.u.)")
         im3 = ax[1, 1].imshow(
-            phi_xt, extent=ext_time, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi_xt,
+            extent=ext_time,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
+            aspect="auto",
         )
         ax[1, 1].set_title(r"Phase in $xt$ plane at $y$=0")
         ax[1, 1].set_ylabel(r"$x$ ($mm$)")

@@ -102,15 +102,11 @@ def test_send_arrays_to_gpu() -> None:
             Isat=Isat,
             backend="GPU",
         )
-        simu.propagator1 = simu._build_propagator(simu.k)
-        simu.propagator2 = simu._build_propagator(simu.k2)
+        simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
         assert isinstance(
-            simu.propagator1, cp.ndarray
-        ), "propagator1 is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.propagator2, cp.ndarray
-        ), "propagator2 is not a cp.ndarray. (Backend GPU)"
+            simu.propagator, cp.ndarray
+        ), "propagator is not a cp.ndarray. (Backend GPU)"
         assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.alpha, cp.ndarray
@@ -154,16 +150,12 @@ def test_retrieve_arrays_from_gpu() -> None:
             Isat=Isat,
             backend="GPU",
         )
-        simu.propagator1 = simu._build_propagator(simu.k)
-        simu.propagator2 = simu._build_propagator(simu.k2)
+        simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
         simu._retrieve_arrays_from_gpu()
         assert isinstance(
-            simu.propagator1, np.ndarray
-        ), "propagator1 is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.propagator2, np.ndarray
-        ), "propagator2 is not a np.ndarray. (Backend GPU)"
+            simu.propagator, np.ndarray
+        ), "propagator is not a np.ndarray. (Backend GPU)"
         assert isinstance(simu.V, np.ndarray), "V is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.alpha, np.ndarray
@@ -228,8 +220,7 @@ def test_split_step() -> None:
             backend=backend,
         )
         simu.delta_z = 0
-        simu.propagator1 = simu._build_propagator(simu.k)
-        simu.propagator2 = simu._build_propagator(simu.k2)
+        simu.propagator = simu._build_propagator()
         E = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
         A = simu._prepare_output_array(E, normalize=False)
         simu.plans = simu._build_fft_plan(A)
@@ -239,8 +230,7 @@ def test_split_step() -> None:
         simu.split_step(
             A,
             simu.V,
-            simu.propagator1,
-            simu.propagator2,
+            simu.propagator,
             simu.plans,
             precision="double",
         )
@@ -273,7 +263,8 @@ def test_out_field() -> None:
 
 def main():
     print("Testing CNLSE class")
-    for backend in ["GPU", "CPU"]:
+    L = 10e-2
+    for backend in ["GPU"]:
         simu_c = CNLSE(
             alpha,
             puiss,
@@ -285,10 +276,10 @@ def main():
             NX=N,
             NY=N,
             Isat=Isat,
-            omega=1,
+            omega=None,
             backend=backend,
         )
-        simu_c.delta_z = 1e-5
+        simu_c.delta_z = 0.5e-4
         simu_c.puiss2 = 10e-3
         simu_c.n22 = 1e-10
         simu_c.k2 = 2 * np.pi / 795e-9

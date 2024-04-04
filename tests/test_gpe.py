@@ -28,7 +28,7 @@ def test_build_propagator() -> None:
             NY=N,
             backend=backend,
         )
-        prop = simu_gpe._build_propagator(simu_gpe.m)
+        prop = simu_gpe._build_propagator()
         assert np.allclose(
             prop,
             np.exp(

@@ -130,7 +130,7 @@ class NLSE:
         else:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
 
-    def _build_propagator(self, k: float) -> np.ndarray:
+    def _build_propagator(self) -> np.ndarray:
         """Builds the linear propagation matrix
 
         Args:
@@ -139,7 +139,7 @@ class NLSE:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(
-            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / k * self.delta_z
+            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k * self.delta_z
         ).astype(np.complex64)
         return propagator
 
@@ -441,7 +441,7 @@ class NLSE:
             self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:
-            self.propagator = self._build_propagator(self.k)
+            self.propagator = self._build_propagator()
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             self._send_arrays_to_gpu()
         if self.V is None:

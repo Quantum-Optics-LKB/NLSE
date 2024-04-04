@@ -22,7 +22,7 @@ def test_build_propagator() -> None:
         simu = NLSE_1d(
             alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend=backend
         )
-        prop = simu._build_propagator(simu.k)
+        prop = simu._build_propagator()
         assert np.allclose(
             prop, np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
         ), f"Propagator is wrong. (Backend {backend})"

@@ -25,7 +25,7 @@ def test_build_propagator() -> None:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
-        prop = simu._build_propagator(simu.k)
+        prop = simu._build_propagator()
         assert np.allclose(
             prop,
             np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
@@ -112,7 +112,7 @@ def test_send_arrays_to_gpu() -> None:
         simu = NLSE(
             alpha, puiss, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
         )
-        simu.propagator = simu._build_propagator(simu.k)
+        simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
         assert isinstance(
             simu.propagator, cp.ndarray
@@ -144,7 +144,7 @@ def test_retrieve_arrays_from_gpu() -> None:
         simu = NLSE(
             alpha, puiss, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
         )
-        simu.propagator = simu._build_propagator(simu.k)
+        simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
         simu._retrieve_arrays_from_gpu()
         assert isinstance(
@@ -168,11 +168,11 @@ def test_split_step() -> None:
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         simu.delta_z = 0
-        simu.propagator = simu._build_propagator(simu.k)
+        simu.propagator = simu._build_propagator()
         E = np.ones((N, N), dtype=PRECISION_COMPLEX)
         A = simu._prepare_output_array(E, normalize=False)
         simu.plans = simu._build_fft_plan(A)
-        simu.propagator = simu._build_propagator(simu.k)
+        simu.propagator = simu._build_propagator()
         if backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             E = cp.asarray(E)
             simu._send_arrays_to_gpu()

@@ -83,7 +83,7 @@ class NLSE_1d(NLSE):
             A = (E_00.T * A.T).T
         return A
 
-    def _build_propagator(self, k: float) -> np.ndarray:
+    def _build_propagator(self) -> np.ndarray:
         """Builds the linear propagation matrix
 
         Args:
@@ -91,7 +91,7 @@ class NLSE_1d(NLSE):
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        propagator = np.exp(-1j * 0.5 * (self.Kx**2) / k * self.delta_z)
+        propagator = np.exp(-1j * 0.5 * (self.Kx**2) / self.k * self.delta_z)
         return propagator
 
     def plot_field(self, A_plot: np.ndarray) -> None:

@@ -108,39 +108,30 @@ class CNLSE(NLSE):
         """
         Send arrays to GPU.
         """
-        if self.V is not None:
-            self.V = cp.asarray(self.V)
-        self.nl_profile = cp.asarray(self.nl_profile)
-        self.propagator1 = cp.asarray(self.propagator1)
-        self.propagator2 = cp.asarray(self.propagator2)
+        super()._send_arrays_to_gpu()
         # for broadcasting of parameters in case they are
         # not already on the GPU
-        if isinstance(self.n2, np.ndarray):
-            self.n2 = cp.asarray(self.n2)
+        if isinstance(self.n22, np.ndarray):
+            self.n22 = cp.asarray(self.n22)
         if isinstance(self.n12, np.ndarray):
             self.n12 = cp.asarray(self.n12)
-        if isinstance(self.alpha, np.ndarray):
-            self.alpha = cp.asarray(self.alpha)
-        if isinstance(self.I_sat, np.ndarray):
-            self.I_sat = cp.asarray(self.I_sat)
 
     def _retrieve_arrays_from_gpu(self) -> None:
         """
         Retrieve arrays from GPU.
         """
-        if self.V is not None:
-            self.V = self.V.get()
-        self.nl_profile = self.nl_profile.get()
-        self.propagator1 = self.propagator1.get()
-        self.propagator2 = self.propagator2.get()
+        super()._retrieve_arrays_from_gpu()
         if isinstance(self.n2, cp.ndarray):
-            self.n2 = self.n2.get()
+            self.n22 = self.n22.get()
         if isinstance(self.n12, cp.ndarray):
             self.n12 = self.n12.get()
-        if isinstance(self.alpha, cp.ndarray):
-            self.alpha = self.alpha.get()
-        if isinstance(self.I_sat, cp.ndarray):
-            self.I_sat = self.I_sat.get()
+
+    def _build_propagator(self) -> np.ndarray:
+        propagator1 = super()._build_propagator()
+        propagator2 = np.exp(
+            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k2 * self.delta_z
+        ).astype(np.complex64)
+        return np.array([propagator1, propagator2])
 
     def _take_components(self, A: np.ndarray) -> tuple:
         """Take the components of the field.
@@ -158,8 +149,7 @@ class CNLSE(NLSE):
         self,
         A: np.ndarray,
         V: np.ndarray,
-        propagator1: np.ndarray,
-        propagator2: np.ndarray,
+        propagator: np.ndarray,
         plans: list,
         precision: str = "single",
     ) -> None:
@@ -249,17 +239,14 @@ class CNLSE(NLSE):
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
             # linear step in Fourier domain (shifted)
-            cp.multiply(A1, propagator1, out=A1)
-            cp.multiply(A2, propagator2, out=A2)
-            # A = cp.fft.ifftn(A, axes=self._last_axes)
+            cp.multiply(A, propagator, out=A)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
             # fft normalization
             A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)
-            np.multiply(A1, propagator1, out=A1)
-            np.multiply(A2, propagator2, out=A2)
+            np.multiply(A, propagator, out=A)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
         A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
@@ -420,96 +407,3 @@ class CNLSE(NLSE):
         ax[1, 1].set_ylabel("y (mm)")
         fig.colorbar(im3, ax=ax[1, 1], shrink=0.6, label="Phase (rad)")
         plt.show()
-
-    def out_field(
-        self,
-        E: np.ndarray,
-        z: float,
-        plot=False,
-        precision: str = "single",
-        verbose: bool = True,
-        normalize: bool = True,
-        callback: callable = None,
-    ) -> np.ndarray:
-        """Propagates the field at a distance z
-        Args:
-            E (np.ndarray): Fields tensor of shape (XX, 2, NY, NX).
-            z (float): propagation distance in m
-            plot (bool, optional): Plots the results. Defaults to False.
-            precision (str, optional): Does a "double" or a "single" application
-            of the nonlinear term.
-            This leads to a dz (single) or dz^3 (double) precision.
-            Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
-        Returns:
-            np.ndarray: Propagated field in proper units V/m
-        """
-        assert (
-            E.shape[self._last_axes[0] :] == self.XX.shape[self._last_axes[0] :]
-        ), "Shape mismatch"
-        assert E.shape[self._last_axes[0] - 1] == 2, "E should have 2 components"
-        assert E.dtype in [
-            np.complex64,
-            np.complex128,
-        ], "Precision mismatch, E should be np.complex64 or np.complex128"
-        Z = np.arange(0, z, step=self.delta_z, dtype=E.real.dtype)
-        A = self._prepare_output_array(E, normalize)
-        if self.plans is None:
-            self.plans = self._build_fft_plan(E)
-        if self.propagator1 is None:
-            self.propagator1 = self._build_propagator(self.k)
-            self.propagator2 = self._build_propagator(self.k2)
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            self._send_arrays_to_gpu()
-        if self.V is None:
-            V = self.V
-        else:
-            V = self.V.copy()
-        if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            start_gpu = cp.cuda.Event()
-            end_gpu = cp.cuda.Event()
-            start_gpu.record()
-        t0 = time.perf_counter()
-        n2_old = self.n2
-        for i, z in enumerate(Z):
-            if z > self.L:
-                self.n2 = 0
-                self.n22 = 0
-                self.n12 = 0
-            if verbose:
-                pbar.update(1)
-            self.split_step(
-                A,
-                V,
-                self.propagator1,
-                self.propagator2,
-                self.plans,
-                precision,
-            )
-            if callback is not None:
-                callback(self, A, z, i)
-        t_cpu = time.perf_counter() - t0
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            end_gpu.record()
-            end_gpu.synchronize()
-            t_gpu = cp.cuda.get_elapsed_time(start_gpu, end_gpu)
-        if verbose:
-            pbar.close()
-            if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-                print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
-                    f" {time.perf_counter()-t0} s (CPU)\n"
-                )
-            else:
-                print(f"\nTime spent to solve : {t_cpu} s (CPU)\n")
-        self.n2 = n2_old
-        return_np_array = isinstance(E, np.ndarray)
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            if return_np_array:
-                A = cp.asnumpy(A)
-            self._retrieve_arrays_from_gpu()
-        if plot:
-            self.plot_field(A)
-        return A

@@ -103,7 +103,7 @@ class CNLSE_1d(CNLSE):
         A2 = A[..., 1, :]
         return A1, A2
 
-    def _build_propagator(self, k: float) -> np.ndarray:
+    def _build_propagator(self) -> np.ndarray:
         """Builds the linear propagation matrix
 
         Args:
@@ -113,8 +113,9 @@ class CNLSE_1d(CNLSE):
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
-        propagator = np.exp(-1j * 0.5 * (self.Kx**2) / k * self.delta_z)
-        return propagator
+        propagator1 = np.exp(-1j * 0.5 * (self.Kx**2) / self.k * self.delta_z)
+        propagator2 = np.exp(-1j * 0.5 * (self.Kx**2) / self.k2 * self.delta_z)
+        return np.array([propagator1, propagator2])
 
     def plot_field(self, A_plot: np.ndarray) -> None:
         """Plot the field.

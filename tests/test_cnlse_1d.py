@@ -23,9 +23,11 @@ def test_build_propagator() -> None:
         simu = CNLSE_1d(
             alpha, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
         )
-        prop = simu._build_propagator(simu.k)
+        prop = simu._build_propagator()
+        prop1 = np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
+        prop2 = np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k2 * simu.delta_z)
         assert np.allclose(
-            prop, np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
+            prop, np.array([prop1, prop2])
         ), f"Propagator is wrong. (Backend {backend})"
 
 

@@ -69,14 +69,14 @@ class GPE(NLSE):
         # do some conversion for the units
         self.I_sat *= epsilon_0 * c / 2
 
-    def _build_propagator(self, m: float) -> np.ndarray:
+    def _build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.
 
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(
-            -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / m * self.delta_t
+            -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / self.m * self.delta_t
         ).astype(np.complex64)
         return propagator
 

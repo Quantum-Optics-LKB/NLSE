@@ -383,7 +383,9 @@ class NLSE:
             np.complex64,
             np.complex128,
         ], "Type mismatch, E_in should be complex64 or complex128"
-        Z = np.arange(0, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype)
+        Z = np.arange(
+            self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
+        )
         A = self._prepare_output_array(E_in, normalize)
         # define plans if not already done
         if self.plans is None:

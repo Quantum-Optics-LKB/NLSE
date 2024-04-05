@@ -120,6 +120,7 @@ Please note that all of the code works with the **"God given" units** i.e **SI u
 The `NLSE` class aims at providing a minimal yet functional toolbox to solve non-linear Schrödinger type equation in optics / atomic physics settings such as the propagation of light in a Kerr medium or solving the Gross Pitaevskii equation for the evolution of cold gases.
 
 The propagation equation is:
+
 $$
 i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
 -\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
@@ -188,6 +189,7 @@ In order to minimize duplication, all classes inherit from the main `NLSE` class
 It supports all of the features of the main `NLSE` class.
 
 The propagation equation is:
+
 $$
 i\partial_{z}E = -\frac{1}{2k_0}\partial^2_x E +
 -\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
@@ -200,6 +202,7 @@ $$
 **WARNING:** Since this solves a 3D+1 equation, this is computationally very intensive ! The space complexity scales as $N^3$ if $N$ is the field array size.
 
 The propagation equation is:
+
 $$
 i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
 \frac{D_0}{2}\partial^2_t E

@@ -78,6 +78,7 @@ def test_out_field() -> None:
         E0 = np.ones(N, dtype=PRECISION_COMPLEX)
         A = simu.out_field(E0, L, verbose=False, plot=False, precision="single")
         rho = A.real * A.real + A.imag * A.imag
+        print(rho)
         norm = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         norm *= c * epsilon_0 / 2
         assert A.shape == (N,), f"Output array has wrong shape. (Backend {backend})"

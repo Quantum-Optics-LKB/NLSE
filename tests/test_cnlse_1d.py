@@ -87,9 +87,9 @@ def test_out_field() -> None:
         )
         E0 = np.ones((2, N), dtype=PRECISION_COMPLEX)
         A = simu.out_field(E0, L, verbose=False, plot=False, precision="single")
-        integral = ((A.real * A.real + A.imag * A.imag) * simu.delta_X**2).sum(
-            axis=simu._last_axes
-        )
+        rho = A.real * A.real + A.imag * A.imag
+        print(rho)
+        integral = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         integral *= c * epsilon_0 / 2
         assert A.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(

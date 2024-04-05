@@ -1,6 +1,6 @@
 # NLSE
 
-A small utility to easily simulate all sorts of non linear Schrödinger equation. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equation.
+A small utility to easily simulate all sorts of non linear Schrödinger equations. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equations.
 
 ## Installation
 
@@ -86,18 +86,22 @@ On a Nvidia RTX4090 GPU and Ryzen 7950X CPU, we test our solver to the following
 The code offers to solve a typical [non linear Schrödinger](https://en.wikipedia.org/wiki/Nonlinear_Schr%C3%B6dinger_equation) / [Gross-Pitaevskii](https://en.wikipedia.org/wiki/Gross%E2%80%93Pitaevskii_equation) equation of the type :
 $$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$
 
-In this particular instance, we solve in the formalism of the propagation of light in a non linear medium, such that the exact equation for the field $E$ in V/m solved is :
+In this particular instance, we solve in the formalism of the propagation of a pulse of light in a non linear medium.
+Within the [paraxial approximation](https://en.wikipedia.org/wiki/Paraxial_approximation), the propagation equation for the field $E$ in V/m solved is:
 
 $$
-i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
+i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
+\frac{D_0}{2}\partial^2_t E
+-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
 $$
 
 Here, the constants are defined as followed :
 
-- $k_0$ : is the electric field wavenumber in $m^{-1}$
+- $k_0$ : is the electric field [wavenumber](https://en.wikipedia.org/wiki/Wavenumber) in $m^{-1}$
+- $D_0$ : is the [group velocity dispersion](https://en.wikipedia.org/wiki/Group-velocity_dispersion) (GVD) in $s^2/m$
 - $\delta n(\mathbf{r})$ : the "potential" i.e a local change in linear index of refraction. Dimensionless.
-- $n_2$ : the non linear coefficient in $m^2/W$.
-- $n$ is the linear index of refraction. In our case 1.
+- $n_2$ : the [non linear index of refraction](https://en.wikipedia.org/wiki/Kerr_effect) in $m^2/W$.
+- $n$ is the linear [index of refraction](https://en.wikipedia.org/wiki/Refractive_index). In our case 1.
 - $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
 
 In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$.
@@ -114,6 +118,13 @@ Please note that all of the code works with the **"God given" units** i.e **SI u
 ### The `NLSE` class
 
 The `NLSE` class aims at providing a minimal yet functional toolbox to solve non-linear Schrödinger type equation in optics / atomic physics settings such as the propagation of light in a Kerr medium or solving the Gross Pitaevskii equation for the evolution of cold gases.
+
+The propagation equation is:
+$$
+i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
+-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
+$$
+
 
 #### Initialization
 
@@ -171,11 +182,31 @@ The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the R
 
 In order to minimize duplication, all classes inherit from the main `NLSE` class according to the following graph:
 ![inheritance](img/inheritance_graph.png)
+### The `NLSE_1d` class
 
-### The `CNLSE` and `NLSE_1d` classes
+`NLSE_1d` is a 1D specialization of `NLSE` for performance. 
+It supports all of the features of the main `NLSE` class.
 
-There are two subclasses of the `NLSE` main class.
-The `NLSE_1d` class is a specialization of the `NLSE` class to 1d problems. It allows vectorized calculations i.e evolving in parallel an arbitrary tensor of fields of shape `(N1, N2, ...., NX)`.
+The propagation equation is:
+$$
+i\partial_{z}E = -\frac{1}{2k_0}\partial^2_x E +
+-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
+$$
+
+### The `NLSE_3d` class
+
+`NLSE_3d` solves the full paraxial propagation equation.
+
+**WARNING:** Since this solves a 3D+1 equation, this is computationally very intensive ! The space complexity scales as $N^3$ if $N$ is the field array size.
+
+The propagation equation is:
+$$
+i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
+\frac{D_0}{2}\partial^2_t E
+-\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
+$$
+
+### The `CNLSE` class
 
 The `CNLSE` class is a coupled non-linear Schrödinger equation allowing to solve the following equation:
 
@@ -189,6 +220,19 @@ $$
 This allows to describe the back reaction of the fluid onto the defect as well as two components scenarii.
 In order to "turn on" different terms, it suffices to set the parameters value to something other than `None`.
 When `None`, the solver does not apply the corresponding evolution term for optimal performance.
+
+### The `CNLSE_1d` class
+
+Similarly to `NLSE_1d`, the `CNLSE_1d` is a 1D specialization of `CNLSE` class.
+
+The propagation equation is:
+
+$$
+\begin{split}
+i\frac{\partial\psi_f}{\partial z} &= -\frac{1}{2k_f}\partial^2_x\psi_f -\frac{1}{2}n_2^f k_f c\epsilon_0|\psi_f|^2\psi_f + k_f n_2^{fd}c\epsilon_0|\psi_d|^2\psi_f-\frac{i\alpha_f}{2}\psi_f + \frac{\Omega}{2} \psi_d  \\
+i\frac{\partial\psi_d}{\partial z} &= -\frac{1}{2k_d}\partial^2_x\psi_d -\frac{1}{2}n_2^d k_d c\epsilon_0|\psi_d|^2\psi_d + k_d n_2^{fd}c\epsilon_0|\psi_f|^2\psi_d-\frac{i\alpha_d}{2}\psi_d + \frac{\Omega}{2} \psi_f
+\end{split}
+$$
 
 ### The `GPE` class
 

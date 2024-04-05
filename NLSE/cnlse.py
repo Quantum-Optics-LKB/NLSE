@@ -241,13 +241,13 @@ class CNLSE(NLSE):
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-            # fft normalization
-            A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=False)
+        # fft normalization
+        A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
         A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
         if self.nl_length > 0:
@@ -358,11 +358,12 @@ class CNLSE(NLSE):
                 self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
                 self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
-    def plot_field(self, A_plot: np.ndarray) -> None:
+    def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.
 
         Args:
             A_plot (np.ndarray): The field to plot
+            z (float): Propagation distance in m.
         """
         # if array is multi-dimensional, drop dims until the shape is 2D
         if A_plot.ndim > 3:
@@ -371,6 +372,7 @@ class CNLSE(NLSE):
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
             self.X[0] * 1e3,
             self.X[-1] * 1e3,

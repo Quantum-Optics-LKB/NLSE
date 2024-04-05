@@ -104,11 +104,12 @@ class GPE(NLSE):
             A = (E_00.T * A.T).T
         return A
 
-    def plot_field(self, A_plot) -> None:
+    def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot a field for monitoring.
 
         Args:
             A_plot (np.ndarray): Field to plot
+            z (float): Propagation distance in m.
         """
         # if array is multi-dimensional, drop dims until the shape is 2D
         if A_plot.ndim > 2:
@@ -117,6 +118,7 @@ class GPE(NLSE):
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(1, 3, layout="constrained")
+        fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
             self.X[0] * 1e3,
             self.X[-1] * 1e3,

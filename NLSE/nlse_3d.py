@@ -33,7 +33,8 @@ class NLSE_3d(NLSE):
         backend: str = __BACKEND__,
     ) -> object:
         """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
+        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +
+          D0/2 (d2/dt2) psi + k0 dn psi +
           k0 n2 psi**2 psi
         Args:
             alpha (float): alpha
@@ -70,6 +71,12 @@ class NLSE_3d(NLSE):
         self.energy = self.puiss
         self.NZ = NZ
         self.window_t = window[1]
+        self.puiss = self.energy / self.window_t
+        Dn = self.n2 * self.puiss / self.window**2
+        z_nl = 1 / (self.k * abs(Dn))
+        if isinstance(z_nl, np.ndarray):
+            z_nl = z_nl.min()
+        self.delta_z = 0.5e-2 * z_nl
         self.T, self.delta_T = np.linspace(
             -self.window_t / 2, self.window_t / 2, self.NZ, retstep=True
         )
@@ -81,6 +88,11 @@ class NLSE_3d(NLSE):
         self._last_axes = (-3, -2, -1)  # Axes are x, y, t
 
     def _build_propagator(self) -> np.ndarray:
+        """Build the linear propagation matrix.
+
+        Returns:
+            np.ndarray: The propagator
+        """
         prop_2d = super()._build_propagator()
         prop_t = np.exp(-1j * self.D0 / 2 * self.Omega**2)
         # prop_t *= np.exp(1 / self.vg * self.Omega)
@@ -115,7 +127,13 @@ class NLSE_3d(NLSE):
             A[:] = (E_00.T * E_in.T).T
         return A
 
-    def plot_field(self, A_plot: np.ndarray) -> None:
+    def plot_field(self, A_plot: np.ndarray, z: float) -> None:
+        """Plot a field for monitoring.
+
+        Args:
+            A_plot (np.ndarray): Field to plot
+            z (float): Propagation distance in m.
+        """
         # if array is multi-dimensional, drop dims until the shape is 2D
         if A_plot.ndim > 3:
             while len(A_plot.shape) > 3:
@@ -123,6 +141,7 @@ class NLSE_3d(NLSE):
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
             self.X[0] * 1e3,
             self.X[-1] * 1e3,

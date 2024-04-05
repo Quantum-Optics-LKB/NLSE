@@ -27,7 +27,7 @@ class NLSE_1d(NLSE):
         backend: str = __BACKEND__,
     ) -> object:
         """Instantiates the simulation.
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
+        Solves an equation : d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +
           k0 n2 psi**2 psi
         Args:
             alpha (float): Transmission coeff
@@ -84,23 +84,23 @@ class NLSE_1d(NLSE):
         return A
 
     def _build_propagator(self) -> np.ndarray:
-        """Builds the linear propagation matrix
+        """Build the linear propagation matrix.
 
-        Args:
-            k (float): Wavenumber
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(-1j * 0.5 * (self.Kx**2) / self.k * self.delta_z)
         return propagator
 
-    def plot_field(self, A_plot: np.ndarray) -> None:
+    def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot a field for monitoring.
 
         Args:
             A_plot (np.ndarray): Field to plot
+            z (float): Propagation distance in m.
         """
         fig, ax = plt.subplots(1, 2, layout="constrained")
+        fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         if A_plot.ndim == 2:
             for i in range(A_plot.shape[0]):
                 ax[0].plot(

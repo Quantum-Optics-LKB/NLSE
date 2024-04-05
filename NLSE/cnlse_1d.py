@@ -117,11 +117,12 @@ class CNLSE_1d(CNLSE):
         propagator2 = np.exp(-1j * 0.5 * (self.Kx**2) / self.k2 * self.delta_z)
         return np.array([propagator1, propagator2])
 
-    def plot_field(self, A_plot: np.ndarray) -> None:
-        """Plot the field.
+    def plot_field(self, A_plot: np.ndarray, z: float) -> None:
+        """Plot a field for monitoring.
 
         Args:
-            A_plot (np.ndarray): The field to plot
+            A_plot (np.ndarray): Field to plot
+            z (float): Propagation distance in m.
         """
         # if array is multi-dimensional, drop dims until the shape is 2D
         if A_plot.ndim > 2:
@@ -132,6 +133,7 @@ class CNLSE_1d(CNLSE):
         A_1_plot = A_plot[0]
         A_2_plot = A_plot[1]
         fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         # plot amplitudes and phases
         ax[0, 0].plot(self.X * 1e3, np.abs(A_1_plot) ** 2 * epsilon_0 * c / 2 * 1e-4)
         ax[0, 0].set_title(r"$|\psi_1|^2$")

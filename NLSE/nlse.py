@@ -87,6 +87,8 @@ class NLSE:
         self.window = window
         Dn = self.n2 * self.puiss / self.window**2
         z_nl = 1 / (self.k * abs(Dn))
+        if isinstance(z_nl, np.ndarray):
+            z_nl = z_nl.min()
         self.delta_z = 1e-2 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
@@ -131,10 +133,8 @@ class NLSE:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
 
     def _build_propagator(self) -> np.ndarray:
-        """Builds the linear propagation matrix
+        """Build the linear propagation matrix.
 
-        Args:
-            k (float): Wavenumber
         Returns:
             propagator (np.ndarray): the propagator matrix
         """
@@ -301,12 +301,12 @@ class NLSE:
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
             plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
-            # fft normalization
-            A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         else:
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=False)
+        # fft normalization
+        A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         A_sq = A.real * A.real + A.imag * A.imag
         if self.nl_length > 0:
             A_sq = self._convolution(
@@ -353,57 +353,6 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
 
-    def plot_field(self, A_plot: np.ndarray) -> None:
-        """Plot a field for monitoring.
-
-        Args:
-            A_plot (np.ndarray): Field to plot
-        """
-        # if array is multi-dimensional, drop dims until the shape is 2D
-        if A_plot.ndim > 2:
-            while len(A_plot.shape) > 2:
-                A_plot = A_plot[0]
-        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
-            A_plot = A_plot.get()
-        fig, ax = plt.subplots(1, 3, layout="constrained")
-        ext_real = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
-            self.Y[0] * 1e3,
-            self.Y[-1] * 1e3,
-        ]
-        ext_fourier = [
-            self.Kx[0] * 1e-3,
-            self.Kx[-1] * 1e-3,
-            self.Ky[0] * 1e-3,
-            self.Ky[-1] * 1e-3,
-        ]
-        rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
-        phi = np.angle(A_plot)
-        im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))
-        im0 = ax[0].imshow(rho, extent=ext_real)
-        ax[0].set_title("Intensity")
-        ax[0].set_xlabel("x (mm)")
-        ax[0].set_ylabel("y (mm)")
-        fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
-        im1 = ax[1].imshow(
-            phi, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
-        )
-        ax[1].set_title("Phase")
-        ax[1].set_xlabel("x (mm)")
-        ax[1].set_ylabel("y (mm)")
-        fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
-        im2 = ax[2].imshow(
-            im_fft,
-            extent=ext_fourier,
-            cmap="nipy_spectral",
-        )
-        ax[2].set_title("Fourier space")
-        ax[2].set_xlabel(r"$k_x$ ($mm^{-1}$)")
-        ax[2].set_ylabel(r"$k_y$ ($mm^{-1}$)")
-        fig.colorbar(im2, ax=ax[2], shrink=0.6, label="Intensity (a.u.)")
-        plt.show()
-
     def out_field(
         self,
         E_in: np.ndarray,
@@ -434,7 +383,7 @@ class NLSE:
             np.complex64,
             np.complex128,
         ], "Type mismatch, E_in should be complex64 or complex128"
-        Z = np.arange(0, z, step=self.delta_z, dtype=E_in.real.dtype)
+        Z = np.arange(0, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype)
         A = self._prepare_output_array(E_in, normalize)
         # define plans if not already done
         if self.plans is None:
@@ -488,5 +437,58 @@ class NLSE:
             self._retrieve_arrays_from_gpu()
 
         if plot:
-            self.plot_field(A)
+            self.plot_field(A, z)
         return A
+
+    def plot_field(self, A_plot: np.ndarray, z: float) -> None:
+        """Plot a field for monitoring.
+
+        Args:
+            A_plot (np.ndarray): Field to plot.
+            z (float): Propagation distance.
+        """
+        # if array is multi-dimensional, drop dims until the shape is 2D
+        if A_plot.ndim > 2:
+            while len(A_plot.shape) > 2:
+                A_plot = A_plot[0]
+        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+            A_plot = A_plot.get()
+        fig, ax = plt.subplots(1, 3, layout="constrained")
+        fig.suptitle(rf"Field at $z$ = {z:.2e} m")
+        ext_real = [
+            self.X[0] * 1e3,
+            self.X[-1] * 1e3,
+            self.Y[0] * 1e3,
+            self.Y[-1] * 1e3,
+        ]
+        ext_fourier = [
+            self.Kx[0] * 1e-3,
+            self.Kx[-1] * 1e-3,
+            self.Ky[0] * 1e-3,
+            self.Ky[-1] * 1e-3,
+        ]
+        rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
+        phi = np.angle(A_plot)
+        im_fft = np.abs(np.fft.fftshift(np.fft.fft2(A_plot)))
+        im0 = ax[0].imshow(rho, extent=ext_real)
+        ax[0].set_title("Intensity")
+        ax[0].set_xlabel("x (mm)")
+        ax[0].set_ylabel("y (mm)")
+        fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Intensity (W/cm^2)")
+        im1 = ax[1].imshow(
+            phi, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+        )
+        ax[1].set_title("Phase")
+        ax[1].set_xlabel("x (mm)")
+        ax[1].set_ylabel("y (mm)")
+        fig.colorbar(im1, ax=ax[1], shrink=0.6, label="Phase (rad)")
+        im2 = ax[2].imshow(
+            im_fft,
+            extent=ext_fourier,
+            cmap="nipy_spectral",
+        )
+        ax[2].set_title("Fourier space")
+        ax[2].set_xlabel(r"$k_x$ ($mm^{-1}$)")
+        ax[2].set_ylabel(r"$k_y$ ($mm^{-1}$)")
+        fig.colorbar(im2, ax=ax[2], shrink=0.6, label="Intensity (a.u.)")
+        plt.show()

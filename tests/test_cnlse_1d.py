@@ -86,7 +86,9 @@ def test_out_field() -> None:
             0, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
         )
         E0 = np.ones((2, N), dtype=PRECISION_COMPLEX)
-        A = simu.out_field(E0, L, verbose=False, plot=False, precision="single")
+        A = simu.out_field(
+            E0, simu.delta_z, verbose=False, plot=False, precision="single"
+        )
         rho = A.real * A.real + A.imag * A.imag
         print(rho)
         integral = (rho * simu.delta_X**2).sum(axis=simu._last_axes)

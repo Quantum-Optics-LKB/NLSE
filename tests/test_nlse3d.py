@@ -8,8 +8,6 @@ if NLSE_3d.__CUPY_AVAILABLE__:
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
-cp.cuda.Device(1).use()
-
 
 N = 256
 NZ = 128

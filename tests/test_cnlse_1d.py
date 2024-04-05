@@ -80,6 +80,31 @@ def test_prepare_output_array() -> None:
             ), f"Output array does not match input array. (Backend {backend})"
 
 
+def test_split_step() -> None:
+    for backend in ["CPU", "GPU"]:
+        simu = CNLSE_1d(
+            alpha, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+        )
+        simu.delta_z = 0
+        simu.propagator = simu._build_propagator()
+        E = np.ones((2, N), dtype=PRECISION_COMPLEX)
+        A = simu._prepare_output_array(E, normalize=False)
+        simu.plans = simu._build_fft_plan(A)
+        simu.propagator = simu._build_propagator()
+        if backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
+            E = cp.asarray(E)
+            simu._send_arrays_to_gpu()
+        simu.split_step(E, simu.V, simu.propagator, simu.plans, precision="double")
+        if backend == "CPU":
+            assert np.allclose(
+                E, np.ones((2, N), dtype=PRECISION_COMPLEX)
+            ), f"Split step is not unitary. (Backend {backend})"
+        elif backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
+            assert cp.allclose(
+                E, cp.ones((2, N), dtype=PRECISION_COMPLEX)
+            ), f"Split step is not unitary. (Backend {backend})"
+
+
 def test_out_field() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(

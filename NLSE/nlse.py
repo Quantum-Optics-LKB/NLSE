@@ -362,6 +362,7 @@ class NLSE:
         verbose: bool = True,
         normalize: bool = True,
         callback: callable = None,
+        *args,
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -373,6 +374,10 @@ class NLSE:
             This leads to a dz (single) or dz^3 (double) precision.
             Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
+            normalize (bool, optional): Normalize the field to the total power.
+            Defaults to True.
+            callback (callable, optional): Callback function. Defaults to None.
+            *args: Additional arguments for the callback function.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
@@ -414,7 +419,7 @@ class NLSE:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
             if callback is not None:
-                callback(self, A, z, i)
+                callback(self, A, z, i, *args)
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

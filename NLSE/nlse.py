@@ -362,7 +362,7 @@ class NLSE:
         verbose: bool = True,
         normalize: bool = True,
         callback: callable = None,
-        *args,
+        callback_args: tuple = (),
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -419,7 +419,7 @@ class NLSE:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
             if callback is not None:
-                callback(self, A, z, i, *args)
+                callback(self, A, z, i, *callback_args)
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

@@ -244,6 +244,7 @@ The `GPE` class allows to solve the 2D Gross-Pitaevskii equation describing the 
 $$
 i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi.
 $$
+
 It follows exactly the same conventions as the other classes a part from the fact that since it describes atoms, the units are the "atomic" units (masses in kg, times in s).
 
 

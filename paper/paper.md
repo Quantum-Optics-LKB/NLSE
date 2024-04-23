@@ -27,16 +27,28 @@ bibliography: paper.bib
 # Summary
 
 The non-linear Schrödinger equation (NLSE) is a general non-linear equation allowing to model the propagation of light in non-linear media.
-This equation is mathematically isomorphic to the Gross-Pitaevskii equation (GPE) describing the evolution of cold atomic ensembles.
-Providing a flexible, modern and performant framework to solve these equations is a crucial need to model realistic experimental scenarii.
+This equation is mathematically isomorphic to the Gross-Pitaevskii equation (GPE) [@pitaevskij_bose-einstein_2016] describing the evolution of cold atomic ensembles.
+Recently, the growing field of quantum fluids of light [@carusotto_quantum_2013] has proven a fruitful testbed for several fundamental quantum and classical phenomena such as superfluidity [@michel_superfluid_2018] or turbulence [@bakerrasooliTurbulentDynamicsTwodimensional2023].
+With these developments, providing a flexible, modern and performant framework to solve these equations is a crucial need to model realistic experimental scenarii.
 
 # Statement of need
+
+Over the years, there have been several packages striving to provide performant split-step solvers for NLSE type equations.
+Here are a few examples:
+- [`FourierGPE.jl`](https://github.com/AshtonSBradley/FourierGPE.jl/tree/master) for 1D to 3D Gross-Pitavskii equations in the context of cold atoms in Julia.
+- [`GPUE`](https://github.com/GPUE-group/GPUE) [@Schloss2018] for 1D to 3D Gross-Pitaevskii equations accelerated on GPU, in C++ (currently unmaintained).
+- [`py-fmas`](https://github.com/omelchert/py-fmas) for 1D NLSE in optical fibers, with a split-step method (currently unmaintained).
+
+With our project, we bring similar performance to C++ and Julia implementations, while striving for accessibility and maintainability by using the prevalant language in the physics community, Python.
+Using an easy to extend object-oriented classes, users can easily input experimental parameters to quickly model real setups.
+
+# Functionality
 
 `NLSE` harnesses the power of pseudo-spectral schemes in order to solve efficiently the following general type of equation:
 $$i\partial_t\psi = -\frac{1}{2m}\nabla^2\psi + V\psi + g|\psi|^2\psi.$$
 
-In order to take advantage of the computing power of modern Graphical Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`cupy`](https://cupy.dev/) package that maps [`numpy`](https://numpy.org/) functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
-It also heavily uses just-in-time compilation using [`numba`](https://numba.pydata.org/) in order to optimize performance while having an easily maintainable Python codebase.
+In order to take advantage of the computing power of modern Graphical Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`cupy`](https://cupy.dev/)[@cupy_learningsys2017]  package that maps [`numpy`](https://numpy.org/) [@harris2020array] functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
+It also heavily uses just-in-time compilation using [`numba`](https://numba.pydata.org/) [@lam2015numba] in order to optimize performance while having an easily maintainable Python codebase.
 Compared to naive Numpy based CPU implementations, this package provides a 100 to 10000 times speedup for typical sizes \autoref{fig:bench}.
 While optimized for the use with GPU, it also provides a performant CPU fallback layer.
 

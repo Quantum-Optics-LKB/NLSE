@@ -60,7 +60,7 @@ class NLSE:
             NX (int, optional): Number of points in the x direction. Defaults to 1024.
             NY (int, optional): Number of points in the y direction. Defaults to 1024.
             Isat (float): Saturation intensity in W/m^2
-            nl_length (float): Non linear length in m
+            nl_length (float): Non local length in m
             wvl (float): Wavelength in m
             backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """

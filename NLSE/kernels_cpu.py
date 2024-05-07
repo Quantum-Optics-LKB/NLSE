@@ -27,9 +27,11 @@ def nl_prop(
     A_sq = A_sq.ravel()
     V = V.ravel()
     for i in numba.prange(A.size):
-        A[i] *= np.exp(
-            dz * (-alpha / 2 + 1j * V[i] + 1j * g * A_sq[i] / (1 + A_sq[i] / Isat))
-        )
+        # saturation
+        sat = 1 / (1 + A_sq[i] / Isat)
+        # Losses and interactions
+        arg = -alpha / 2 + 1j * g * A_sq[i] * sat + 1j * V[i]
+        A[i] *= np.exp(dz * arg)
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
@@ -54,7 +56,11 @@ def nl_prop_without_V(
     A = A.ravel()
     A_sq = A_sq.ravel()
     for i in numba.prange(A.size):
-        A[i] *= np.exp(dz * (-alpha / 2 + 1j * g * A_sq[i] / (1 + A_sq[i] / Isat)))
+        # saturation
+        sat = 1 / (1 + A_sq[i] / Isat)
+        # Losses and interactions
+        arg = -alpha / 2 + 1j * g * A_sq[i] * sat
+        A[i] *= np.exp(dz * arg)
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
@@ -85,14 +91,15 @@ def nl_prop_c(
     A_sq_1 = A_sq_1.ravel()
     A_sq_2 = A_sq_2.ravel()
     for i in numba.prange(A1.size):
+        # Saturation parameter
+        sat = 1 / (1 + A_sq_1[i] / Isat)
         # Losses
-        A1[i] *= np.exp(dz * (-alpha / (2 * (1 + A_sq_1[i] / Isat))))
-        # Potential
-        A1[i] *= np.exp(dz * (1j * V[i]))
+        arg = -alpha / 2 * sat
         # Interactions
-        A1[i] *= np.exp(
-            dz * (1j * (g11 * A_sq_1[i] / (1 + A_sq_1[i] / Isat) + g12 * A_sq_2[i]))
-        )
+        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i])
+        # Potential
+        arg += 1j * V[i]
+        A1[i] *= np.exp(dz * arg)
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)
@@ -121,12 +128,13 @@ def nl_prop_without_V_c(
     A_sq_1 = A_sq_1.ravel()
     A_sq_2 = A_sq_2.ravel()
     for i in numba.prange(A1.size):
+        # Saturation parameter
+        sat = 1 / (1 + A_sq_1[i] / Isat)
         # Losses
-        A1[i] *= np.exp(dz * (-alpha / (2 * (1 + A_sq_1[i] / Isat))))
+        arg = -alpha / 2 * sat
         # Interactions
-        A1[i] *= np.exp(
-            dz * (1j * (g11 * A_sq_1[i] / (1 + A_sq_1[i] / Isat) + g12 * A_sq_2[i]))
-        )
+        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i])
+        A1[i] *= np.exp(dz * arg)
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)

@@ -23,10 +23,10 @@ f_fourier = 200e-3
 window = 3008 * d_real
 puiss = 1.05
 Isat = 3.92e4  # saturation intensity in W/m^2
-L = 1e-2
+L = 2e-3
 alpha = 22
 dn = None
-N_avg = 10
+N_avg = 2
 sizes = np.logspace(6, 14, 9, base=2, dtype=int)
 times = np.zeros((len(sizes), 3, N_avg))
 pbar = tqdm.tqdm(total=np.prod(times.shape), desc="Benchmarks")
@@ -45,7 +45,7 @@ for i, size in enumerate(sizes):
             backend=backend,
         )
         simu0.I_sat = Isat
-        simu0.delta_z = 0.5e-4
+        simu0.delta_z = 1e-4
         if j == 0:
             E_0 = np.exp(-(np.hypot(simu0.XX, simu0.YY) ** 2) / waist**2).astype(
                 PRECISION_COMPLEX

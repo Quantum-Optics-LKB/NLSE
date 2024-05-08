@@ -1,0 +1,17 @@
+site_name: NLSE Documentation
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [..]
+
+nav:
+  - Home: index.md
+  - NLSE: reference.md
+  - Coupled NLSE: cnlse.md
+  - Kernels: kernels.md
+

@@ -357,7 +357,7 @@ class NLSE:
         self,
         E_in: np.ndarray,
         z: float,
-        plot=False,
+        plot: bool = False,
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,

@@ -15,6 +15,7 @@ from scipy import signal
 from scipy import special
 from . import kernels_cpu
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
+from typing import Union
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
@@ -365,8 +366,8 @@ class NLSE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callbacks: list[callable] | callable = None,
-        callback_args: list[tuple] | tuple = (),
+        callbacks: Union[list[callable], callable] = None,
+        callback_args: Union[list[tuple], tuple] = (),
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:

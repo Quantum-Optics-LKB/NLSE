@@ -125,6 +125,11 @@ class CNLSE(NLSE):
             self.n12 = self.n12.get()
 
     def _build_propagator(self) -> np.ndarray:
+        """Build the propagators.
+
+        Returns:
+            np.ndarray: A tuple of linear propagators for each component.
+        """
         propagator1 = super()._build_propagator()
         propagator2 = np.exp(
             -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k2 * self.delta_z

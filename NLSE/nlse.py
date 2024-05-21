@@ -365,8 +365,8 @@ class NLSE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: callable = None,
-        callback_args: tuple = (),
+        callbacks: list[callable] | callable = None,
+        callback_args: list[tuple] | tuple = (),
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -420,8 +420,16 @@ class NLSE:
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
-            if callback is not None:
-                callback(self, A, z, i, *callback_args)
+            if callbacks is not None:
+                if isinstance(callbacks, callable):
+                    callbacks(self, A, z, *callback_args)
+                elif isinstance(callbacks, list):
+                    for i, c in callbacks:
+                        c(self, A, z, i, *callback_args[i])
+                else:
+                    raise ValueError(
+                        "callbacks should be a callable or a list of callables"
+                    )
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

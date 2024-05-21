@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import c, epsilon_0
 import pyfftw
-import time
-import tqdm
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:

@@ -18,7 +18,7 @@ from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
-    import cupyx.scipy.fftpack as fftpack
+    from pyvkfft.cuda import VkFFTApp
     import cupyx.scipy.signal as signal_cp
     from . import kernels_gpu
 
@@ -89,7 +89,7 @@ class NLSE:
         z_nl = 1 / (self.k * abs(Dn))
         if isinstance(z_nl, np.ndarray):
             z_nl = z_nl.min()
-        self.delta_z = 1e-2 * z_nl
+        self.delta_z = 5e-3 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -120,8 +120,8 @@ class NLSE:
         self.nl_length = nl_length
         if self.nl_length > 0:
             d = self.nl_length // self.delta_X
-            x = np.arange(-2 * d, 2 * d + 1)
-            y = np.arange(-2 * d, 2 * d + 1)
+            x = np.arange(-3 * d, 3 * d + 1)
+            y = np.arange(-3 * d, 3 * d + 1)
             XX, YY = np.meshgrid(x, y)
             R = np.hypot(XX, YY)
             self.nl_profile = special.kn(0, R / d)
@@ -152,12 +152,18 @@ class NLSE:
             list: A list containing the FFT plans
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            plan_fft = fftpack.get_fft_plan(
-                A,
-                axes=self._last_axes,
-                value_type="C2C",
+            stream = cp.cuda.get_current_stream()
+            plan_fft = VkFFTApp(
+                A.shape,
+                A.dtype,
+                ndim=len(self._last_axes),
+                stream=stream,
+                inplace=True,
+                norm=1,
+                tune=True,
             )
             return [plan_fft]
+
         else:
             # try to load previous fftw wisdom
             try:
@@ -287,7 +293,7 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
-                self.self._kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -297,16 +303,14 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+            plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+            plan_fft.ifft(A, A)
         else:
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=False)
-        # fft normalization
-        A *= 1 / np.prod(A.shape[self._last_axes[0] :])
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         A_sq = A.real * A.real + A.imag * A.imag
         if self.nl_length > 0:
             A_sq = self._convolution(

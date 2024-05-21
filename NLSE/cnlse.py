@@ -237,17 +237,16 @@ class CNLSE(NLSE):
                     A2, A1_old, self.delta_z / 2, self.omega / 2
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+            plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+            plan_fft.ifft(A, A)
         else:
             plan_fft, plan_ifft = plans
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=False)
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         # fft normalization
-        A *= 1 / np.prod(A.shape[self._last_axes[0] :])
         A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
         A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
         if self.nl_length > 0:

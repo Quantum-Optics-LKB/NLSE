@@ -39,7 +39,7 @@ class NLSE:
         puiss: float,
         window: float,
         n2: float,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         L: float,
         NX: int = 1024,
         NY: int = 1024,
@@ -255,7 +255,7 @@ class NLSE:
     def split_step(
         self,
         A: np.ndarray,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",

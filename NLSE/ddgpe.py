@@ -149,7 +149,7 @@ class DDGPE(CNLSE):
     def split_step(
         self,
         A: np.ndarray,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",

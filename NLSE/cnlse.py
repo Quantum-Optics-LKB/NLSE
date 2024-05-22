@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import c, epsilon_0
 import pyfftw
+from typing import Union
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:
@@ -19,7 +20,7 @@ class CNLSE(NLSE):
         window: float,
         n2: float,
         n12: float,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         L: float,
         NX: int = 1024,
         NY: int = 1024,
@@ -151,7 +152,7 @@ class CNLSE(NLSE):
     def split_step(
         self,
         A: np.ndarray,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",

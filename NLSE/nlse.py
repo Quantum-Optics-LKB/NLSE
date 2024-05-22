@@ -366,7 +366,7 @@ class NLSE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callbacks: Union[list[callable], callable] = None,
+        callback: Union[list[callable], callable] = None,
         callback_args: Union[list[tuple], tuple] = (),
     ) -> np.ndarray:
         """Propagates the field at a distance z
@@ -421,11 +421,11 @@ class NLSE:
             if verbose:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
-            if callbacks is not None:
-                if isinstance(callbacks, callable):
-                    callbacks(self, A, z, *callback_args)
-                elif isinstance(callbacks, list):
-                    for i, c in callbacks:
+            if callback is not None:
+                if isinstance(callback, callable):
+                    callback(self, A, z, *callback_args)
+                elif isinstance(callback, list):
+                    for i, c in callback:
                         c(self, A, z, i, *callback_args[i])
                 else:
                     raise ValueError(

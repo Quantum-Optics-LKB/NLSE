@@ -15,7 +15,7 @@ from scipy import signal
 from scipy import special
 from . import kernels_cpu
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
-from typing import Union
+from typing import Union, Callable
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
@@ -422,9 +422,9 @@ class NLSE:
                 pbar.update(1)
             self.split_step(A, V, self.propagator, self.plans, precision)
             if callback is not None:
-                if isinstance(callback, callable):
-                    callback(self, A, z, *callback_args)
-                elif isinstance(callback, list):
+                if isinstance(callback, Callable):
+                    callback(self, A, z, i, *callback_args)
+                elif isinstance(callback, list[Callable]):
                     for i, c in callback:
                         c(self, A, z, i, *callback_args[i])
                 else:

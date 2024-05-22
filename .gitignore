@@ -74,3 +74,12 @@ tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
 build/lib/NLSE/nlse_3d.py
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+build/lib/NLSE/ddgpe.py
+tests/__pycache__/test_broadcasting.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_cnlse.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_gpe.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_nlse_1d.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_nlse.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_nlse3d.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_nonlocality.cpython-310-pytest-8.2.0.pyc

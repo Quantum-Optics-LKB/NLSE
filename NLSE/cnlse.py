@@ -200,6 +200,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -210,6 +211,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -222,6 +224,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -233,6 +236,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
@@ -271,6 +275,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -281,6 +286,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -293,6 +299,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -304,6 +311,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
@@ -322,6 +330,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -332,6 +341,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -344,6 +354,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -355,6 +366,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
                 A1_old = A1.copy()

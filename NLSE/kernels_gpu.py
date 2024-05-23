@@ -71,7 +71,8 @@ def nl_prop_c(
     V: cp.ndarray,
     g11: float,
     g12: float,
-    Isat: float,
+    Isat1: float,
+    Isat2: float,
 ) -> None:
     """A fused kernel to apply real space terms
     Args:
@@ -83,14 +84,16 @@ def nl_prop_c(
         V (cp.ndarray): Potential
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
-        Isat (float): Saturation parameter of intra-component interaction
+        Isat1 (float): Saturation parameter of first component
+        Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    sat = 1 / (1 + A_sq_1 / Isat)
+    sat1 = 1 / (1 + A_sq_1 / Isat1)
+    sat2 = 1 / (1 + A_sq_2 / Isat2)
     # Interactions
-    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2)
+    arg = 1j * (g11 * A_sq_1 * sat1 + g12 * A_sq_2 * sat2)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha / 2 * sat1
     # Potential
     arg += 1j * V
     A1 *= cp.exp(dz * arg)
@@ -105,7 +108,8 @@ def nl_prop_without_V_c(
     alpha: float,
     g11: float,
     g12: float,
-    Isat: float,
+    Isat1: float,
+    Isat2: float,
 ) -> None:
     """A fused kernel to apply real space terms
     Args:
@@ -116,14 +120,16 @@ def nl_prop_without_V_c(
         alpha (float): Losses
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
-        Isat (float): Saturation parameter of intra-component interaction
+        Isat1 (float): Saturation parameter of first component
+        Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    sat = 1 / (1 + A_sq_1 / Isat)
+    sat1 = 1 / (1 + A_sq_1 / Isat1)
+    sat2 = 1 / (1 + A_sq_2 / Isat2)
     # Interactions
-    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2)
+    arg = 1j * (g11 * A_sq_1 * sat1 + g12 * A_sq_2 * sat2)
     # Losses
-    arg -= alpha / 2 * sat
+    arg += -alpha / 2 * sat1
     A1 *= cp.exp(dz * arg)
 
 

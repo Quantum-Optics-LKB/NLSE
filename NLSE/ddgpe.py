@@ -20,8 +20,9 @@ class DDGPE(CNLSE):
         g: float,
         omega: float,
         T: float,
-        m: float = np.inf,
-        m2: float = 2 * np.pi / 800e-9,
+        omega_exc: float,
+        omega_cav: float,
+        k_z: float,
         V: np.ndarray = None,
         g12: float = 0,
         NX: int = 1024,
@@ -65,22 +66,22 @@ class DDGPE(CNLSE):
             NY=NY,
             Isat=Isat,
             nl_length=nl_length,
-            wvl=2 * np.pi / m + 1e-30,
+            wvl=1e-30,
             omega=omega,
             backend=backend,
         )
         self.g = self.n2
         self.g12 = self.n12
         self.g2 = self.n22
-        self.m = m
-        self.m2 = m2
-        self.omega0_photon = 0
+        self.omega_exc = omega_exc
+        self.omega_cav = omega_cav
+        self.k_z = k_z
         self.gamma = gamma
         self.gamma2 = self.gamma
-
+        
     @staticmethod
     def add_noise(
-        simu: object, A: np.ndarray, t: float, i: int, *args, **kwargs
+        simu: object, A: np.ndarray, t: float, i: int, noise:float = 0, noise1:float = 0, **kwargs
     ) -> None:
         """Add noise to the propagation step.
 
@@ -92,13 +93,32 @@ class DDGPE(CNLSE):
             t (float): Propagation time in s.
             i (int): Propagation step.
         """
-        # do something like A += np.random.normal(0, 1e-3, A.shape)
-        # will certainly benefit from kernel fusion
-        pass
+        if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
+            rand1 = cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64) + 1j * cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64)
+            rand2 = cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64) + 1j * cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64)
+            A[...,0,:,:] += noise * cp.sqrt(simu.gamma / (4 * (simu.delta_X*simu.delta_Y))) * rand1
+            A[...,1,:,:] += noise * cp.sqrt((simu.gamma2) / (4 * (simu.delta_X*simu.delta_Y))) * rand2
 
+        else:
+            rand1 = np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX)) + 1j * np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX))
+            rand2 = np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX)) + 1j * np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX))
+            A[...,0,:,:] += noise * np.sqrt(simu.gamma / (4 * (simu.delta_X*simu.delta_Y))) * rand1
+            A[...,1,:,:] += noise * np.sqrt((simu.gamma2) / (4 * (simu.delta_X*simu.delta_Y))) * rand2
+    
     @staticmethod
-    def pump(simu: object, A: np.ndarray, t: float, i: int, *args, **kwargs) -> None:
-        """Add the pump laser.
+    def laser_excitation(simu: object, 
+            A: np.ndarray, 
+            t: float, 
+            i: int, 
+            F_pump: float,
+            F_pump_r: cp.ndarray, 
+            F_pump_t: float, 
+            F_probe: float = 0, 
+            F_probe_r: cp.ndarray = 0, 
+            F_probe_t: cp.ndarray = 0, 
+            **kwargs 
+    )-> None:
+        """Add the pump and probe laser.
 
         Args:
             simu (object): _description_
@@ -106,22 +126,29 @@ class DDGPE(CNLSE):
             t (float): _description_
             i (int): _description_
         """
-        pass
-
+        if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
+            A[...,1,:,:] -= cp.asarray(F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j)
+            if F_probe!=0:
+                A[...,1,:,:] -= cp.asarray(F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j)
+        else:
+            A[...,1,:,:] -= F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j
+            if F_probe!=0:
+                A[...,1,:,:] -= F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
+        
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
 
-        Args:
-            omega (float): Arbitrary frequency offset.
         Returns:
             np.ndarray: A tuple of linear propagators for each component.
         """
         propagator1 = np.exp(
-            -1j * 0.5 * (self.Kxx**2 + self.Kyy**2) / self.m * self.delta_z
+            -1j 
+            * self.omega_exc * (1 + 0*self.Kxx**2)
+            * self.delta_z
         ).astype(np.complex64)
         propagator2 = np.exp(
             -1j
-            * (0.5 * (self.Kxx**2 + self.Kyy**2) / self.m2 + self.omega0_photon)
+            * self.omega_cav * (1 + 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k_z**2)
             * self.delta_z
         ).astype(np.complex64)
         return np.array([propagator1, propagator2])
@@ -149,7 +176,7 @@ class DDGPE(CNLSE):
     def split_step(
         self,
         A: np.ndarray,
-        V: Union[np.ndarray, None],
+        V: np.ndarray,
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",
@@ -372,12 +399,12 @@ class DDGPE(CNLSE):
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(2, 2, layout="constrained")
-        fig.suptitle(rf"Field at $t$ = {t*1e12:.2e} ps")
+        fig.suptitle(rf"Field at $t$ = {t:} ps")
         ext_real = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
-            self.Y[0] * 1e3,
-            self.Y[-1] * 1e3,
+            self.X[0],
+            self.X[-1],
+            self.Y[0],
+            self.Y[-1],
         ]
         rho0 = np.abs(A_plot[0]) ** 2
         phi0 = np.angle(A_plot[0])
@@ -418,11 +445,9 @@ class DDGPE(CNLSE):
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callbacks: Union[list[callable], callable] = None,
-        callback_args: Union[list[tuple], tuple] = (),
+        callbacks: Union[list[callable], callable] = [],
+        callback_args: Union[list[tuple], tuple] = [],
     ) -> np.ndarray:
-        callbacks.append(self.add_noise)
-        callbacks.append(self.pump)
         super().out_field(
             E_in=E_in,
             z=z,
@@ -430,6 +455,6 @@ class DDGPE(CNLSE):
             precision=precision,
             verbose=verbose,
             normalize=normalize,
-            callbacks=callbacks,
+            callback=callbacks,
             callback_args=callback_args,
         )

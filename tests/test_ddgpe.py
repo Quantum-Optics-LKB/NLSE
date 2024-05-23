@@ -2,6 +2,9 @@ from NLSE import DDGPE
 import numpy as np
 import cupy as cp
 
+if DDGPE.__CUPY_AVAILABLE__:
+    import cupy as cp
+
 def turn_on(
     F_laser_t: np.ndarray, 
     time: np.ndarray, 
@@ -27,7 +30,7 @@ def main():
     g0 = (1e-2) /h_bar  # (frequency/density) (meV/hbar)/(1/um^2) nonlinear coupling constant 
     omega_exc = 1484.44 /h_bar # (meV/h_bar) exciton energy measured from the cavity energy #-0.5
     omega_cav = 1482.76 /h_bar # (meV/h_bar) cavity energy at k=0  original value: 1482.76 /h_bar
-    omega_lp = (omega_exc + omega_cav) / 2 - 0.5 * np.sqrt((omega_exc - omega_cav) ** 2 + (omega) ** 2)
+    omega_lp = (omega_exc + omega_cav) / 2 - 0.5 * np.sqrt((omega_exc - omega_cav) ** 2 + 4 * (omega) ** 2)
     detuning = 0.17/h_bar
     omega_pump = omega_lp + detuning
     omega_exc-=omega_pump

@@ -1,6 +1,5 @@
 from NLSE import DDGPE
 import numpy as np
-import cupy as cp
 
 if DDGPE.__CUPY_AVAILABLE__:
     import cupy as cp

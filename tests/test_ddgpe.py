@@ -17,6 +17,8 @@ def turn_on(
     F_laser_t[time < t_up] = np.exp(-1 * (time[time < t_up] - t_up)**2 / (t_up / 2))
     F_laser_t[time >= t_up] = 1
 
+
+
 def main():
     
     h_bar = 0.654 # (meV*ps)
@@ -31,33 +33,29 @@ def main():
     omega_exc-=omega_pump
     omega_cav-=omega_pump
     k_z = 27
-    gamma = 0.07 / h_bar
+    gamma = 10 * 0.07 / h_bar
     puiss = 1
     waist = 50
     window = 4*waist
     g = 1e-2
-    T = 5e2
+    T = 6e2
     
     dd = DDGPE(gamma, puiss, window, g, omega, T, omega_exc, omega_cav, k_z, NX=256, NY=256)
-    dd.delta_z = 2000/130000
+    
+    dd.delta_z = 2000/130000 #need to be adjusted automatically
+    
     E0 = np.zeros((2, dd.NY, dd.NX), dtype=np.complex64)
     F_pump = 3
-    # F_pump_r = np.ones((dd.NY, dd.NX), dtype=np.complex64)
-    # F_pump_r[dd.XX**2 + dd.YY**2 > waist**2] = 0
     F_pump_r = np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
-
     time = np.arange(
             dd.delta_z, T + dd.delta_z, step=dd.delta_z, dtype=E0.real.dtype
         )
-    
     F_pump_t = np.ones(time.shape, dtype=np.complex64)
     turn_on(F_pump_t, time)
     
-    callbacks = [DDGPE.laser_excitation, DDGPE.add_noise]
-    callback_args_laser = (F_pump, F_pump_r, F_pump_t)
-    callback_args_noise = (0, 0)
-    callback_args = [callback_args_laser, callback_args_noise]
-    dd.out_field(E0, T, plot=True, callbacks=callbacks, callback_args=callback_args)
+    callback = [DDGPE.add_noise]
+    callback_args = [(0, 0)]
+    dd.out_field(E0, F_pump, F_pump_r, F_pump_t, T, plot=True, callback=callback, callback_args=callback_args)
 
 if __name__ == "__main__":
     main()

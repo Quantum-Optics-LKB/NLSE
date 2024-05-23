@@ -111,11 +111,11 @@ class DDGPE(CNLSE):
             t: float, 
             i: int, 
             F_pump: float,
-            F_pump_r: cp.ndarray, 
+            F_pump_r: np.ndarray, 
             F_pump_t: float, 
             F_probe: float = 0, 
-            F_probe_r: cp.ndarray = 0, 
-            F_probe_t: cp.ndarray = 0, 
+            F_probe_r: np.ndarray = 0, 
+            F_probe_t: np.ndarray = 0, 
             **kwargs 
     )-> None:
         """Add the pump and probe laser.
@@ -440,14 +440,19 @@ class DDGPE(CNLSE):
     def out_field(
         self,
         E_in: np.ndarray,
+        F_pump: float,
+        F_pump_r: np.ndarray,
+        F_pump_t: np.ndarray,
         z: float,
         plot: bool = False,
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callbacks: Union[list[callable], callable] = [],
+        callback: Union[list[callable], callable] = [],
         callback_args: Union[list[tuple], tuple] = [],
     ) -> np.ndarray:
+        callback.append(self.laser_excitation)
+        callback_args.append((F_pump, F_pump_r, F_pump_t))
         super().out_field(
             E_in=E_in,
             z=z,
@@ -455,6 +460,6 @@ class DDGPE(CNLSE):
             precision=precision,
             verbose=verbose,
             normalize=normalize,
-            callback=callbacks,
+            callback=callback,
             callback_args=callback_args,
         )

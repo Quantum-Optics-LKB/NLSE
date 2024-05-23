@@ -22,6 +22,7 @@ class DDGPE(CNLSE):
         T: float,
         omega_exc: float,
         omega_cav: float,
+        detuning: float,
         k_z: float,
         V: np.ndarray = None,
         g12: float = 0,
@@ -58,7 +59,7 @@ class DDGPE(CNLSE):
             alpha=gamma,
             puiss=puiss,
             window=window,
-            n2=g,
+            n2=-g,
             n12=g12,
             V=V,
             L=T,
@@ -72,13 +73,16 @@ class DDGPE(CNLSE):
         )
         self.g = self.n2
         self.g12 = self.n12
-        self.g2 = self.n22
-        self.omega_exc = omega_exc
-        self.omega_cav = omega_cav
+        self.g2 = 0
         self.k_z = k_z
         self.gamma = gamma
         self.gamma2 = self.gamma
-        
+        self.omega_exc = omega_exc
+        self.omega_cav = omega_cav
+        self.detuning = detuning
+        omega_lp = (omega_exc + omega_cav) / 2 - 0.5 * np.sqrt((omega_exc - omega_cav) ** 2 + (omega) ** 2)
+        self.omega_pump = omega_lp + detuning
+
     @staticmethod
     def add_noise(
         simu: object, A: np.ndarray, t: float, i: int, noise:float = 0, noise1:float = 0, **kwargs
@@ -112,8 +116,8 @@ class DDGPE(CNLSE):
             i: int, 
             F_pump: float,
             F_pump_r: np.ndarray, 
-            F_pump_t: float, 
-            F_probe: float = 0, 
+            F_pump_t: float,
+            F_probe: float = 0,
             F_probe_r: np.ndarray = 0, 
             F_probe_t: np.ndarray = 0, 
             **kwargs 
@@ -135,6 +139,26 @@ class DDGPE(CNLSE):
             if F_probe!=0:
                 A[...,1,:,:] -= F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
         
+    @staticmethod
+    def boundary_losses(simu: object, 
+            A: np.ndarray, 
+            t: float, 
+            i: int, 
+            v_gamma: np.ndarray,
+            **kwargs 
+    )-> None:
+        """A fused kernel to apply the potential term
+
+        Args:
+            phi_cav (cp.ndarray): Photon field in ph,exc basis
+            dz (float): Propagation step in ps
+            v_gamma (np.ndarray): Loss at the edges of the grid and optical defects
+        """
+        if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
+            A[...,1,:,:] *= cp.exp(-simu.delta_z * 0.5 * cp.asarray(v_gamma))
+        else:
+            A[...,1,:,:] *= np.exp(-simu.delta_z * 0.5 * v_gamma)
+        
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
 
@@ -143,12 +167,12 @@ class DDGPE(CNLSE):
         """
         propagator1 = np.exp(
             -1j 
-            * self.omega_exc * (1 + 0*self.Kxx**2)
+            * (self.omega_exc * (1 + 0*self.Kxx**2) -self.omega_pump)
             * self.delta_z
         ).astype(np.complex64)
         propagator2 = np.exp(
             -1j
-            * self.omega_cav * (1 + 0.5 * (self.Kxx**2 + self.Kyy**2) / self.k_z**2)
+            * (self.omega_cav * np.sqrt(1 + (self.Kxx**2 + self.Kyy**2) / self.k_z**2) - self.omega_pump)
             * self.delta_z
         ).astype(np.complex64)
         return np.array([propagator1, propagator2])
@@ -452,7 +476,7 @@ class DDGPE(CNLSE):
         callback_args: Union[list[tuple], tuple] = [],
     ) -> np.ndarray:
         callback.append(self.laser_excitation)
-        callback_args.append((F_pump, F_pump_r, F_pump_t))
+        callback_args.append([F_pump, F_pump_r, F_pump_t])
         super().out_field(
             E_in=E_in,
             z=z,

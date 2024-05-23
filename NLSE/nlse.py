@@ -424,9 +424,9 @@ class NLSE:
             if callback is not None:
                 if isinstance(callback, Callable):
                     callback(self, A, z, i, *callback_args)
-                elif isinstance(callback, list[Callable]):
-                    for i, c in callback:
-                        c(self, A, z, i, *callback_args[i])
+                elif isinstance(callback, list) and isinstance(callback[0], Callable):
+                    for c, ca in zip(callback, callback_args):
+                        c(self, A, z, i, *ca)
                 else:
                     raise ValueError(
                         "callbacks should be a callable or a list of callables"

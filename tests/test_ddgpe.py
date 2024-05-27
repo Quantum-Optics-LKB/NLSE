@@ -35,12 +35,12 @@ def callback_sample(
     sample3: list,
 ) -> None:
     if i % save_every == 0:
-        sum_exc = cp.sum(A[..., 0, :, :].real ** 2 + A[..., 0, :, :].imag ** 2)
-        sum_cav = cp.sum(A[..., 1, :, :].real ** 2 + A[..., 1, :, :].imag ** 2)
+        sum_exc = (A[..., 0, :, :].real ** 2 + A[..., 0, :, :].imag ** 2).sum()
+        sum_cav = (A[..., 1, :, :].real ** 2 + A[..., 1, :, :].imag ** 2).sum()
         sum_tot = sum_exc + sum_cav
-        sample1.append(sum_exc.get())
-        sample2.append(sum_cav.get())
-        sample3.append(sum_tot.get())
+        sample1[i // save_every] = sum_exc
+        sample2[i // save_every] = sum_cav
+        sample3[i // save_every] = sum_tot
 
 
 def main():
@@ -78,7 +78,10 @@ def main():
 
     dd.delta_z = 0.1 / 32  # need to be adjusted automatically
     time = np.arange(dd.delta_z, T + dd.delta_z, step=dd.delta_z, dtype=np.float32)
-
+    save_every = 1  # np.argwhere(time == 1)[0][0]
+    sample1 = np.zeros(time.size // save_every, dtype=np.float32)
+    sample2 = np.zeros(time.size // save_every, dtype=np.float32)
+    sample3 = np.zeros(time.size // save_every, dtype=np.float32)
     E0 = np.zeros((2, dd.NY, dd.NX), dtype=np.complex64)
     E0[..., 0, :, :] = np.sqrt(detuning / g) * np.exp(-(dd.XX**2 + dd.YY**2) / waist**2)
 
@@ -86,10 +89,8 @@ def main():
     F_pump_r = np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
     F_pump_t = np.zeros(time.shape, dtype=np.complex64)
 
-    sample1, sample2, sample3 = [], [], []
     turn_on(F_pump_t, time, t_up=10)
 
-    save_every = 1  # np.argwhere(time == 1)[0][0]
     callback = [callback_sample]
     callback_args = [[save_every, sample1, sample2, sample3]]
     dd.out_field(

@@ -80,12 +80,20 @@ class DDGPE(CNLSE):
         self.omega_exc = omega_exc
         self.omega_cav = omega_cav
         self.detuning = detuning
-        omega_lp = (omega_exc + omega_cav) / 2 - 0.5 * np.sqrt((omega_exc - omega_cav) ** 2 + (omega) ** 2)
+        omega_lp = (omega_exc + omega_cav) / 2 - 0.5 * np.sqrt(
+            (omega_exc - omega_cav) ** 2 + (omega) ** 2
+        )
         self.omega_pump = omega_lp + detuning
 
     @staticmethod
     def add_noise(
-        simu: object, A: np.ndarray, t: float, i: int, noise:float = 0, noise1:float = 0, **kwargs
+        simu: object,
+        A: np.ndarray,
+        t: float,
+        i: int,
+        noise: float = 0,
+        noise1: float = 0,
+        **kwargs,
     ) -> None:
         """Add noise to the propagation step.
 
@@ -98,30 +106,63 @@ class DDGPE(CNLSE):
             i (int): Propagation step.
         """
         if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
-            rand1 = cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64) + 1j * cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64)
-            rand2 = cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64) + 1j * cp.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX), dtype = np.float64)
-            A[...,0,:,:] += noise * cp.sqrt(simu.gamma / (4 * (simu.delta_X*simu.delta_Y))) * rand1
-            A[...,1,:,:] += noise * cp.sqrt((simu.gamma2) / (4 * (simu.delta_X*simu.delta_Y))) * rand2
+            rand1 = cp.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
+            ) + 1j * cp.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
+            )
+            rand2 = cp.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
+            ) + 1j * cp.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
+            )
+            A[..., 0, :, :] += (
+                noise
+                * cp.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y)))
+                * rand1
+            )
+            A[..., 1, :, :] += (
+                noise
+                * cp.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y)))
+                * rand2
+            )
 
         else:
-            rand1 = np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX)) + 1j * np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX))
-            rand2 = np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX)) + 1j * np.random.normal(loc = 0, scale = simu.delta_z, size = (simu.NY, simu.NX))
-            A[...,0,:,:] += noise * np.sqrt(simu.gamma / (4 * (simu.delta_X*simu.delta_Y))) * rand1
-            A[...,1,:,:] += noise * np.sqrt((simu.gamma2) / (4 * (simu.delta_X*simu.delta_Y))) * rand2
-    
+            rand1 = np.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+            ) + 1j * np.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+            )
+            rand2 = np.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+            ) + 1j * np.random.normal(
+                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+            )
+            A[..., 0, :, :] += (
+                noise
+                * np.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y)))
+                * rand1
+            )
+            A[..., 1, :, :] += (
+                noise
+                * np.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y)))
+                * rand2
+            )
+
     @staticmethod
-    def laser_excitation(simu: object, 
-            A: np.ndarray, 
-            t: float, 
-            i: int, 
-            F_pump: float,
-            F_pump_r: np.ndarray, 
-            F_pump_t: float,
-            F_probe: float = 0,
-            F_probe_r: np.ndarray = 0, 
-            F_probe_t: np.ndarray = 0, 
-            **kwargs 
-    )-> None:
+    def laser_excitation(
+        simu: object,
+        A: np.ndarray,
+        t: float,
+        i: int,
+        F_pump: float,
+        F_pump_r: np.ndarray,
+        F_pump_t: float,
+        F_probe: float = 0,
+        F_probe_r: np.ndarray = 0,
+        F_probe_t: np.ndarray = 0,
+        **kwargs,
+    ) -> None:
         """Add the pump and probe laser.
 
         Args:
@@ -131,22 +172,24 @@ class DDGPE(CNLSE):
             i (int): _description_
         """
         if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
-            A[...,1,:,:] -= cp.asarray(F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j)
-            if F_probe!=0:
-                A[...,1,:,:] -= cp.asarray(F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j)
+            A[..., 1, :, :] -= cp.asarray(
+                F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j
+            )
+            if F_probe != 0:
+                A[..., 1, :, :] -= cp.asarray(
+                    F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
+                )
         else:
-            A[...,1,:,:] -= F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j
-            if F_probe!=0:
-                A[...,1,:,:] -= F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
-        
+            A[..., 1, :, :] -= F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j
+            if F_probe != 0:
+                A[..., 1, :, :] -= (
+                    F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
+                )
+
     @staticmethod
-    def boundary_losses(simu: object, 
-            A: np.ndarray, 
-            t: float, 
-            i: int, 
-            v_gamma: np.ndarray,
-            **kwargs 
-    )-> None:
+    def boundary_losses(
+        simu: object, A: np.ndarray, t: float, i: int, v_gamma: np.ndarray, **kwargs
+    ) -> None:
         """A fused kernel to apply the potential term
 
         Args:
@@ -155,10 +198,10 @@ class DDGPE(CNLSE):
             v_gamma (np.ndarray): Loss at the edges of the grid and optical defects
         """
         if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
-            A[...,1,:,:] *= cp.exp(-simu.delta_z * 0.5 * cp.asarray(v_gamma))
+            A[..., 1, :, :] *= cp.exp(-simu.delta_z * 0.5 * cp.asarray(v_gamma))
         else:
-            A[...,1,:,:] *= np.exp(-simu.delta_z * 0.5 * v_gamma)
-        
+            A[..., 1, :, :] *= np.exp(-simu.delta_z * 0.5 * v_gamma)
+
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
 
@@ -166,13 +209,16 @@ class DDGPE(CNLSE):
             np.ndarray: A tuple of linear propagators for each component.
         """
         propagator1 = np.exp(
-            -1j 
-            * (self.omega_exc * (1 + 0*self.Kxx**2) -self.omega_pump)
+            -1j
+            * (self.omega_exc * (1 + 0 * self.Kxx**2) - self.omega_pump)
             * self.delta_z
         ).astype(np.complex64)
         propagator2 = np.exp(
             -1j
-            * (self.omega_cav * np.sqrt(1 + (self.Kxx**2 + self.Kyy**2) / self.k_z**2) - self.omega_pump)
+            * (
+                self.omega_cav * np.sqrt(1 + (self.Kxx**2 + self.Kyy**2) / self.k_z**2)
+                - self.omega_pump
+            )
             * self.delta_z
         ).astype(np.complex64)
         return np.array([propagator1, propagator2])
@@ -248,6 +294,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -257,6 +304,7 @@ class DDGPE(CNLSE):
                     self.gamma2 / 2,
                     self.g,
                     self.g12,
+                    self.I_sat2,
                     self.I_sat,
                 )
             else:
@@ -270,6 +318,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -281,6 +330,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat2,
+                    self.I_sat,
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
@@ -319,6 +369,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -328,6 +379,7 @@ class DDGPE(CNLSE):
                     self.gamma2 / 2,
                     self.g,
                     self.g12,
+                    self.I_sat2,
                     self.I_sat,
                 )
             else:
@@ -341,6 +393,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -352,6 +405,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat2,
+                    self.I_sat,
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
@@ -370,6 +424,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -380,6 +435,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat2,
+                    self.I_sat,
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -392,6 +448,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -403,6 +460,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat2,
+                    self.I_sat,
                 )
             if self.omega is not None:
                 A1_old = A1.copy()

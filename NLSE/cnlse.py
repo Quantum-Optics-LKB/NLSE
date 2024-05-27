@@ -238,12 +238,6 @@ class CNLSE(NLSE):
                     2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-            if self.omega is not None:
-                A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self._kernels.rabi_coupling(
-                    A2, A1_old, self.delta_z / 2, self.omega / 2
-                )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
@@ -313,12 +307,6 @@ class CNLSE(NLSE):
                     2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-            if self.omega is not None:
-                A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self._kernels.rabi_coupling(
-                    A2, A1_old, self.delta_z / 2, self.omega / 2
-                )
         else:
             if V is None:
                 self._kernels.nl_prop_without_V_c(
@@ -370,8 +358,8 @@ class CNLSE(NLSE):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
-                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega)
+                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega)
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.

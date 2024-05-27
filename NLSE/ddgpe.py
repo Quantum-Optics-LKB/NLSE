@@ -332,12 +332,6 @@ class DDGPE(CNLSE):
                     self.I_sat2,
                     self.I_sat,
                 )
-            if self.omega is not None:
-                A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self._kernels.rabi_coupling(
-                    A2, A1_old, self.delta_z / 2, self.omega / 2
-                )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
@@ -406,12 +400,6 @@ class DDGPE(CNLSE):
                     self.g12,
                     self.I_sat2,
                     self.I_sat,
-                )
-            if self.omega is not None:
-                A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z / 2, self.omega / 2)
-                self._kernels.rabi_coupling(
-                    A2, A1_old, self.delta_z / 2, self.omega / 2
                 )
         else:
             if V is None:

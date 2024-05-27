@@ -218,7 +218,7 @@ class CNLSE(NLSE):
                     A1,
                     A_sq_1,
                     A_sq_2,
-                    self.delta_z,
+                    self.delta_z / 2,
                     self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
@@ -230,7 +230,7 @@ class CNLSE(NLSE):
                     A2,
                     A_sq_2,
                     A_sq_1,
-                    self.delta_z,
+                    self.delta_z / 2,
                     self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
@@ -287,7 +287,7 @@ class CNLSE(NLSE):
                     A1,
                     A_sq_1,
                     A_sq_2,
-                    self.delta_z,
+                    self.delta_z / 2,
                     self.alpha / 2,
                     self.k / 2 * V,
                     self.k / 2 * self.n2 * c * epsilon_0,
@@ -299,7 +299,7 @@ class CNLSE(NLSE):
                     A2,
                     A_sq_2,
                     A_sq_1,
-                    self.delta_z,
+                    self.delta_z / 2,
                     self.alpha2 / 2,
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
@@ -358,8 +358,8 @@ class CNLSE(NLSE):
                 )
             if self.omega is not None:
                 A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega)
-                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.

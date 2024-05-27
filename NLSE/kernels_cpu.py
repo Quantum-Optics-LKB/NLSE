@@ -157,8 +157,10 @@ def rabi_coupling(A1: np.ndarray, A2: np.ndarray, dz: float, omega: float) -> No
     """
     A1 = A1.ravel()
     A2 = A2.ravel()
+    A1_old = A1.copy()
     for i in numba.prange(A1.size):
         A1[i] = np.cos(omega * dz) * A1[i] - 1j * np.sin(omega * dz) * A2[i]
+        A2[i] = np.cos(omega * dz) * A2[i] - 1j * np.sin(omega * dz) * A1_old[i]
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)

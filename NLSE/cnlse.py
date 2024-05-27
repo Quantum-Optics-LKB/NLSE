@@ -357,9 +357,7 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
-                A1_old = A1.copy()
-                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
-                self._kernels.rabi_coupling(A2, A1_old, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A, self.delta_z, self.omega / 2)
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.

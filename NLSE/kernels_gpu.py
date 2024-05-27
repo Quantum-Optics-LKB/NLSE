@@ -145,7 +145,8 @@ def rabi_coupling(A1: cp.ndarray, A2: cp.ndarray, dz: float, omega: float) -> No
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
-    A1 += 1j * omega * A2 * dz
+    # A1 += 1j * omega * A2 * dz
+    A1 += cp.cos(omega * dz) * A1 + 1j * cp.sin(omega * dz) * A2
 
 
 @cp.fuse(kernel_name="vortex_cp")

@@ -158,7 +158,8 @@ def rabi_coupling(A1: np.ndarray, A2: np.ndarray, dz: float, omega: float) -> No
     A1 = A1.ravel()
     A2 = A2.ravel()
     for i in numba.prange(A1.size):
-        A1[i] += 1j * omega * A2[i] * dz
+        # A1[i] += 1j * omega * A2[i] * dz
+        A1[i] += np.cos(omega * dz) * A1[i] + 1j * np.sin(omega * dz) * A2[i]
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)

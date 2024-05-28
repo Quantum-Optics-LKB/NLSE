@@ -37,7 +37,7 @@ mkdocs, version 1.2.0 from /usr/local/lib/python3.8/site-packages/mkdocs (Python
 
 ### Extra packages
 
-You need to install packages to support the markdown extensions used in the documentation. You can install these using pip:
+You need to install packages to support the markdown extensions : [mkdocstrings](https://pypi.org/project/mkdocstrings/) and [mkdocs-jupyter](https://github.com/danielfrg/mkdocs-jupyter) used in the documentation. You can install these using pip:
 
 ```
 pip install mkdocs-jupyter

@@ -88,17 +88,27 @@ def main():
     F_pump = 0
     F_pump_r = F_pump * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
     F_pump_t = np.zeros(time.shape, dtype=np.complex64)
-
+    F_probe = 0
+    F_probe_r = F_probe * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(
+        np.complex64
+    )
+    F_probe_t = np.zeros(time.shape, dtype=np.complex64)
     turn_on(F_pump_t, time, t_up=10)
 
     callback = [callback_sample]
-    callback_args = [[save_every, sample1, sample2, sample3]]
+    callback_args = [
+        [
+            cp.asarray(F_pump_r),
+            cp.asarray(F_pump_t),
+            cp.asarray(F_probe_r),
+            cp.asarray(F_probe_t),
+        ],
+        [save_every, sample1, sample2, sample3],
+    ]
     dd.out_field(
         E0,
-        F_pump,
-        F_pump_r,
-        F_pump_t,
         T,
+        dd.laser_excitation,
         plot=True,
         callback=callback,
         callback_args=callback_args,

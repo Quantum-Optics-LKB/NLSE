@@ -452,7 +452,6 @@ class DDGPE(CNLSE):
         plot: bool = False,
         precision: str = "single",
         verbose: bool = True,
-        normalize: bool = True,
         callback: Union[list[callable], callable] = None,
         callback_args: Union[list[tuple], tuple] = None,
     ) -> np.ndarray:
@@ -470,8 +469,6 @@ class DDGPE(CNLSE):
             precision (str, optional): Whether to apply the nonlinear terms in a
             single or double step. Defaults to "single".
             verbose (bool, optional): Whether to print progress. Defaults to True.
-            normalize (bool, optional): Whether to normalize the input field to the
-            total particle number. Defaults to True.
             callback (Union[list[callable], callable], optional): A list of functions
             to execute at every solver step. Defaults to None.
             callback_args (Union[list[tuple], tuple], optional): A list of callback
@@ -481,14 +478,16 @@ class DDGPE(CNLSE):
             np.ndarray: _description_
         """
         if laser_excitation is None:
-            callback.append(self.laser_excitation)
+            callback.insert(0, self.laser_excitation)
+        else:
+            callback.insert(0, laser_excitation)
         super().out_field(
             E_in=E_in,
             z=t,
             plot=plot,
             precision=precision,
             verbose=verbose,
-            normalize=normalize,
+            normalize=False,
             callback=callback,
             callback_args=callback_args,
         )

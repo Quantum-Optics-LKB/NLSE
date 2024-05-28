@@ -16,6 +16,7 @@ waist2 = 70e-6
 window = 4 * waist
 puiss = 1.05
 Isat = 10e4  # saturation intensity in W/m^2
+Isat2 = waist / waist2 * Isat
 L = 1e-3
 alpha = 20
 
@@ -284,6 +285,7 @@ def main():
         simu_c.delta_z = 0.5e-4
         simu_c.puiss2 = 10e-3
         simu_c.n22 = 1e-10
+        simu_c.I_sat2 = Isat2
         simu_c.k2 = 2 * np.pi / 795e-9
         E_0 = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist**2).astype(
             PRECISION_COMPLEX

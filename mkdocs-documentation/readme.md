@@ -80,15 +80,4 @@ That's looking good. You're ready to deploy the first pass of your MkLorum docum
 mkdocs build
 ```
 
-# This will create a new directory, named `site`.
-
-# Documentation of NLSE
-
-## Installation
-
-pip install mkdocs
-
-## Dev server
-
-To launch the dev server : mkdocs serve
-Then go to [Here](http://127.0.0.1:8000/)
+This will create a new directory, named `site`.

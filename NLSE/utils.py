@@ -1,23 +1,23 @@
 __BACKEND__ = "GPU"
 
-if __BACKEND__ == "GPU":
-    try:
-        import cupy
 
-        __CUPY_AVAILABLE__ = True
+try:
+    import cupy
 
-    except ImportError:
-        print("CuPy not available, falling back to CPU BACKEND ...")
-        __CUPY_AVAILABLE__ = False
-        __BACKEND__ = "CPU"
+    __CUPY_AVAILABLE__ = True
 
-if __BACKEND__ == "CL":
-    try:
-        import pyopencl
+except ImportError:
+    print("CuPy not available, falling back to CPU BACKEND ...")
+    __CUPY_AVAILABLE__ = False
+    __BACKEND__ = "CPU"
 
-        __PYOPENCL_AVAILABLE__ = True
 
-    except ImportError:
-        print("PyOpenCL not available, falling back to CPU BACKEND ...")
-        __PYOPENCL_AVAILABLE__ = False
-        __BACKEND__ = "CPU"
+try:
+    import pyopencl
+
+    __PYOPENCL_AVAILABLE__ = True
+
+except ImportError:
+    print("PyOpenCL not available, falling back to CPU BACKEND ...")
+    __PYOPENCL_AVAILABLE__ = False
+    __BACKEND__ = "CPU"

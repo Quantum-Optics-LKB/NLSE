@@ -19,13 +19,14 @@ from typing import Union, Callable
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
-    from pyvkfft.cuda import VkFFTApp
+    from pyvkfft.cuda import VkFFTApp as VkFFTApp_cuda
     import cupyx.scipy.signal as signal_cp
     from . import kernels_gpu
 
 if __PYOPENCL_AVAILABLE__:
     import pyopencl as cl
-    from pyopencl.array import cla
+    from pyopencl import array as cla
+    from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
     from . import kernels_cl
 
 pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
@@ -162,7 +163,7 @@ class NLSE:
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             stream = cp.cuda.get_current_stream()
-            plan_fft = VkFFTApp(
+            plan_fft = VkFFTApp_cuda(
                 A.shape,
                 A.dtype,
                 ndim=len(self._last_axes),
@@ -172,7 +173,17 @@ class NLSE:
                 tune=True,
             )
             return [plan_fft]
-
+        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+            plan_fft = VkFFTApp_cl(
+                A.shape,
+                A.dtype,
+                ndim=len(self._last_axes),
+                queue=self._cl_queue,
+                inplace=True,
+                norm=1,
+                tune=True,
+            )
+            return [plan_fft]
         else:
             # try to load previous fftw wisdom
             try:
@@ -212,6 +223,9 @@ class NLSE:
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
             E_in = cp.asarray(E_in)
+        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+            A = cla.empty_like(E_in)
+            E_in = cla.to_device(self._cl_queue, E_in)
         else:
             A = pyfftw.empty_aligned(
                 E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment

@@ -255,6 +255,7 @@ class NLSE:
     def split_step(
         self,
         A: np.ndarray,
+        A_sq: np.ndarray,
         V: Union[np.ndarray, None],
         propagator: np.ndarray,
         plans: list,
@@ -264,6 +265,7 @@ class NLSE:
 
         Args:
             A (np.ndarray): Field to propagate
+            A_sq (np.ndarray): Field modulus squared.
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
             plans (list): List of FFT plan objects. Either a single FFT plan for
@@ -279,9 +281,9 @@ class NLSE:
         else:
             plan_fft, plan_ifft = plans
         if precision == "double":
-            A_sq = A.real * A.real + A.imag * A.imag
+            self._kernels.square_mod(A, A_sq)
             if self.nl_length > 0:
-                A_sq = self._convolution(
+                A_sq[:] = self._convolution(
                     A_sq, self.nl_profile, mode="same", axes=self._last_axes
                 )
             if V is None:
@@ -312,9 +314,9 @@ class NLSE:
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
-        A_sq = A.real * A.real + A.imag * A.imag
+        self._kernels.square_mod(A, A_sq)
         if self.nl_length > 0:
-            A_sq = self._convolution(
+            A_sq[:] = self._convolution(
                 A_sq, self.nl_profile, mode="same", axes=self._last_axes
             )
         if precision == "double":
@@ -397,6 +399,7 @@ class NLSE:
             self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
         )
         A = self._prepare_output_array(E_in, normalize)
+        A_sq = A.copy().real
         self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:
@@ -420,7 +423,7 @@ class NLSE:
                 self.n2 = 0
             if verbose:
                 pbar.update(1)
-            self.split_step(A, V, self.propagator, self.plans, precision)
+            self.split_step(A, A_sq, V, self.propagator, self.plans, precision)
             if callback is not None:
                 if isinstance(callback, Callable):
                     callback(self, A, z, i, *callback_args)

@@ -73,8 +73,7 @@ def nl_prop_c(
     V: np.ndarray,
     g11: float,
     g12: float,
-    Isat1: float,
-    Isat2: float,
+    Isat: float,
 ) -> None:
     """A fused kernel to apply real space terms
     Args:
@@ -94,12 +93,11 @@ def nl_prop_c(
     A_sq_2 = A_sq_2.ravel()
     for i in numba.prange(A1.size):
         # Saturation parameter
-        sat1 = 1 / (1 + A_sq_1[i] / Isat1)
-        sat2 = 1 / (1 + A_sq_2[i] / Isat2)
+        sat = 1 / (1 + A_sq_1[i] / Isat)
         # Losses
-        arg = -alpha / 2 * sat1
+        arg = -alpha / 2 * sat
         # Interactions
-        arg += 1j * (g11 * A_sq_1[i] * sat1 + g12 * A_sq_2[i] * sat2)
+        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i] * sat)
         # Potential
         arg += 1j * V[i]
         A1[i] *= np.exp(dz * arg)
@@ -114,8 +112,7 @@ def nl_prop_without_V_c(
     alpha: float,
     g11: float,
     g12: float,
-    Isat1: float,
-    Isat2: float,
+    Isat: float,
 ) -> None:
     """A fused kernel to apply real space terms
     Args:
@@ -134,12 +131,11 @@ def nl_prop_without_V_c(
     A_sq_2 = A_sq_2.ravel()
     for i in numba.prange(A1.size):
         # Saturation parameter
-        sat1 = 1 / (1 + A_sq_1[i] / Isat1)
-        sat2 = 1 / (1 + A_sq_2[i] / Isat2)
+        sat = 1 / (1 + A_sq_1[i] / Isat)
         # Losses
-        arg = -alpha / 2 * sat1
+        arg = -alpha / 2 * sat
         # Interactions
-        arg += 1j * (g11 * A_sq_1[i] * sat1 + g12 * A_sq_2[i] * sat2)
+        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i] * sat)
         A1[i] *= np.exp(dz * arg)
 
 

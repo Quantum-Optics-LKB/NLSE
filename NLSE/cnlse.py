@@ -67,7 +67,6 @@ class CNLSE(NLSE):
             backend=backend,
         )
         self.n12 = n12
-        self.I_sat2 = self.I_sat
         # initialize intra component 2 interaction parameter
         # to be the same as intra component 1
         self.n22 = self.n2
@@ -152,6 +151,7 @@ class CNLSE(NLSE):
     def split_step(
         self,
         A: np.ndarray,
+        A_sq: np.ndarray,
         V: Union[np.ndarray, None],
         propagator: np.ndarray,
         plans: list,
@@ -161,6 +161,7 @@ class CNLSE(NLSE):
 
         Args:
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
+            A_sq (np.ndarray): Intensity of the fields.
             V (np.ndarray): Potential field (can be None).
             propagator1 (np.ndarray): Propagator matrix for field 1.
             propagator2 (np.ndarray): Propagator matrix for field 2.
@@ -180,8 +181,8 @@ class CNLSE(NLSE):
             plan_fft, plan_ifft = plans
         A1, A2 = self._take_components(A)
         if precision == "double":
-            A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
-            A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
+            self._kernels.square_mod(A, A_sq)
+            A_sq_1, A_sq_2 = self._take_components(A_sq)
             if self.nl_length > 0:
                 A_sq_1 = self._convolution(
                     A_sq_1, self.nl_profile, mode="same", axes=self._last_axes
@@ -200,7 +201,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
-                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -210,7 +210,6 @@ class CNLSE(NLSE):
                     self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
@@ -224,7 +223,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
-                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -235,7 +233,6 @@ class CNLSE(NLSE):
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
@@ -249,8 +246,8 @@ class CNLSE(NLSE):
             np.multiply(A, propagator, out=A)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         # fft normalization
-        A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
-        A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
+        self._kernels.square_mod(A, A_sq)
+        A_sq_1, A_sq_2 = self._take_components(A_sq)
         if self.nl_length > 0:
             A_sq_1 = self._convolution(
                 A_sq_1, self.nl_profile, mode="same", axes=self._last_axes
@@ -269,7 +266,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
-                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -279,7 +275,6 @@ class CNLSE(NLSE):
                     self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
@@ -293,7 +288,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
-                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -304,7 +298,6 @@ class CNLSE(NLSE):
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         else:
@@ -318,7 +311,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
-                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -328,7 +320,6 @@ class CNLSE(NLSE):
                     self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
@@ -342,7 +333,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
-                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -353,7 +343,6 @@ class CNLSE(NLSE):
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:

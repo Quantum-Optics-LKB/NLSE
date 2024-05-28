@@ -21,7 +21,7 @@ nav:
     - What is the Physics problem ?: 'physics_problem.md'
     - Tutorial on : 'tutorial.md'
   - How to:
-    - 'How to ?': 'how_to.md'
+    - How to ?: 'how_to.md'
   - Reference:
     - NLSE: reference.md
     - Coupled NLSE: cnlse.md

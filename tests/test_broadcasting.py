@@ -7,7 +7,7 @@ PRECISION_REAL = np.float32
 
 
 def test_broadcasting():
-    if __CUPY_AVAILABLE__:
+    if NLSE.__CUPY_AVAILABLE__:
         N = 2048
         n2 = np.zeros((10, 1, 1))
         n2[:, 0, 0] = np.linspace(-1.6e-9, -1e-10, 10)
@@ -25,7 +25,8 @@ def test_broadcasting():
             PRECISION_COMPLEX
         )
         simu.delta_z = 1e-4
-        simu.out_field(E_0, L, verbose=True, plot=False, precision="single")
+        E = simu.out_field(E_0, L, verbose=True, plot=False, precision="single")
+        assert E.shape == E_0.shape, "Output shape mismatch !"
     else:
         print("Broadcasting is only available for Cupy backend !")
 

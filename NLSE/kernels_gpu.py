@@ -30,7 +30,9 @@ def nl_prop(
     arg += -alpha / 2 * sat
     # Potential
     arg += 1j * V
-    A *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A *= arg
 
 
 @cp.fuse(kernel_name="nl_prop_without_V")
@@ -58,7 +60,9 @@ def nl_prop_without_V(
     arg = 1j * g * A_sq * sat
     # Losses
     arg += -alpha / 2 * sat
-    A *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A *= arg
 
 
 @cp.fuse(kernel_name="nl_prop_c")
@@ -83,17 +87,20 @@ def nl_prop_c(
         V (cp.ndarray): Potential
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
-        Isat (float): Saturation parameter of intra-component interaction
+        Isat1 (float): Saturation parameter of first component
+        Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    sat = 1 / (1 + A_sq_1 / Isat)
+    sat = 1 / (1 + (A_sq_1 + A_sq_2) / Isat)
     # Interactions
-    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2)
+    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
     arg += -alpha / 2 * sat
     # Potential
     arg += 1j * V
-    A1 *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A1 *= arg
 
 
 @cp.fuse(kernel_name="nl_prop_without_V_c")
@@ -116,19 +123,22 @@ def nl_prop_without_V_c(
         alpha (float): Losses
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
-        Isat (float): Saturation parameter of intra-component interaction
+        Isat1 (float): Saturation parameter of first component
+        Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    sat = 1 / (1 + A_sq_1 / Isat)
+    sat = 1 / (1 + (A_sq_1 + A_sa_2) / Isat)
     # Interactions
-    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2)
+    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg -= alpha / 2 * sat
-    A1 *= cp.exp(dz * arg)
+    arg += -alpha / 2 * sat
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A1 *= arg
 
 
 @cp.fuse(kernel_name="rabi_coupling")
-def rabi_coupling(A1: cp.ndarray, A2: cp.ndarray, dz: float, omega: float) -> None:
+def rabi_coupling(A, dz: float, omega: float) -> None:
     """Apply a Rabi coupling term.
     This function implements the Rabi hopping term.
     It exchanges density between the two components.
@@ -139,7 +149,11 @@ def rabi_coupling(A1: cp.ndarray, A2: cp.ndarray, dz: float, omega: float) -> No
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
-    A1 += 1j * omega * A2 * dz
+    A1 = A[..., 0, :, :]
+    A2 = A[..., 1, :, :]
+    A1_old = A1.copy()
+    A1[:] = cp.cos(omega * dz) * A1 - 1j * cp.sin(omega * dz) * A2
+    A2[:] = cp.cos(omega * dz) * A2 - 1j * cp.sin(omega * dz) * A1_old
 
 
 @cp.fuse(kernel_name="vortex_cp")
@@ -173,4 +187,4 @@ def square_mod(A: cp.ndarray, A_sq: cp.ndarray) -> None:
     Returns:
         None
     """
-    A_sq[:] = A.real * A.real + A.imag * A.imag
+    A_sq[:] = cp.abs(A) ** 2

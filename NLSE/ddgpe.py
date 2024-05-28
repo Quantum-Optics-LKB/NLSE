@@ -107,12 +107,12 @@ class DDGPE(CNLSE):
             t (float): Propagation time in s.
             i (int): Propagation step.
         """
-        rand1 = simu.normal(
+        rand1 = simu._random(
             loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-        ) + 1j * simu.normal(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
-        rand2 = simu.normal(
+        ) + 1j * simu._random(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
+        rand2 = simu._random(
             loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-        ) + 1j * simu.normal(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
+        ) + 1j * simu._random(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
         A[..., 0, :, :] += (
             noise * np.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y))) * rand1
         )

@@ -83,3 +83,5 @@ tests/__pycache__/test_nlse_1d.cpython-310-pytest-8.2.0.pyc
 tests/__pycache__/test_nlse.cpython-310-pytest-8.2.0.pyc
 tests/__pycache__/test_nlse3d.cpython-310-pytest-8.2.0.pyc
 tests/__pycache__/test_nonlocality.cpython-310-pytest-8.2.0.pyc
+mkdocs-documentation/site/
+

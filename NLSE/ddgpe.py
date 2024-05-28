@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyfftw
 from typing import Union
+from scipy.constants import hbar
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:
@@ -97,6 +98,25 @@ class DDGPE(CNLSE):
         i: int,
         noise: float = 0,
     ) -> None:
+=======
+            wvl=wvl,
+            omega=omega,
+            backend=backend,
+        )
+        self.alpha *= hbar
+        self.omega *= hbar
+        self.n2 *= hbar
+        self.n22 = 0
+        # k = 2 * np.pi / self.wvl = m
+
+     @staticmethod
+    def add_noise(
+        simu: object,
+        A: np.ndarray,
+        t: float,
+        i: int,
+        noise: float = 0,
+    ) -> None:
         """Add noise to the propagation step.
 
         Follows the callback convention of NLSE.
@@ -120,37 +140,6 @@ class DDGPE(CNLSE):
             noise * np.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y))) * rand2
         )
 
-    @staticmethod
-    def laser_excitation(
-        simu: object,
-        A: np.ndarray,
-        t: float,
-        i: int,
-        F_pump_r: np.ndarray,
-        F_pump_t: np.ndarray,
-        F_probe_r: np.ndarray,
-        F_probe_t: np.ndarray,
-    ) -> None:
-        """Add the pump and probe laser.
-
-        This function adds a pump field with a spatial profile F_pump_r and a temporal
-        profile F_pump_t and a probe field with a spatial profile F_probe_r and a
-        temporal profile F_probe_t. The pump and probe fields are added to the
-        cavity field at each propagation step.
-
-        Args:
-            simu (object): The simulation object.
-            A (np.ndarray): The field array.
-            t (float): The current solver time.
-            i (int): The current solver step.
-            F_pump_r (np.ndarray): The spatial profile of the pump field.
-            F_pump_t (np.ndarray): The temporal profile of the pump field.
-            F_probe_r (np.ndarray): The spatial profile of the probe field.
-            F_probe_t (np.ndarray): The temporal profile of the probe field.
-        """
-        A[..., 1, :, :] -= F_pump_r * F_pump_t[i] * simu.delta_z * 1j
-        A[..., 1, :, :] -= F_probe_r * F_probe_t[i] * simu.delta_z * 1j
-
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
 
@@ -171,7 +160,6 @@ class DDGPE(CNLSE):
             * self.delta_z
         ).astype(np.complex64)
         return np.array([propagator1, propagator2])
-        pass
 
     def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__.

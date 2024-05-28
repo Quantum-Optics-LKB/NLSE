@@ -1,6 +1,4 @@
-## Kernels
-
-### CPU
+## CPU
 The CPU kernel in the `NLSE` package is responsible for solving the nonlinear Schrödinger equation using CPU resources. It utilizes the computational power of the central processing unit (CPU) to perform the necessary calculations.
 
 To use the CPU kernel, you can call the appropriate functions or methods provided by the `NLSE` package. These functions will internally invoke the CPU-specific implementation to solve the NLSE.
@@ -11,7 +9,7 @@ If you have specific code or implementation details related to the CPU kernel th
 
 ::: NLSE.kernels_cpu
 
-### GPU (CUDA)
+## GPU (CUDA)
 The GPU kernel in the `NLSE` package is responsible for solving the nonlinear Schrödinger equation using GPU resources. It utilizes the computational power of the graphics processing unit (GPU) to perform the necessary calculations.
 
 ::: NLSE.kernels_gpu

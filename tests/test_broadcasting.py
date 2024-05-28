@@ -1,5 +1,6 @@
 from NLSE import NLSE
 import numpy as np
+from NLSE.utils import __CUPY_AVAILABLE__
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32

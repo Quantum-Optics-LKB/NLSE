@@ -468,7 +468,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../how_to.md" class="md-nav__link">
+      <a href="../how_to/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -646,29 +646,29 @@
 
 <h2 id="physical-situation">Physical situation</h2>
 <p>The code offers to solve a typical <a href="https://en.wikipedia.org/wiki/Nonlinear_Schr%C3%B6dinger_equation">non linear Schrödinger</a> / <a href="https://en.wikipedia.org/wiki/Gross%E2%80%93Pitaevskii_equation">Gross-Pitaevskii</a> equation of the type :
-$$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$</p>
+<span class="arithmatex">\(<span class="arithmatex">\(i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi\)</span>\)</span></p>
 <p>In this particular instance, we solve in the formalism of the propagation of a pulse of light in a non linear medium.
-Within the <a href="https://en.wikipedia.org/wiki/Paraxial_approximation">paraxial approximation</a>, the propagation equation for the field $E$ in V/m solved is:</p>
-<p>$$
+Within the <a href="https://en.wikipedia.org/wiki/Paraxial_approximation">paraxial approximation</a>, the propagation equation for the field <span class="arithmatex">\(E\)</span> in V/m solved is:</p>
+<div class="arithmatex">\[
 i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
 \frac{D_0}{2}\partial^2_t E
 -\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
-$$</p>
+\]</div>
 <p>Here, the constants are defined as followed :</p>
 <ul>
-<li>$k_0$ : is the electric field <a href="https://en.wikipedia.org/wiki/Wavenumber">wavenumber</a> in $m^{-1}$</li>
-<li>$D_0$ : is the <a href="https://en.wikipedia.org/wiki/Group-velocity_dispersion">group velocity dispersion</a> (GVD) in $s^2/m$</li>
-<li>$\delta n(\mathbf{r})$ : the "potential" i.e a local change in linear index of refraction. Dimensionless.</li>
-<li>$n_2$ : the <a href="https://en.wikipedia.org/wiki/Kerr_effect">non linear index of refraction</a> in $m^2/W$.</li>
-<li>$n$ is the linear <a href="https://en.wikipedia.org/wiki/Refractive_index">index of refraction</a>. In our case 1.</li>
-<li>$c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.</li>
+<li><span class="arithmatex">\(k_0\)</span> : is the electric field <a href="https://en.wikipedia.org/wiki/Wavenumber">wavenumber</a> in <span class="arithmatex">\(m^{-1}\)</span></li>
+<li><span class="arithmatex">\(D_0\)</span> : is the <a href="https://en.wikipedia.org/wiki/Group-velocity_dispersion">group velocity dispersion</a> (GVD) in <span class="arithmatex">\(s^2/m\)</span></li>
+<li><span class="arithmatex">\(\delta n(\mathbf{r})\)</span> : the "potential" i.e a local change in linear index of refraction. Dimensionless.</li>
+<li><span class="arithmatex">\(n_2\)</span> : the <a href="https://en.wikipedia.org/wiki/Kerr_effect">non linear index of refraction</a> in <span class="arithmatex">\(m^2/W\)</span>.</li>
+<li><span class="arithmatex">\(n\)</span> is the linear <a href="https://en.wikipedia.org/wiki/Refractive_index">index of refraction</a>. In our case 1.</li>
+<li><span class="arithmatex">\(c,\epsilon_0\)</span> : the speed of light and electric permittivity of vacuum.</li>
 </ul>
-<p>In all generality, the interaction term can be <em>non-local</em> i.e $n_2=n_2(\mathbf{r})$.
+<p>In all generality, the interaction term can be <em>non-local</em> i.e <span class="arithmatex">\(n_2=n_2(\mathbf{r})\)</span>.
 This means usually that the response will be described as a convolution by some non-local kernel:</p>
-<p>$$
+<div class="arithmatex">\[
 n_2(\mathbf{r})|E|^2(\mathbf{r})=n_2\int_{\mathbb{R}^2}\mathrm{d}\mathbf{r}' K(\mathbf{r}-\mathbf{r}')|E|^2(\mathbf{r}'),
-$$</p>
-<p>where $K(\mathbf{r})$ is the non-local kernel, typically the Green function of some diffusion equation.</p>
+\]</div>
+<p>where <span class="arithmatex">\(K(\mathbf{r})\)</span> is the non-local kernel, typically the Green function of some diffusion equation.</p>
 <p>Please note that all of the code works with the <strong>"God given" units</strong> i.e <strong>SI units</strong> !</p>
 
 
@@ -720,6 +720,12 @@ $$</p>
     
     
       <script src="../assets/javascripts/bundle.a7c05c9e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>

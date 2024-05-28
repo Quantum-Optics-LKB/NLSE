@@ -22,14 +22,15 @@ def nl_prop(
         g (float): Interactions
         Isat (float): Saturation
     """
-    A *= cp.exp(
-        dz
-        * (
-            -alpha / (2 * (1 + A_sq / Isat))
-            + 1j * V
-            + 1j * g * A_sq / (1 + A_sq / Isat)
-        )
-    )
+    # saturation
+    sat = 1 / (1 + A_sq / Isat)
+    # Interactions
+    arg = 1j * g * A_sq * sat
+    # Losses
+    arg += -alpha / 2 * sat
+    # Potential
+    arg += 1j * V
+    A *= cp.exp(dz * arg)
 
 
 @cp.fuse(kernel_name="nl_prop_without_V")
@@ -51,9 +52,13 @@ def nl_prop_without_V(
         g (float): Interactions
         Isat (float): Saturation
     """
-    A *= cp.exp(
-        dz * (-alpha / (2 * (1 + A_sq / Isat)) + 1j * g * A_sq / (1 + A_sq / Isat))
-    )
+    # saturation
+    sat = 1 / (1 + A_sq / Isat)
+    # Interactions
+    arg = 1j * g * A_sq * sat
+    # Losses
+    arg += -alpha / 2 * sat
+    A *= cp.exp(dz * arg)
 
 
 @cp.fuse(kernel_name="nl_prop_c")
@@ -80,12 +85,15 @@ def nl_prop_c(
         g12 (float): Inter-component interactions
         Isat (float): Saturation parameter of intra-component interaction
     """
-    # Losses
-    A1 *= cp.exp(dz * (-alpha / (2 * (1 + A_sq_1 / Isat))))
-    # Potential
-    A1 *= cp.exp(dz * (1j * V))
+    # Saturation parameter
+    sat = 1 / (1 + A_sq_1 / Isat)
     # Interactions
-    A1 *= cp.exp(dz * (1j * (g11 * A_sq_1 / (1 + A_sq_1 / Isat) + g12 * A_sq_2)))
+    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2)
+    # Losses
+    arg += -alpha / 2 * sat
+    # Potential
+    arg += 1j * V
+    A1 *= cp.exp(dz * arg)
 
 
 @cp.fuse(kernel_name="nl_prop_without_V_c")
@@ -110,10 +118,13 @@ def nl_prop_without_V_c(
         g12 (float): Inter-component interactions
         Isat (float): Saturation parameter of intra-component interaction
     """
-    # Losses
-    A1 *= cp.exp(dz * (-alpha / (2 * (1 + A_sq_1 / Isat))))
+    # Saturation parameter
+    sat = 1 / (1 + A_sq_1 / Isat)
     # Interactions
-    A1 *= cp.exp(dz * (1j * (g11 * A_sq_1 / (1 + A_sq_1 / Isat) + g12 * A_sq_2)))
+    arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2)
+    # Losses
+    arg -= alpha / 2 * sat
+    A1 *= cp.exp(dz * arg)
 
 
 @cp.fuse(kernel_name="rabi_coupling")
@@ -162,4 +173,4 @@ def square_mod(A: cp.ndarray, A_sq: cp.ndarray) -> None:
     Returns:
         None
     """
-    A_sq = A.real * A.real + A.imag * A.imag
+    A_sq[:] = A.real * A.real + A.imag * A.imag

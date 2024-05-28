@@ -1,0 +1,29 @@
+site_name: NLSE Documentation
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [..]
+
+nav:
+  - Home: index.md
+  - Getting started:
+    - Installation: 'installation.md'
+    - Basic Usage: 'basic_usage.md'
+    
+    - Structure and Inheritance: 'structure_and_inheritance.md'
+    - Contributing: 'contributing.md'
+  - Tutorial:
+    - What is the Physics problem ?: 'physics_problem.md'
+    - Tutorial on : 'tutorial.md'
+  - How to:
+    - 'How to ?': 'how_to.md'
+  - Reference:
+    - NLSE: reference.md
+    - Coupled NLSE: cnlse.md
+    - Kernels: kernels.md
+

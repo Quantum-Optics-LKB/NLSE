@@ -38,6 +38,7 @@ class NLSE:
     """A class to solve NLSE"""
 
     __CUPY_AVAILABLE__ = __CUPY_AVAILABLE__
+    __PYOPENCL_AVAILABLE__ = __PYOPENCL_AVAILABLE__
 
     def __init__(
         self,
@@ -224,7 +225,7 @@ class NLSE:
             A = cp.empty_like(E_in)
             E_in = cp.asarray(E_in)
         elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
-            A = cla.empty_like(E_in)
+            A = cla.empty(self._cl_queue, E_in.shape, E_in.dtype)
             E_in = cla.to_device(self._cl_queue, E_in)
         else:
             A = pyfftw.empty_aligned(
@@ -232,11 +233,20 @@ class NLSE:
             )
         if normalize:
             # normalization of the field
-            integral = (
-                (E_in.real * E_in.real + E_in.imag * E_in.imag)
-                * self.delta_X
-                * self.delta_Y
-            ).sum(axis=self._last_axes)
+            if self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+                arr = E_in.real * E_in.real + E_in.imag * E_in.imag
+                arr *= self.delta_X * self.delta_Y
+                integral = cla.sum(
+                    arr,
+                    dtype=arr.dtype,
+                    queue=self._cl_queue,
+                )
+            else:
+                integral = (
+                    (E_in.real * E_in.real + E_in.imag * E_in.imag)
+                    * self.delta_X
+                    * self.delta_Y
+                ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
             E_00 = (self.puiss / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
@@ -246,18 +256,32 @@ class NLSE:
         """
         Send arrays to GPU.
         """
-        if self.V is not None:
-            self.V = cp.asarray(self.V)
-        self.nl_profile = cp.asarray(self.nl_profile)
-        self.propagator = cp.asarray(self.propagator)
-        # for broadcasting of parameters in case they are
-        # not already on the GPU
-        if isinstance(self.n2, np.ndarray):
-            self.n2 = cp.asarray(self.n2)
-        if isinstance(self.alpha, np.ndarray):
-            self.alpha = cp.asarray(self.alpha)
-        if isinstance(self.I_sat, np.ndarray):
-            self.I_sat = cp.asarray(self.I_sat)
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+            if self.V is not None:
+                self.V = cp.asarray(self.V)
+            self.nl_profile = cp.asarray(self.nl_profile)
+            self.propagator = cp.asarray(self.propagator)
+            # for broadcasting of parameters in case they are
+            # not already on the GPU
+            if isinstance(self.n2, np.ndarray):
+                self.n2 = cp.asarray(self.n2)
+            if isinstance(self.alpha, np.ndarray):
+                self.alpha = cp.asarray(self.alpha)
+            if isinstance(self.I_sat, np.ndarray):
+                self.I_sat = cp.asarray(self.I_sat)
+        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+            if self.V is not None:
+                self.V = cla.to_device(self._cl_queue, self.V)
+            self.nl_profile = cla.to_device(self._cl_queue, self.nl_profile)
+            self.propagator = cla.to_device(self._cl_queue, self.propagator)
+            # for broadcasting of parameters in case they are
+            # not already on the GPU
+            if isinstance(self.n2, np.ndarray):
+                self.n2 = cla.to_device(self._cl_queue, self.n2)
+            if isinstance(self.alpha, np.ndarray):
+                self.alpha = cla.to_device(self._cl_queue, self.alpha)
+            if isinstance(self.I_sat, np.ndarray):
+                self.I_sat = cla.to_device(self._cl_queue, self.I_sat)
 
     def _retrieve_arrays_from_gpu(self) -> None:
         """
@@ -297,7 +321,12 @@ class NLSE:
             propagation step.
             Defaults to "single".
         """
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+        if (
+            self.backend == "GPU"
+            and self.__CUPY_AVAILABLE__
+            or self.backend == "CL"
+            and self.__PYOPENCL_AVAILABLE__
+        ):
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -331,6 +360,11 @@ class NLSE:
             plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
+            plan_fft.ifft(A, A)
+        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+            plan_fft.fft(A, A)
+            # linear step in Fourier domain (shifted)
+            A *= propagator
             plan_fft.ifft(A, A)
         else:
             plan_fft(input_array=A, output_array=A)
@@ -426,7 +460,12 @@ class NLSE:
         # define propagator if not already done
         if self.propagator is None:
             self.propagator = self._build_propagator()
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+        if (
+            self.backend == "GPU"
+            and self.__CUPY_AVAILABLE__
+            or self.backend == "CL"
+            and self.__PYOPENCL_AVAILABLE__
+        ):
             self._send_arrays_to_gpu()
         if self.V is None:
             V = self.V
@@ -476,7 +515,7 @@ class NLSE:
         return_np_array = isinstance(E_in, np.ndarray)
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             if return_np_array:
-                A = cp.asnumpy(A)
+                A = A.get()
             self._retrieve_arrays_from_gpu()
 
         if plot:
@@ -494,7 +533,12 @@ class NLSE:
         if A_plot.ndim > 2:
             while len(A_plot.shape) > 2:
                 A_plot = A_plot[0]
-        if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
+        if (
+            self.__CUPY_AVAILABLE__
+            and isinstance(A_plot, cp.ndarray)
+            or self.__PYOPENCL_AVAILABLE__
+            and isinstance(A_plot, cla.Array)
+        ):
             A_plot = A_plot.get()
         fig, ax = plt.subplots(1, 3, layout="constrained")
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")

@@ -31,7 +31,7 @@ def nl_prop(
     # Potential
     arg += 1j * V
     arg *= dz
-    clmath.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A *= arg
 
 
@@ -60,7 +60,7 @@ def nl_prop_without_V(
     # Losses
     arg += -alpha / 2 * sat
     arg *= dz
-    clmath.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A *= arg
 
 
@@ -97,7 +97,7 @@ def nl_prop_c(
     # Potential
     arg += 1j * V
     arg *= dz
-    clmath.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A1 *= arg
 
 
@@ -130,7 +130,7 @@ def nl_prop_without_V_c(
     # Losses
     arg += -alpha / 2 * sat
     arg *= dz
-    clmath.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A1 *= arg
 
 

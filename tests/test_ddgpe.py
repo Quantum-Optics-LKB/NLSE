@@ -86,7 +86,7 @@ def main():
     E0[..., 0, :, :] = np.sqrt(detuning / g) * np.exp(-(dd.XX**2 + dd.YY**2) / waist**2)
 
     F_pump = 0
-    F_pump_r = np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
+    F_pump_r = F_pump * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
     F_pump_t = np.zeros(time.shape, dtype=np.complex64)
 
     turn_on(F_pump_t, time, t_up=10)

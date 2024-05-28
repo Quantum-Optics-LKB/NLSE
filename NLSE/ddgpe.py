@@ -84,6 +84,10 @@ class DDGPE(CNLSE):
             (omega_exc - omega_cav) ** 2 + (omega) ** 2
         )
         self.omega_pump = omega_lp + detuning
+        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+            self._random = cp.random.normal
+        else:
+            self._random = np.random.normal
 
     @staticmethod
     def add_noise(
@@ -92,8 +96,6 @@ class DDGPE(CNLSE):
         t: float,
         i: int,
         noise: float = 0,
-        noise1: float = 0,
-        **kwargs,
     ) -> None:
         """Add noise to the propagation step.
 
@@ -105,49 +107,18 @@ class DDGPE(CNLSE):
             t (float): Propagation time in s.
             i (int): Propagation step.
         """
-        if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
-            rand1 = cp.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
-            ) + 1j * cp.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
-            )
-            rand2 = cp.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
-            ) + 1j * cp.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX), dtype=np.float64
-            )
-            A[..., 0, :, :] += (
-                noise
-                * cp.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y)))
-                * rand1
-            )
-            A[..., 1, :, :] += (
-                noise
-                * cp.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y)))
-                * rand2
-            )
-
-        else:
-            rand1 = np.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-            ) + 1j * np.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-            )
-            rand2 = np.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-            ) + 1j * np.random.normal(
-                loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-            )
-            A[..., 0, :, :] += (
-                noise
-                * np.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y)))
-                * rand1
-            )
-            A[..., 1, :, :] += (
-                noise
-                * np.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y)))
-                * rand2
-            )
+        rand1 = simu.normal(
+            loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+        ) + 1j * simu.normal(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
+        rand2 = simu.normal(
+            loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+        ) + 1j * simu.normal(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
+        A[..., 0, :, :] += (
+            noise * np.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y))) * rand1
+        )
+        A[..., 1, :, :] += (
+            noise * np.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y))) * rand2
+        )
 
     @staticmethod
     def laser_excitation(
@@ -155,52 +126,30 @@ class DDGPE(CNLSE):
         A: np.ndarray,
         t: float,
         i: int,
-        F_pump: float,
         F_pump_r: np.ndarray,
-        F_pump_t: float,
-        F_probe: float = 0,
-        F_probe_r: np.ndarray = 0,
-        F_probe_t: np.ndarray = 0,
-        **kwargs,
+        F_pump_t: np.ndarray,
+        F_probe_r: np.ndarray,
+        F_probe_t: np.ndarray,
     ) -> None:
         """Add the pump and probe laser.
 
-        Args:
-            simu (object): _description_
-            A (np.ndarray): _description_
-            t (float): _description_
-            i (int): _description_
-        """
-        if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
-            A[..., 1, :, :] -= cp.asarray(
-                F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j
-            )
-            if F_probe != 0:
-                A[..., 1, :, :] -= cp.asarray(
-                    F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
-                )
-        else:
-            A[..., 1, :, :] -= F_pump * F_pump_r * F_pump_t[i] * simu.delta_z * 1j
-            if F_probe != 0:
-                A[..., 1, :, :] -= (
-                    F_probe * F_probe_r * F_probe_t[i] * simu.delta_z * 1j
-                )
-
-    @staticmethod
-    def boundary_losses(
-        simu: object, A: np.ndarray, t: float, i: int, v_gamma: np.ndarray, **kwargs
-    ) -> None:
-        """A fused kernel to apply the potential term
+        This function adds a pump field with a spatial profile F_pump_r and a temporal
+        profile F_pump_t and a probe field with a spatial profile F_probe_r and a
+        temporal profile F_probe_t. The pump and probe fields are added to the
+        cavity field at each propagation step.
 
         Args:
-            phi_cav (cp.ndarray): Photon field in ph,exc basis
-            dz (float): Propagation step in ps
-            v_gamma (np.ndarray): Loss at the edges of the grid and optical defects
+            simu (object): The simulation object.
+            A (np.ndarray): The field array.
+            t (float): The current solver time.
+            i (int): The current solver step.
+            F_pump_r (np.ndarray): The spatial profile of the pump field.
+            F_pump_t (np.ndarray): The temporal profile of the pump field.
+            F_probe_r (np.ndarray): The spatial profile of the probe field.
+            F_probe_t (np.ndarray): The temporal profile of the probe field.
         """
-        if simu.backend == "GPU" and simu.__CUPY_AVAILABLE__:
-            A[..., 1, :, :] *= cp.exp(-simu.delta_z * 0.5 * cp.asarray(v_gamma))
-        else:
-            A[..., 1, :, :] *= np.exp(-simu.delta_z * 0.5 * v_gamma)
+        A[..., 1, :, :] -= F_pump_r * F_pump_t[i] * simu.delta_z * 1j
+        A[..., 1, :, :] -= F_probe_r * F_probe_t[i] * simu.delta_z * 1j
 
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
@@ -246,6 +195,7 @@ class DDGPE(CNLSE):
     def split_step(
         self,
         A: np.ndarray,
+        A_sq: np.ndarray,
         V: np.ndarray,
         propagator: np.ndarray,
         plans: list,
@@ -255,6 +205,7 @@ class DDGPE(CNLSE):
 
         Args:
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
+            A_sq (np.ndarray): Squared modulus of the fields
             V (np.ndarray): Potential field (can be None).
             propagator1 (np.ndarray): Propagator matrix for field 1.
             propagator2 (np.ndarray): Propagator matrix for field 2.
@@ -274,8 +225,8 @@ class DDGPE(CNLSE):
             plan_fft, plan_ifft = plans
         A1, A2 = self._take_components(A)
         if precision == "double":
-            A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
-            A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
+            self._kernels.square_mod(A, A_sq)
+            A_sq_1, A_sq_2 = self._take_components(A_sq)
             if self.nl_length > 0:
                 A_sq_1 = self._convolution(
                     A_sq_1, self.nl_profile, mode="same", axes=self._last_axes
@@ -294,7 +245,6 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
-                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -304,7 +254,6 @@ class DDGPE(CNLSE):
                     self.gamma2 / 2,
                     self.g,
                     self.g12,
-                    self.I_sat2,
                     self.I_sat,
                 )
             else:
@@ -318,7 +267,6 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
-                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -329,7 +277,6 @@ class DDGPE(CNLSE):
                     V,
                     self.g2,
                     self.g12,
-                    self.I_sat2,
                     self.I_sat,
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
@@ -343,8 +290,8 @@ class DDGPE(CNLSE):
             np.multiply(A, propagator, out=A)
             plan_ifft(input_array=A, output_array=A, normalise_idft=True)
         # fft normalization
-        A_sq_1 = A1.real * A1.real + A1.imag * A1.imag
-        A_sq_2 = A2.real * A2.real + A2.imag * A2.imag
+        self._kernels.square_mod(A, A_sq)
+        A_sq_1, A_sq_2 = self._take_components(A_sq)
         if self.nl_length > 0:
             A_sq_1 = self._convolution(
                 A_sq_1, self.nl_profile, mode="same", axes=self._last_axes
@@ -363,7 +310,6 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
-                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -373,7 +319,6 @@ class DDGPE(CNLSE):
                     self.gamma2 / 2,
                     self.g,
                     self.g12,
-                    self.I_sat2,
                     self.I_sat,
                 )
             else:
@@ -387,7 +332,6 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
-                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -398,7 +342,6 @@ class DDGPE(CNLSE):
                     V,
                     self.g2,
                     self.g12,
-                    self.I_sat2,
                     self.I_sat,
                 )
         else:
@@ -412,7 +355,6 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
-                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -422,7 +364,6 @@ class DDGPE(CNLSE):
                     self.gamma2 / 2,
                     self.g2,
                     self.g12,
-                    self.I_sat2,
                     self.I_sat,
                 )
             else:
@@ -436,7 +377,6 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
-                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -447,7 +387,6 @@ class DDGPE(CNLSE):
                     V,
                     self.g2,
                     self.g12,
-                    self.I_sat2,
                     self.I_sat,
                 )
             if self.omega is not None:
@@ -508,22 +447,44 @@ class DDGPE(CNLSE):
     def out_field(
         self,
         E_in: np.ndarray,
-        F_pump: float,
-        F_pump_r: np.ndarray,
-        F_pump_t: np.ndarray,
-        z: float,
+        t: float,
+        laser_excitation: Union[callable, None],
         plot: bool = False,
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: Union[list[callable], callable] = [],
-        callback_args: Union[list[tuple], tuple] = [],
+        callback: Union[list[callable], callable] = None,
+        callback_args: Union[list[tuple], tuple] = None,
     ) -> np.ndarray:
-        callback.append(self.laser_excitation)
-        callback_args.append([F_pump, F_pump_r, F_pump_t])
+        """_summary_
+
+        Args:
+            E_in (np.ndarray): Input field where E_in[0] is the exciton field and
+            E_in[1] is the cavity field.
+            t (float): Time to propagate to in s.
+            laser_excitation (Union[callable, None]): The excitation function.
+            This represents the laser pump and probe. Defaults to None which uses
+            the static method defined in the class. In this case you still need
+            to pass the correct arguments to the callback_args.
+            plot (bool, optional): Whether to plot the results. Defaults to False.
+            precision (str, optional): Whether to apply the nonlinear terms in a
+            single or double step. Defaults to "single".
+            verbose (bool, optional): Whether to print progress. Defaults to True.
+            normalize (bool, optional): Whether to normalize the input field to the
+            total particle number. Defaults to True.
+            callback (Union[list[callable], callable], optional): A list of functions
+            to execute at every solver step. Defaults to None.
+            callback_args (Union[list[tuple], tuple], optional): A list of callback
+            arguments passed to the callbacks. Defaults to None.
+
+        Returns:
+            np.ndarray: _description_
+        """
+        if laser_excitation is None:
+            callback.append(self.laser_excitation)
         super().out_field(
             E_in=E_in,
-            z=z,
+            z=t,
             plot=plot,
             precision=precision,
             verbose=verbose,

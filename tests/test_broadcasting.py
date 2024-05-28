@@ -1,13 +1,12 @@
 from NLSE import NLSE
 import numpy as np
-from NLSE.utils import __CUPY_AVAILABLE__
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
 
 def test_broadcasting():
-    if __CUPY_AVAILABLE__:
+    if NLSE.__CUPY_AVAILABLE__:
         N = 2048
         n2 = np.zeros((10, 1, 1))
         n2[:, 0, 0] = np.linspace(-1.6e-9, -1e-10, 10)

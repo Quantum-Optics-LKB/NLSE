@@ -5,6 +5,7 @@ from scipy.constants import c, epsilon_0
 
 if NLSE_3d.__CUPY_AVAILABLE__:
     import cupy as cp
+    from pyvkfft.cuda import VkFFTApp
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
@@ -87,9 +88,9 @@ def test_build_fft_plan() -> None:
         elif backend == "GPU" and NLSE_3d.__CUPY_AVAILABLE__:
             assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
             assert isinstance(
-                plans[0], cp.cuda.cufft.PlanNd
+                plans[0], VkFFTApp
             ), f"Plan type is wrong. (Backend {backend})"
-            assert plans[0].shape == (
+            assert plans[0].shape0 == (
                 N,
                 N,
                 NZ,
@@ -263,12 +264,15 @@ def test_split_step() -> None:
         simu.propagator = simu._build_propagator()
         E = np.ones((N, N, NZ), dtype=PRECISION_COMPLEX)
         A = simu._prepare_output_array(E, normalize=False)
+        A_sq = A.copy().real
         simu.plans = simu._build_fft_plan(A)
         simu.propagator = simu._build_propagator()
         if backend == "GPU" and NLSE_3d.__CUPY_AVAILABLE__:
             E = cp.asarray(E)
             simu._send_arrays_to_gpu()
-        simu.split_step(E, simu.V, simu.propagator, simu.plans, precision="double")
+        simu.split_step(
+            E, A_sq, simu.V, simu.propagator, simu.plans, precision="double"
+        )
         if backend == "CPU":
             assert np.allclose(
                 E, np.ones((N, N, NZ), dtype=PRECISION_COMPLEX)

@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import c, epsilon_0
 import pyfftw
+from typing import Union
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:
@@ -22,7 +23,7 @@ class NLSE_3d(NLSE):
         n2: float,
         D0: float,
         vg: float,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         L: float,
         NX: int = 1024,
         NY: int = 1024,

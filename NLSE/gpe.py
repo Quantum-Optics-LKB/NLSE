@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import c, epsilon_0, atomic_mass, hbar
 import pyfftw
+from typing import Union
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:
@@ -18,7 +19,7 @@ class GPE(NLSE):
         N: float,
         window: float,
         g: float,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         m: float = 87 * atomic_mass,
         NX: int = 1024,
         NY: int = 1024,

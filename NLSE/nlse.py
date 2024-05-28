@@ -15,10 +15,11 @@ from scipy import signal
 from scipy import special
 from . import kernels_cpu
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
+from typing import Union, Callable
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
-    import cupyx.scipy.fftpack as fftpack
+    from pyvkfft.cuda import VkFFTApp
     import cupyx.scipy.signal as signal_cp
     from . import kernels_gpu
 
@@ -38,7 +39,7 @@ class NLSE:
         puiss: float,
         window: float,
         n2: float,
-        V: np.ndarray,
+        V: Union[np.ndarray, None],
         L: float,
         NX: int = 1024,
         NY: int = 1024,
@@ -89,7 +90,7 @@ class NLSE:
         z_nl = 1 / (self.k * abs(Dn))
         if isinstance(z_nl, np.ndarray):
             z_nl = z_nl.min()
-        self.delta_z = 1e-2 * z_nl
+        self.delta_z = 5e-3 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
             -self.window / 2,
@@ -120,8 +121,8 @@ class NLSE:
         self.nl_length = nl_length
         if self.nl_length > 0:
             d = self.nl_length // self.delta_X
-            x = np.arange(-2 * d, 2 * d + 1)
-            y = np.arange(-2 * d, 2 * d + 1)
+            x = np.arange(-3 * d, 3 * d + 1)
+            y = np.arange(-3 * d, 3 * d + 1)
             XX, YY = np.meshgrid(x, y)
             R = np.hypot(XX, YY)
             self.nl_profile = special.kn(0, R / d)
@@ -152,12 +153,18 @@ class NLSE:
             list: A list containing the FFT plans
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            plan_fft = fftpack.get_fft_plan(
-                A,
-                axes=self._last_axes,
-                value_type="C2C",
+            stream = cp.cuda.get_current_stream()
+            plan_fft = VkFFTApp(
+                A.shape,
+                A.dtype,
+                ndim=len(self._last_axes),
+                stream=stream,
+                inplace=True,
+                norm=1,
+                tune=True,
             )
             return [plan_fft]
+
         else:
             # try to load previous fftw wisdom
             try:
@@ -248,7 +255,8 @@ class NLSE:
     def split_step(
         self,
         A: np.ndarray,
-        V: np.ndarray,
+        A_sq: np.ndarray,
+        V: Union[np.ndarray, None],
         propagator: np.ndarray,
         plans: list,
         precision: str = "single",
@@ -257,6 +265,7 @@ class NLSE:
 
         Args:
             A (np.ndarray): Field to propagate
+            A_sq (np.ndarray): Field modulus squared.
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
             plans (list): List of FFT plan objects. Either a single FFT plan for
@@ -272,9 +281,9 @@ class NLSE:
         else:
             plan_fft, plan_ifft = plans
         if precision == "double":
-            A_sq = A.real * A.real + A.imag * A.imag
+            self._kernels.square_mod(A, A_sq)
             if self.nl_length > 0:
-                A_sq = self._convolution(
+                A_sq[:] = self._convolution(
                     A_sq, self.nl_profile, mode="same", axes=self._last_axes
                 )
             if V is None:
@@ -287,7 +296,7 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
-                self.self._kernels.nl_prop(
+                self._kernels.nl_prop(
                     A,
                     A_sq,
                     self.delta_z / 2,
@@ -297,19 +306,17 @@ class NLSE:
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_FORWARD)
+            plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
             cp.multiply(A, propagator, out=A)
-            plan_fft.fft(A, A, cp.cuda.cufft.CUFFT_INVERSE)
+            plan_fft.ifft(A, A)
         else:
             plan_fft(input_array=A, output_array=A)
             np.multiply(A, propagator, out=A)
-            plan_ifft(input_array=A, output_array=A, normalise_idft=False)
-        # fft normalization
-        A *= 1 / np.prod(A.shape[self._last_axes[0] :])
-        A_sq = A.real * A.real + A.imag * A.imag
+            plan_ifft(input_array=A, output_array=A, normalise_idft=True)
+        self._kernels.square_mod(A, A_sq)
         if self.nl_length > 0:
-            A_sq = self._convolution(
+            A_sq[:] = self._convolution(
                 A_sq, self.nl_profile, mode="same", axes=self._last_axes
             )
         if precision == "double":
@@ -361,8 +368,8 @@ class NLSE:
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
-        callback: callable = None,
-        callback_args: tuple = (),
+        callback: Union[list[callable], callable] = None,
+        callback_args: Union[list[tuple], tuple] = (),
     ) -> np.ndarray:
         """Propagates the field at a distance z
         Args:
@@ -392,6 +399,7 @@ class NLSE:
             self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
         )
         A = self._prepare_output_array(E_in, normalize)
+        A_sq = A.copy().real
         self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:
@@ -415,9 +423,17 @@ class NLSE:
                 self.n2 = 0
             if verbose:
                 pbar.update(1)
-            self.split_step(A, V, self.propagator, self.plans, precision)
+            self.split_step(A, A_sq, V, self.propagator, self.plans, precision)
             if callback is not None:
-                callback(self, A, z, i, *callback_args)
+                if isinstance(callback, Callable):
+                    callback(self, A, z, i, *callback_args)
+                elif isinstance(callback, list) and isinstance(callback[0], Callable):
+                    for c, ca in zip(callback, callback_args):
+                        c(self, A, z, i, *ca)
+                else:
+                    raise ValueError(
+                        "callbacks should be a callable or a list of callables"
+                    )
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

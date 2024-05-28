@@ -85,7 +85,8 @@ def nl_prop_c(
         V (cp.ndarray): Potential
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
-        Isat (float): Saturation parameter of intra-component interaction
+        Isat1 (float): Saturation parameter of first component
+        Isat2 (float): Saturation parameter of second component
     """
     A1 = A1.ravel()
     A_sq_1 = A_sq_1.ravel()
@@ -96,7 +97,7 @@ def nl_prop_c(
         # Losses
         arg = -alpha / 2 * sat
         # Interactions
-        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i])
+        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i] * sat)
         # Potential
         arg += 1j * V[i]
         A1[i] *= np.exp(dz * arg)
@@ -122,7 +123,8 @@ def nl_prop_without_V_c(
         alpha (float): Losses
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
-        Isat (float): Saturation parameter of intra-component interaction
+        Isat1 (float): Saturation parameter of first component
+        Isat2 (float): Saturation parameter of second component
     """
     A1 = A1.ravel()
     A_sq_1 = A_sq_1.ravel()
@@ -133,7 +135,7 @@ def nl_prop_without_V_c(
         # Losses
         arg = -alpha / 2 * sat
         # Interactions
-        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i])
+        arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i] * sat)
         A1[i] *= np.exp(dz * arg)
 
 
@@ -151,8 +153,10 @@ def rabi_coupling(A1: np.ndarray, A2: np.ndarray, dz: float, omega: float) -> No
     """
     A1 = A1.ravel()
     A2 = A2.ravel()
+    A1_old = A1.copy()
     for i in numba.prange(A1.size):
-        A1[i] += 1j * omega * A2[i] * dz
+        A1[i] = np.cos(omega * dz) * A1[i] - 1j * np.sin(omega * dz) * A2[i]
+        A2[i] = np.cos(omega * dz) * A2[i] - 1j * np.sin(omega * dz) * A1_old[i]
 
 
 @numba.njit(parallel=True, fastmath=True, cache=True, boundscheck=False)

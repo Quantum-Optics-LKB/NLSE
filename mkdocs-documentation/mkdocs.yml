@@ -8,7 +8,9 @@ plugins:
       handlers:
         python:
           paths: [..]
-  - mkdocs-jupyter
+  - mkdocs-jupyter:
+      execute: false
+      kernel_name: python3
 
 nav:
   - Home: index.md
@@ -20,7 +22,7 @@ nav:
       - Contributing: "contributing.md"
   - Tutorial:
       - What is the Physics problem ?: "physics_problem.md"
-      - Tutorial on: "tutorial.md"
+      - A NLSE tutorial: "nlse_tutorial.ipynb"
   - How to:
       - How to ?: "how_to.md"
   - Reference:

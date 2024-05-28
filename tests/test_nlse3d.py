@@ -264,12 +264,15 @@ def test_split_step() -> None:
         simu.propagator = simu._build_propagator()
         E = np.ones((N, N, NZ), dtype=PRECISION_COMPLEX)
         A = simu._prepare_output_array(E, normalize=False)
+        A_sq = A.copy().real
         simu.plans = simu._build_fft_plan(A)
         simu.propagator = simu._build_propagator()
         if backend == "GPU" and NLSE_3d.__CUPY_AVAILABLE__:
             E = cp.asarray(E)
             simu._send_arrays_to_gpu()
-        simu.split_step(E, simu.V, simu.propagator, simu.plans, precision="double")
+        simu.split_step(
+            E, A_sq, simu.V, simu.propagator, simu.plans, precision="double"
+        )
         if backend == "CPU":
             assert np.allclose(
                 E, np.ones((N, N, NZ), dtype=PRECISION_COMPLEX)

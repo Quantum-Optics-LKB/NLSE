@@ -5,6 +5,7 @@ from scipy.constants import c, epsilon_0
 
 if NLSE.__CUPY_AVAILABLE__:
     import cupy as cp
+    from pyvkfft.cuda import VkFFTApp
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
@@ -54,9 +55,12 @@ def test_build_fft_plan() -> None:
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
             assert isinstance(
-                plans[0], cp.cuda.cufft.PlanNd
+                plans[0], VkFFTApp
             ), f"Plan type is wrong. (Backend {backend})"
-            assert plans[0].shape == (N, N), f"Plan shape is wrong. (Backend {backend})"
+            assert plans[0].shape0 == (
+                N,
+                N,
+            ), f"Plan shape is wrong. (Backend {backend})"
 
 
 def test_prepare_output_array() -> None:

@@ -30,7 +30,9 @@ def nl_prop(
     arg += -alpha / 2 * sat
     # Potential
     arg += 1j * V
-    A *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A *= arg
 
 
 @cp.fuse(kernel_name="nl_prop_without_V")
@@ -58,7 +60,9 @@ def nl_prop_without_V(
     arg = 1j * g * A_sq * sat
     # Losses
     arg += -alpha / 2 * sat
-    A *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A *= arg
 
 
 @cp.fuse(kernel_name="nl_prop_c")
@@ -96,7 +100,9 @@ def nl_prop_c(
     arg += -alpha / 2 * sat1
     # Potential
     arg += 1j * V
-    A1 *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A1 *= arg
 
 
 @cp.fuse(kernel_name="nl_prop_without_V_c")
@@ -130,7 +136,9 @@ def nl_prop_without_V_c(
     arg = 1j * (g11 * A_sq_1 * sat1 + g12 * A_sq_2 * sat2)
     # Losses
     arg += -alpha / 2 * sat1
-    A1 *= cp.exp(dz * arg)
+    arg *= dz
+    cp.exp(arg, out=arg)
+    A1 *= arg
 
 
 @cp.fuse(kernel_name="rabi_coupling")

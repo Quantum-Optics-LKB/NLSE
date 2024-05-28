@@ -14,7 +14,7 @@ from scipy.constants import c, epsilon_0
 from scipy import signal
 from scipy import special
 from . import kernels_cpu
-from .utils import __BACKEND__, __CUPY_AVAILABLE__
+from .utils import __BACKEND__, __CUPY_AVAILABLE__, __PYOPENCL_AVAILABLE__
 from typing import Union, Callable
 
 if __CUPY_AVAILABLE__:
@@ -22,6 +22,11 @@ if __CUPY_AVAILABLE__:
     from pyvkfft.cuda import VkFFTApp
     import cupyx.scipy.signal as signal_cp
     from . import kernels_gpu
+
+if __PYOPENCL_AVAILABLE__:
+    import pyopencl as cl
+    from pyopencl.array import cla
+    from . import kernels_cl
 
 pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
 pyfftw.config.PLANNER_EFFORT = "FFTW_MEASURE"
@@ -63,13 +68,16 @@ class NLSE:
             Isat (float): Saturation intensity in W/m^2
             nl_length (float): Non local length in m
             wvl (float): Wavelength in m
-            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU", "CPU" or "CL". Defaults to __BACKEND__.
         """
         # listof physical parameters
         self.backend = backend
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             self._kernels = kernels_gpu
             self._convolution = signal_cp.oaconvolve
+        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+            self._kernels = kernels_cl
+            self._cl_queue = cl.CommandQueue(cl.create_some_context(interactive=False))
         else:
             self.backend = "CPU"
             self._kernels = kernels_cpu

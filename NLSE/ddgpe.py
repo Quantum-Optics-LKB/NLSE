@@ -456,7 +456,7 @@ class DDGPE(CNLSE):
         callback: Union[list[callable], callable] = None,
         callback_args: Union[list[tuple], tuple] = None,
     ) -> np.ndarray:
-        """_summary_
+        """Propagate a field to time T.
 
         Args:
             E_in (np.ndarray): Input field where E_in[0] is the exciton field and

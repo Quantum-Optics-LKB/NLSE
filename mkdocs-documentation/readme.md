@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Generate the NLSE Documentation
 We are using the `mkdocs` package to generate the documentation for the `NLSE` package. The documentation is written in markdown and can be found in the `docs` directory.
 
@@ -56,3 +57,13 @@ mkdocs build
 ```
 
 This will create a new directory, named `site`.
+=======
+# Documentation of NLSE
+
+## Installation
+pip install mkdocs
+
+## Dev server
+To launch the dev server : mkdocs serve
+Then go to [Here](http://127.0.0.1:8000/)
+>>>>>>> b2d5ce201112718ea8f7ad57179765703d28a237

@@ -1,0 +1,8 @@
+cupy==13.1.0
+matplotlib==3.8.3
+numba==0.59.1
+numpy==1.26.4
+pyFFTW==0.13.1+15.g2494ad5
+scipy==1.13.1
+setuptools==69.2.0
+tqdm==4.66.2

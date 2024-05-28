@@ -357,7 +357,7 @@ class NLSE:
         self,
         E_in: np.ndarray,
         z: float,
-        plot=False,
+        plot: bool = False,
         precision: str = "single",
         verbose: bool = True,
         normalize: bool = True,
@@ -392,9 +392,7 @@ class NLSE:
             self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
         )
         A = self._prepare_output_array(E_in, normalize)
-        # define plans if not already done
-        if self.plans is None:
-            self.plans = self._build_fft_plan(A)
+        self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:
             self.propagator = self._build_propagator()

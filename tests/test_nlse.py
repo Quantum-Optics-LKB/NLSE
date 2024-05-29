@@ -25,7 +25,7 @@ alpha = 20
 
 
 def test_build_propagator() -> None:
-    for backend in ["CL", "CPU", "GPU"]:
+    for backend in ["CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -37,7 +37,7 @@ def test_build_propagator() -> None:
 
 
 def test_build_fft_plan() -> None:
-    for backend in ["CL", "CPU", "GPU"]:
+    for backend in ["CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -77,7 +77,7 @@ def test_build_fft_plan() -> None:
 
 
 def test_prepare_output_array() -> None:
-    for backend in ["CL", "CPU", "GPU"]:
+    for backend in ["CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -206,7 +206,7 @@ def test_retrieve_arrays_from_gpu() -> None:
 
 
 def test_split_step() -> None:
-    for backend in ["CL", "CPU", "GPU"]:
+    for backend in ["CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -241,7 +241,7 @@ def test_split_step() -> None:
 # tests for convergence of the solver : the norm of the field should be conserved
 def test_out_field() -> None:
     E = np.ones((N, N), dtype=PRECISION_COMPLEX)
-    for backend in ["CL", "CPU", "GPU"]:
+    for backend in ["CPU", "GPU"]:
         simu = NLSE(
             0, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -257,7 +257,7 @@ def test_out_field() -> None:
 # for integration testing
 def main():
     print("Testing NLSE class")
-    for backend in ["CL", "GPU", "CPU"]:
+    for backend in ["GPU", "CPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )

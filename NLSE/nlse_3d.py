@@ -100,21 +100,25 @@ class NLSE_3d(NLSE):
         return prop_2d * prop_t
 
     def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
-        """Prepare the output array depending on __BACKEND__.
+        """Prepare the output arrays depending on __BACKEND__.
 
+        Prepares the A and A_sq arrays to store the field and its modulus.
         Args:
             E_in (np.ndarray): Input array
             normalize (bool): Normalize the field to the total power.
         Returns:
-            np.ndarray: Output array
+            A (np.ndarray): Output field array
+            A_sq (np.ndarray): Output field modulus squared array
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
+            A_sq = cp.empty_like(A, dtype=A.real.dtype)
             E_in = cp.asarray(E_in)
         else:
             A = pyfftw.empty_aligned(
                 E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
             )
+            A_sq = np.empty_like(A, dtype=A.real.dtype)
         if normalize:
             # normalization of the field
             integral = (
@@ -126,7 +130,7 @@ class NLSE_3d(NLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (self.energy / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
-        return A
+        return A, A_sq
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot a field for monitoring.

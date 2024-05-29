@@ -59,7 +59,18 @@ def test_prepare_output_array() -> None:
             E_in = np.random.random((N, N)) + 1j * np.random.random((N, N))
         elif backend == "GPU" and GPE.__CUPY_AVAILABLE__:
             E_in = cp.random.random((N, N)) + 1j * cp.random.random((N, N))
-        A = simu._prepare_output_array(E_in, normalize=True)
+        A, A_sq = simu._prepare_output_array(E_in, normalize=True)
+        assert (
+            A.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert (
+            A_sq.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
+        if backend == "CPU":
+            assert A.flags.aligned, f"Output array is not aligned. (Backend {backend})"
+            assert (
+                A_sq.flags.aligned
+            ), f"Output array is not aligned. (Backend {backend})"
         integral = (
             (A.real * A.real + A.imag * A.imag) * simu.delta_X * simu.delta_Y
         ).sum(axis=simu._last_axes)
@@ -84,6 +95,28 @@ def test_prepare_output_array() -> None:
             assert cp.allclose(
                 E_in, A
             ), f"Output array does not match input array. (Backend {backend})"
+
+
+def test_out_field() -> None:
+    for backend in ["CPU", "GPU"]:
+        simu = GPE(
+            gamma=0,
+            N=N_at,
+            window=window,
+            g=g,
+            V=None,
+            m=m,
+            NX=N,
+            NY=N,
+            backend=backend,
+        )
+        simu.delta_t = 1e-8
+        psi_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2).astype(PRECISION_COMPLEX)
+        psi = simu.out_field(psi_0, 1e-6, verbose=True, plot=False, precision="single")
+        norm = np.sum(np.abs(psi) ** 2 * simu.delta_X * simu.delta_Y)
+        assert np.allclose(
+            norm, simu.N, rtol=1e-4
+        ), f"Norm not conserved. (Backend {backend})"
 
 
 def main():

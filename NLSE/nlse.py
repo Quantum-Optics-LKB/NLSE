@@ -80,10 +80,12 @@ class NLSE:
         elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
             self._kernels = kernels_cl
             self._cl_queue = cl.CommandQueue(cl.create_some_context(interactive=False))
-        else:
+        elif self.backend == "CPU":
             self.backend = "CPU"
             self._kernels = kernels_cpu
             self._convolution = signal.oaconvolve
+        else:
+            raise ValueError("Supported backends are 'CPU', 'GPU' and 'CL'")
         self.n2 = n2
         self.V = V
         self.wl = wvl
@@ -213,24 +215,29 @@ class NLSE:
             return [plan_fft, plan_ifft]
 
     def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
-        """Prepare the output array depending on __BACKEND__.
+        """Prepare the output arrays depending on __BACKEND__.
 
+        Prepares the A and A_sq arrays to store the field and its modulus.
         Args:
             E_in (np.ndarray): Input array
             normalize (bool): Normalize the field to the total power.
         Returns:
-            np.ndarray: Output array
+            A (np.ndarray): Output field array
+            A_sq (np.ndarray): Output field modulus squared array
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
+            A_sq = cp.empty_like(A, dtype=A.real.dtype)
             E_in = cp.asarray(E_in)
         elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
             A = cla.empty(self._cl_queue, E_in.shape, E_in.dtype)
+            A_sq = cla.empty(self._cl_queue, E_in.shape, E_in.real.dtype)
             E_in = cla.to_device(self._cl_queue, E_in)
         else:
             A = pyfftw.empty_aligned(
                 E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
             )
+            A_sq = np.empty_like(A, dtype=A.real.dtype)
         if normalize:
             # normalization of the field
             if self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
@@ -250,7 +257,7 @@ class NLSE:
             integral *= c * epsilon_0 / 2
             E_00 = (self.puiss / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
-        return A
+        return A, A_sq
 
     def _send_arrays_to_gpu(self) -> None:
         """
@@ -356,12 +363,12 @@ class NLSE:
                     self.k / 2 * self.n2 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            plan_fft.fft(A, A)
-            # linear step in Fourier domain (shifted)
-            cp.multiply(A, propagator, out=A)
-            plan_fft.ifft(A, A)
-        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+        if (
+            self.backend == "GPU"
+            and self.__CUPY_AVAILABLE__
+            or self.backend == "CL"
+            and self.__PYOPENCL_AVAILABLE__
+        ):
             plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
             A *= propagator
@@ -454,8 +461,7 @@ class NLSE:
         Z = np.arange(
             self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
         )
-        A = self._prepare_output_array(E_in, normalize)
-        A_sq = A.copy().real
+        A, A_sq = self._prepare_output_array(E_in, normalize)
         self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:

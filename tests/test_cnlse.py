@@ -40,7 +40,13 @@ def test_prepare_output_array() -> None:
             A = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
         elif backend == "GPU" and CNLSE.__CUPY_AVAILABLE__:
             A = cp.ones((2, N, N), dtype=PRECISION_COMPLEX)
-        out = simu._prepare_output_array(A, normalize=True)
+        out, out_sq = simu._prepare_output_array(A, normalize=True)
+        assert (
+            out.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert (
+            out_sq.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
         integral = (
             (out.real * out.real + out.imag * out.imag) * simu.delta_X * simu.delta_Y
         ).sum(axis=simu._last_axes)
@@ -223,8 +229,7 @@ def test_split_step() -> None:
         simu.delta_z = 0
         simu.propagator = simu._build_propagator()
         E = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
-        A = simu._prepare_output_array(E, normalize=False)
-        A_sq = A.copy().real
+        A, A_sq = simu._prepare_output_array(E, normalize=False)
         simu.plans = simu._build_fft_plan(A)
         if backend == "GPU" and CNLSE.__CUPY_AVAILABLE__:
             E = cp.asarray(E)

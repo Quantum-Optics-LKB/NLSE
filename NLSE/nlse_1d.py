@@ -70,19 +70,22 @@ class NLSE_1d(NLSE):
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E_in)
-            A[:] = cp.asarray(E_in)
+            A_sq = cp.empty_like(A, dtype=A.real.dtype)
+            E_in = cp.asarray(E_in)
         else:
-            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
-            A[:] = E_in
+            A = pyfftw.empty_aligned(
+                E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
+            )
+            A_sq = np.empty_like(A, dtype=A.real.dtype)
         if normalize:
             # normalization of the field
-            integral = ((A.real * A.real + A.imag * A.imag) * self.delta_X**2).sum(
-                axis=self._last_axes
-            )
+            integral = (
+                (E_in.real * E_in.real + E_in.imag * E_in.imag) * self.delta_X**2
+            ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
             E_00 = (self.puiss / integral) ** 0.5
-            A = (E_00.T * A.T).T
-        return A
+            A[:] = (E_00.T * E_in.T).T
+        return A, A_sq
 
     def _build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.

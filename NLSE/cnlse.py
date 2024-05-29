@@ -52,6 +52,8 @@ class CNLSE(NLSE):
         Returns:
             object: CNLSE class instance
         """
+        if backend == "CL":
+            raise NotImplementedError("OpenCL backend is not yet supported for CNLSE.")
         super().__init__(
             alpha=alpha,
             puiss=puiss,
@@ -85,13 +87,24 @@ class CNLSE(NLSE):
         self.propagator2 = None
 
     def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
-        """Prepare the output array depending on __BACKEND__."""
+        """Prepare the output arrays depending on __BACKEND__.
+
+        Prepares the A and A_sq arrays to store the field and its modulus.
+        Args:
+            E_in (np.ndarray): Input array
+            normalize (bool): Normalize the field to the total power.
+        Returns:
+            A (np.ndarray): Output field array
+            A_sq (np.ndarray): Output field modulus squared array
+        """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.empty_like(E)
+            A_sq = cp.empty_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
             puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
         else:
             A = pyfftw.empty_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
+            A_sq = np.empty_like(A, dtype=A.real.dtype)
             puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
@@ -101,7 +114,7 @@ class CNLSE(NLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
             A[:] = (E_00.T * E.T).T
-        return A
+        return A, A_sq
 
     def _send_arrays_to_gpu(self) -> None:
         """

@@ -118,7 +118,20 @@ def test_prepare_output_array() -> None:
             A = np.random.random((N, N, NZ)) + 1j * np.random.random((N, N, NZ))
         elif backend == "GPU" and NLSE_3d.__CUPY_AVAILABLE__:
             A = cp.random.random((N, N, NZ)) + 1j * cp.random.random((N, N, NZ))
-        out = simu._prepare_output_array(A, normalize=True)
+        out, out_sq = simu._prepare_output_array(A, normalize=True)
+        assert (
+            out.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert (
+            out_sq.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
+        if backend == "CPU":
+            assert (
+                out.flags.aligned
+            ), f"Output array is not aligned. (Backend {backend})"
+            assert (
+                out_sq.flags.aligned
+            ), f"Output array is not aligned. (Backend {backend})"
         integral = (
             (out.real * out.real + out.imag * out.imag)
             * simu.delta_X
@@ -263,8 +276,7 @@ def test_split_step() -> None:
         simu.delta_z = 0
         simu.propagator = simu._build_propagator()
         E = np.ones((N, N, NZ), dtype=PRECISION_COMPLEX)
-        A = simu._prepare_output_array(E, normalize=False)
-        A_sq = A.copy().real
+        A, A_sq = simu._prepare_output_array(E, normalize=False)
         simu.plans = simu._build_fft_plan(A)
         simu.propagator = simu._build_propagator()
         if backend == "GPU" and NLSE_3d.__CUPY_AVAILABLE__:

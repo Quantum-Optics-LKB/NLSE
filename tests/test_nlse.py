@@ -22,7 +22,7 @@ alpha = 20
 
 
 def test_build_propagator() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in ["CL", "CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -34,14 +34,15 @@ def test_build_propagator() -> None:
 
 
 def test_build_fft_plan() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in ["CL", "CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
-        if backend == "CPU":
+        if backend == "CPU" or backend == "CL":
             A = np.random.random((N, N)) + 1j * np.random.random((N, N))
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             A = cp.random.random((N, N)) + 1j * cp.random.random((N, N))
+        A = A.astype(PRECISION_COMPLEX)
         plans = simu._build_fft_plan(A)
         if backend == "CPU":
             assert len(plans) == 2, f"Number of plans is wrong. (Backend {backend})"
@@ -64,14 +65,15 @@ def test_build_fft_plan() -> None:
 
 
 def test_prepare_output_array() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in ["CL", "CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
-        if backend == "CPU":
+        if backend == "CPU" or backend == "CL":
             A = np.random.random((N, N)) + 1j * np.random.random((N, N))
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             A = cp.random.random((N, N)) + 1j * cp.random.random((N, N))
+        A = A.astype(PRECISION_COMPLEX)
         out, out_sq = simu._prepare_output_array(A, normalize=True)
         assert (
             out.flags.c_contiguous
@@ -180,7 +182,7 @@ def test_retrieve_arrays_from_gpu() -> None:
 
 
 def test_split_step() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in ["CL", "CPU", "GPU"]:
         simu = NLSE(
             alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
@@ -209,7 +211,7 @@ def test_split_step() -> None:
 # tests for convergence of the solver : the norm of the field should be conserved
 def test_out_field() -> None:
     E = np.ones((N, N), dtype=PRECISION_COMPLEX)
-    for backend in ["CPU", "GPU"]:
+    for backend in ["CL", "CPU", "GPU"]:
         simu = NLSE(
             0, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )

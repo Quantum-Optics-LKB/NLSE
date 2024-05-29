@@ -99,3 +99,9 @@ tests/__pycache__/test_ddgpe.cpython-310-pytest-8.2.0.pyc
 tests/__pycache__/test_opencl.cpython-310-pytest-8.2.0.pyc
 __pycache__/__init__.cpython-310.pyc
 __pycache__/test_opencl.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_ddgpe.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_nlse3d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc

@@ -69,14 +69,14 @@ class NLSE_1d(NLSE):
             np.ndarray: Output array
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            A = cp.empty_like(E_in)
-            A_sq = cp.empty_like(A, dtype=A.real.dtype)
+            A = cp.zeros_like(E_in)
+            A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E_in = cp.asarray(E_in)
         else:
-            A = pyfftw.empty_aligned(
+            A = pyfftw.zeros_aligned(
                 E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
             )
-            A_sq = np.empty_like(A, dtype=A.real.dtype)
+            A_sq = np.zeros_like(A, dtype=A.real.dtype)
         if normalize:
             # normalization of the field
             integral = (
@@ -103,7 +103,7 @@ class NLSE_1d(NLSE):
             A_plot (np.ndarray): Field to plot
             z (float): Propagation distance in m.
         """
-        fig, ax = plt.subplots(1, 2, layout="constrained")
+        fig, ax = plt.subplots(1, 2, layout="constrained", figsize=(10, 5))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         if A_plot.ndim == 2:
             for i in range(A_plot.shape[0]):

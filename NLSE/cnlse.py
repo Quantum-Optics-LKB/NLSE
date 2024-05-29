@@ -98,13 +98,13 @@ class CNLSE(NLSE):
             A_sq (np.ndarray): Output field modulus squared array
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            A = cp.empty_like(E)
-            A_sq = cp.empty_like(A, dtype=A.real.dtype)
+            A = cp.zeros_like(E)
+            A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
             puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
         else:
-            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
-            A_sq = np.empty_like(A, dtype=A.real.dtype)
+            A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
+            A_sq = np.zeros_like(A, dtype=A.real.dtype)
             puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
@@ -387,7 +387,7 @@ class CNLSE(NLSE):
                 A_plot = A_plot[0]
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
-        fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
             self.X[0] * 1e3,

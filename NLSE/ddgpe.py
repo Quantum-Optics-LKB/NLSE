@@ -183,14 +183,16 @@ class DDGPE(CNLSE):
             np.ndarray: Output array
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            A = cp.empty_like(E_in)
+            A = cp.zeros_like(E_in)
+            A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             A[:] = cp.asarray(E_in)
         else:
-            A = pyfftw.empty_aligned(E_in.shape, dtype=E_in.dtype)
+            A = pyfftw.zeros_aligned(E_in.shape, dtype=E_in.dtype)
+            A_sq = np.empty_like(A, dtype=A.real.dtype)
             A[:] = E_in
         if normalize:
             pass
-        return A
+        return A, A_sq
 
     def split_step(
         self,

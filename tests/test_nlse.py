@@ -5,7 +5,10 @@ from scipy.constants import c, epsilon_0
 
 if NLSE.__CUPY_AVAILABLE__:
     import cupy as cp
-    from pyvkfft.cuda import VkFFTApp
+    from pyvkfft.cuda import VkFFTApp as VkFFTApp_cuda
+if NLSE.__PYOPENCL_AVAILABLE__:
+    import pyopencl.array as cla
+    from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
@@ -56,7 +59,16 @@ def test_build_fft_plan() -> None:
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
             assert isinstance(
-                plans[0], VkFFTApp
+                plans[0], VkFFTApp_cuda
+            ), f"Plan type is wrong. (Backend {backend})"
+            assert plans[0].shape0 == (
+                N,
+                N,
+            ), f"Plan shape is wrong. (Backend {backend})"
+        elif backend == "CL" and NLSE.__PYOPENCL_AVAILABLE__:
+            assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
+            assert isinstance(
+                plans[0], VkFFTApp_cl
             ), f"Plan type is wrong. (Backend {backend})"
             assert plans[0].shape0 == (
                 N,
@@ -88,9 +100,21 @@ def test_prepare_output_array() -> None:
             assert (
                 out_sq.flags.aligned
             ), f"Output array is not aligned. (Backend {backend})"
-        integral = (
-            (out.real * out.real + out.imag * out.imag) * simu.delta_X * simu.delta_Y
-        ).sum(axis=simu._last_axes)
+        if backend == "GPU" and NLSE.__CUPY_AVAILABLE__ or backend == "CPU":
+            integral = (
+                (out.real * out.real + out.imag * out.imag)
+                * simu.delta_X
+                * simu.delta_Y
+            ).sum(axis=simu._last_axes)
+        if backend == "CL" and NLSE.__PYOPENCL_AVAILABLE__:
+            arr = out.real * out.real + out.imag * out.imag
+            arr *= simu.delta_X * simu.delta_Y
+            integral = cla.sum(
+                arr,
+                dtype=arr.dtype,
+                queue=simu._cl_queue,
+            )
+            integral = integral.get()
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral, simu.puiss
@@ -194,17 +218,23 @@ def test_split_step() -> None:
         simu.propagator = simu._build_propagator()
         if backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             E = cp.asarray(E)
+        if (
+            backend == "GPU"
+            and NLSE.__CUPY_AVAILABLE__
+            or backend == "CL"
+            and NLSE.__PYOPENCL_AVAILABLE__
+        ):
             simu._send_arrays_to_gpu()
         simu.split_step(
-            E, A_sq, simu.V, simu.propagator, simu.plans, precision="double"
+            A, A_sq, simu.V, simu.propagator, simu.plans, precision="double"
         )
         if backend == "CPU":
             assert np.allclose(
-                E, np.ones((N, N), dtype=PRECISION_COMPLEX)
+                A, np.zeros((N, N), dtype=PRECISION_COMPLEX)
             ), f"Split step is not unitary. (Backend {backend})"
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert cp.allclose(
-                E, cp.ones((N, N), dtype=PRECISION_COMPLEX)
+                A, cp.zeros((N, N), dtype=PRECISION_COMPLEX)
             ), f"Split step is not unitary. (Backend {backend})"
 
 

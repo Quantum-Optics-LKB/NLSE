@@ -229,18 +229,18 @@ class NLSE:
             A_sq (np.ndarray): Output field modulus squared array
         """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            A = cp.empty_like(E_in)
-            A_sq = cp.empty_like(A, dtype=A.real.dtype)
+            A = cp.zeros_like(E_in)
+            A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E_in = cp.asarray(E_in)
         elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
-            A = cla.empty(self._cl_queue, E_in.shape, E_in.dtype)
-            A_sq = cla.empty(self._cl_queue, E_in.shape, E_in.real.dtype)
+            A = cla.zeros(self._cl_queue, E_in.shape, E_in.dtype)
+            A_sq = cla.zeros(self._cl_queue, E_in.shape, E_in.real.dtype)
             E_in = cla.to_device(self._cl_queue, E_in)
         else:
-            A = pyfftw.empty_aligned(
+            A = pyfftw.zeros_aligned(
                 E_in.shape, dtype=E_in.dtype, n=pyfftw.simd_alignment
             )
-            A_sq = np.empty_like(A, dtype=A.real.dtype)
+            A_sq = np.zeros_like(A, dtype=A.real.dtype)
         if normalize:
             # normalization of the field
             if self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
@@ -522,7 +522,12 @@ class NLSE:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)\n")
         self.n2 = n2_old
         return_np_array = isinstance(E_in, np.ndarray)
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+        if (
+            self.backend == "GPU"
+            and self.__CUPY_AVAILABLE__
+            or self.backend == "CL"
+            and self.__PYOPENCL_AVAILABLE__
+        ):
             if return_np_array:
                 A = A.get()
             self._retrieve_arrays_from_gpu()
@@ -549,7 +554,7 @@ class NLSE:
             and isinstance(A_plot, cla.Array)
         ):
             A_plot = A_plot.get()
-        fig, ax = plt.subplots(1, 3, layout="constrained")
+        fig, ax = plt.subplots(1, 3, layout="constrained", figsize=(15, 5))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
             self.X[0] * 1e3,

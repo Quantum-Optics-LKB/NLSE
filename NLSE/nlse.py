@@ -80,12 +80,15 @@ class NLSE:
         elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
             self._kernels = kernels_cl
             self._cl_queue = cl.CommandQueue(cl.create_some_context(interactive=False))
-        elif self.backend == "CPU":
+        else:
+            if backend in ["GPU", "CL"]:
+                print("Backend not available, switching to CPU")
+            if backend != "CPU":
+                print("Available backends are GPU, CPU or CL, switching to CPU")
             self.backend = "CPU"
             self._kernels = kernels_cpu
             self._convolution = signal.oaconvolve
-        else:
-            raise ValueError("Supported backends are 'CPU', 'GPU' and 'CL'")
+
         self.n2 = n2
         self.V = V
         self.wl = wvl

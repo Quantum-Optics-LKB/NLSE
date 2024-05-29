@@ -1,4 +1,3 @@
-cupy==13.1.0
 matplotlib==3.8.4
 numba==0.59.1
 numpy==1.26.4

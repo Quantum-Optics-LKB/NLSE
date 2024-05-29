@@ -272,7 +272,7 @@ def test_out_field() -> None:
 def main():
     print("Testing CNLSE class")
     L = 10e-2
-    for backend in ["GPU"]:
+    for backend in ["GPU", "CPU"]:
         simu_c = CNLSE(
             alpha,
             puiss,

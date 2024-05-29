@@ -100,7 +100,7 @@ def test_prepare_output_array() -> None:
             assert (
                 out_sq.flags.aligned
             ), f"Output array is not aligned. (Backend {backend})"
-        if backend == "GPU" and NLSE.__CUPY_AVAILABLE__ or backend == "CPU":
+        if simu.backend == "GPU" and NLSE.__CUPY_AVAILABLE__ or simu.backend == "CPU":
             integral = (
                 (out.real * out.real + out.imag * out.imag)
                 * simu.delta_X
@@ -118,7 +118,7 @@ def test_prepare_output_array() -> None:
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral, simu.puiss
-        ), f"Normalization failed. (Backend {backend})"
+        ), f"Normalization failed. (Backend {simu.backend}) : {integral} != {simu.puiss}"
         assert out.shape == (N, N), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(

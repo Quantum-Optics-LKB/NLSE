@@ -247,6 +247,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -257,6 +258,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -269,6 +271,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -280,6 +283,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             plan_fft.fft(A, A)
@@ -312,6 +316,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -322,6 +327,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -334,6 +340,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -345,6 +352,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
         else:
             if V is None:
@@ -357,6 +365,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -367,6 +376,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -379,6 +389,7 @@ class DDGPE(CNLSE):
                     self.g,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -390,6 +401,7 @@ class DDGPE(CNLSE):
                     self.g2,
                     self.g12,
                     self.I_sat,
+                    self.I_sat2,
                 )
             if self.omega is not None:
                 self._kernels.rabi_coupling(A, self.delta_z, self.omega / 2)
@@ -407,7 +419,7 @@ class DDGPE(CNLSE):
                 A_plot = A_plot[0]
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
-        fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $t$ = {t:} ps")
         ext_real = [
             self.X[0],

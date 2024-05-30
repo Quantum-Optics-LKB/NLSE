@@ -85,6 +85,8 @@ class NLSE_1d(NLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (self.puiss / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
+        else:
+            A[:] = E_in
         return A, A_sq
 
     def _build_propagator(self) -> np.ndarray:

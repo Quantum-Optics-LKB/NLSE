@@ -230,11 +230,11 @@ def test_split_step() -> None:
         )
         if backend == "CPU":
             assert np.allclose(
-                A, np.zeros((N, N), dtype=PRECISION_COMPLEX)
+                A, np.ones((N, N), dtype=PRECISION_COMPLEX)
             ), f"Split step is not unitary. (Backend {backend})"
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
             assert cp.allclose(
-                A, cp.zeros((N, N), dtype=PRECISION_COMPLEX)
+                A, cp.ones((N, N), dtype=PRECISION_COMPLEX)
             ), f"Split step is not unitary. (Backend {backend})"
 
 

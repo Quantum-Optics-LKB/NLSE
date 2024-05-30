@@ -114,6 +114,8 @@ class CNLSE(NLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
             A[:] = (E_00.T * E.T).T
+        else:
+            A[:] = E
         return A, A_sq
 
     def _send_arrays_to_gpu(self) -> None:

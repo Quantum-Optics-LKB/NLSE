@@ -99,6 +99,8 @@ class CNLSE_1d(CNLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
             A[:] = (E_00.T * E.T).T
+        else:
+            A[:] = E
         return A, A_sq
 
     def _take_components(self, A: np.ndarray) -> tuple:

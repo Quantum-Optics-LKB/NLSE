@@ -130,6 +130,8 @@ class NLSE_3d(NLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (self.energy / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
+        else:
+            A[:] = E_in
         return A, A_sq
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:

@@ -565,10 +565,10 @@ class NLSE:
             self.Y[-1] * 1e3,
         ]
         ext_fourier = [
-            self.Kx[0] * 1e-3,
-            self.Kx[-1] * 1e-3,
-            self.Ky[0] * 1e-3,
-            self.Ky[-1] * 1e-3,
+            np.min(self.Kx) * 1e-3,
+            np.max(self.Kx) * 1e-3,
+            np.min(self.Ky) * 1e-3,
+            np.max(self.Ky) * 1e-3,
         ]
         rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
         phi = np.angle(A_plot)

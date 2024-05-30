@@ -4,6 +4,8 @@ import numpy as np
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
 
+# TODO: Add assertions to check the norm
+
 
 def main():
     N = 2048

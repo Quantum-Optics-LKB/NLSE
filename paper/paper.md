@@ -49,7 +49,7 @@ Using an easy to extend object-oriented classes, users can readily input experim
 
 $$i\partial_t\psi = -\frac{1}{2m}\nabla^2\psi + V\psi + g|\psi|^2\psi.$$
 
-In order to take advantage of the computing power of modern Graphical Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`Cupy`](https://cupy.dev/)[@cupy_learningsys2017]  package that maps [`Numpy`](https://numpy.org/) [@harris2020array] functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
+In order to take advantage of the computing power of modern Graphics Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`Cupy`](https://cupy.dev/) [@cupy_learningsys2017]  package that maps [`Numpy`](https://numpy.org/) [@harris2020array] functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
 It also heavily uses just-in-time compilation using [`Numba`](https://numba.pydata.org/) [@lam2015numba] in order to optimize performance while having an easily maintainable Python codebase.
 Compared to naive Numpy based CPU implementations, this package provides a 100 to 10000 times speedup for typical sizes \autoref{fig:bench}.
 While optimized for the use with GPU, it also provides a performant CPU fallback layer.
@@ -58,6 +58,7 @@ The goal of this package is to provide a natural framework for all physicists wi
 It supports lossy, non-linear and non-local media.
 
 It provides several classes to model 1D, 2D or 3D propagation, and leverages the array functionalities of `Numpy` like broadcasting in order to allow scans of physical parameters to most faithfully replicate experimental setups.
+The typical output of a simulation run is presented in \autoref{fig:output}.
 
 This code has been developped during the author's PhD thesis [@aladjidiFullOpticalControl2023] and used as the main simulation tool for several publications like [@glorieuxHotAtomicVapors2023] and [@bakerrasooliTurbulentDynamicsTwodimensional2023].
 

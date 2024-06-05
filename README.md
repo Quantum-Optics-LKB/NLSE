@@ -63,6 +63,12 @@ On Mac, you first need to install FFTW which can be done by simply using Homebre
 
 **WARNING** : The default flag passed to `FFTW` for planning is `FFTW_PATIENT` which means that the first run of the code can take a long time. This information is cached so subsequent runs just have to load the plans, removing this computation time.
 
+<!-- TODO Tuto to install FFTW on Mac ... -->
+
+### PyVkFFT
+
+We found out that [PyVkFFT](https://github.com/vincefn/pyvkfft/tree/master) was outperforming CuFFT so the GPU implementation uses this library for optimal performance.
+
 Other than this, the code relies on these libraries :
 
 - `numba` : for best CPU performance on Intel CPU's, with `icc_rt`

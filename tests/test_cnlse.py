@@ -16,6 +16,7 @@ waist2 = 70e-6
 window = 4 * waist
 puiss = 1.05
 Isat = 10e4  # saturation intensity in W/m^2
+Isat2 = waist / waist2 * Isat
 L = 1e-3
 alpha = 20
 
@@ -39,7 +40,13 @@ def test_prepare_output_array() -> None:
             A = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
         elif backend == "GPU" and CNLSE.__CUPY_AVAILABLE__:
             A = cp.ones((2, N, N), dtype=PRECISION_COMPLEX)
-        out = simu._prepare_output_array(A, normalize=True)
+        out, out_sq = simu._prepare_output_array(A, normalize=True)
+        assert (
+            out.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert (
+            out_sq.flags.c_contiguous
+        ), f"Output array is not C-contiguous. (Backend {backend})"
         integral = (
             (out.real * out.real + out.imag * out.imag) * simu.delta_X * simu.delta_Y
         ).sum(axis=simu._last_axes)
@@ -222,8 +229,7 @@ def test_split_step() -> None:
         simu.delta_z = 0
         simu.propagator = simu._build_propagator()
         E = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
-        A = simu._prepare_output_array(E, normalize=False)
-        A_sq = A.copy().real
+        A, A_sq = simu._prepare_output_array(E, normalize=False)
         simu.plans = simu._build_fft_plan(A)
         if backend == "GPU" and CNLSE.__CUPY_AVAILABLE__:
             E = cp.asarray(E)
@@ -266,7 +272,7 @@ def test_out_field() -> None:
 def main():
     print("Testing CNLSE class")
     L = 10e-2
-    for backend in ["GPU"]:
+    for backend in ["GPU", "CPU"]:
         simu_c = CNLSE(
             alpha,
             puiss,
@@ -284,6 +290,7 @@ def main():
         simu_c.delta_z = 0.5e-4
         simu_c.puiss2 = 10e-3
         simu_c.n22 = 1e-10
+        simu_c.I_sat2 = Isat2
         simu_c.k2 = 2 * np.pi / 795e-9
         E_0 = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist**2).astype(
             PRECISION_COMPLEX

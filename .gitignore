@@ -85,3 +85,23 @@ tests/__pycache__/test_nlse3d.cpython-310-pytest-8.2.0.pyc
 tests/__pycache__/test_nonlocality.cpython-310-pytest-8.2.0.pyc
 mkdocs-documentation/site/
 
+build/lib/NLSE/kernels_cl.py
+NLSE/__pycache__/cnlse_1d.cpython-310.pyc
+NLSE/__pycache__/cnlse.cpython-310.pyc
+NLSE/__pycache__/ddgpe.cpython-310.pyc
+NLSE/__pycache__/gpe.cpython-310.pyc
+NLSE/__pycache__/kernels_cl.cpython-310.pyc
+NLSE/__pycache__/kernels_gpu.cpython-310.pyc
+NLSE/__pycache__/nlse_1d.cpython-310.pyc
+NLSE/__pycache__/nlse_3d.cpython-310.pyc
+NLSE/__pycache__/utils.cpython-310.pyc
+tests/__pycache__/test_ddgpe.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_opencl.cpython-310-pytest-8.2.0.pyc
+__pycache__/__init__.cpython-310.pyc
+__pycache__/test_opencl.cpython-310-pytest-8.2.0.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_ddgpe.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_nlse3d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc

@@ -52,6 +52,8 @@ class CNLSE(NLSE):
         Returns:
             object: CNLSE class instance
         """
+        if backend == "CL":
+            raise NotImplementedError("OpenCL backend is not yet supported for CNLSE.")
         super().__init__(
             alpha=alpha,
             puiss=puiss,
@@ -66,6 +68,7 @@ class CNLSE(NLSE):
             wvl=wvl,
             backend=backend,
         )
+        self.I_sat2 = self.I_sat
         self.n12 = n12
         # initialize intra component 2 interaction parameter
         # to be the same as intra component 1
@@ -84,13 +87,24 @@ class CNLSE(NLSE):
         self.propagator2 = None
 
     def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
-        """Prepare the output array depending on __BACKEND__."""
+        """Prepare the output arrays depending on __BACKEND__.
+
+        Prepares the A and A_sq arrays to store the field and its modulus.
+        Args:
+            E_in (np.ndarray): Input array
+            normalize (bool): Normalize the field to the total power.
+        Returns:
+            A (np.ndarray): Output field array
+            A_sq (np.ndarray): Output field modulus squared array
+        """
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            A = cp.empty_like(E)
+            A = cp.zeros_like(E)
+            A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
             puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
         else:
-            A = pyfftw.empty_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
+            A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
+            A_sq = np.zeros_like(A, dtype=A.real.dtype)
             puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
@@ -100,7 +114,9 @@ class CNLSE(NLSE):
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
             A[:] = (E_00.T * E.T).T
-        return A
+        else:
+            A[:] = E
+        return A, A_sq
 
     def _send_arrays_to_gpu(self) -> None:
         """
@@ -201,6 +217,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -210,6 +227,7 @@ class CNLSE(NLSE):
                     self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
@@ -223,6 +241,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -233,6 +252,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
@@ -266,6 +286,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -275,6 +296,7 @@ class CNLSE(NLSE):
                     self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
@@ -288,6 +310,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -298,6 +321,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         else:
@@ -311,6 +335,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_without_V_c(
                     A2,
@@ -320,6 +345,7 @@ class CNLSE(NLSE):
                     self.alpha2 / 2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
@@ -333,6 +359,7 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
+                    2 * self.I_sat2 / (epsilon_0 * c),
                 )
                 self._kernels.nl_prop_c(
                     A2,
@@ -343,6 +370,7 @@ class CNLSE(NLSE):
                     self.k2 / 2 * V,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:

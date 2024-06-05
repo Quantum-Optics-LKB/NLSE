@@ -1,24 +1,24 @@
-import cupy as cp
+from pyopencl import array as cla
+from pyopencl import clmath
 
 
-@cp.fuse(kernel_name="nl_prop")
 def nl_prop(
-    A: cp.ndarray,
-    A_sq: cp.ndarray,
+    A: cla.Array,
+    A_sq: cla.Array,
     dz: float,
     alpha: float,
-    V: cp.ndarray,
+    V: cla.Array,
     g: float,
     Isat: float,
 ) -> None:
     """A fused kernel to apply real space terms
 
     Args:
-        A (cp.ndarray): The field to propagate
-        A_sq (cp.ndarray): The field modulus squared
+        A (cla.Array): The field to propagate
+        A_sq (cla.Array): The field modulus squared
         dz (float): Propagation step in m
         alpha (float): Losses
-        V (cp.ndarray): Potential
+        V (cla.Array): Potential
         g (float): Interactions
         Isat (float): Saturation
     """
@@ -31,14 +31,13 @@ def nl_prop(
     # Potential
     arg += 1j * V
     arg *= dz
-    cp.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A *= arg
 
 
-@cp.fuse(kernel_name="nl_prop_without_V")
 def nl_prop_without_V(
-    A: cp.ndarray,
-    A_sq: cp.ndarray,
+    A: cla.Array,
+    A_sq: cla.Array,
     dz: float,
     alpha: float,
     g: float,
@@ -47,8 +46,8 @@ def nl_prop_without_V(
     """A fused kernel to apply real space terms
 
     Args:
-        A (cp.ndarray): The field to propagate
-        A_sq (cp.ndarray): The field modulus squared
+        A (cla.Array): The field to propagate
+        A_sq (cla.Array): The field modulus squared
         dz (float): Propagation step in m
         alpha (float): Losses
         g (float): Interactions
@@ -61,38 +60,36 @@ def nl_prop_without_V(
     # Losses
     arg += -alpha / 2 * sat
     arg *= dz
-    cp.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A *= arg
 
 
-@cp.fuse(kernel_name="nl_prop_c")
 def nl_prop_c(
-    A1: cp.ndarray,
-    A_sq_1: cp.ndarray,
-    A_sq_2: cp.ndarray,
+    A1: cla.Array,
+    A_sq_1: cla.Array,
+    A_sq_2: cla.Array,
     dz: float,
     alpha: float,
-    V: cp.ndarray,
+    V: cla.Array,
     g11: float,
     g12: float,
-    Isat1: float,
-    Isat2: float,
+    Isat: float,
 ) -> None:
     """A fused kernel to apply real space terms
     Args:
-        A1 (cp.ndarray): The field to propagate (1st component)
-        A_sq_1 (cp.ndarray): The field modulus squared (1st component)
-        A_sq_2 (cp.ndarray): The field modulus squared (2nd component)
+        A1 (cla.Array): The field to propagate (1st component)
+        A_sq_1 (cla.Array): The field modulus squared (1st component)
+        A_sq_2 (cla.Array): The field modulus squared (2nd component)
         dz (float): Propagation step in m
         alpha (float): Losses
-        V (cp.ndarray): Potential
+        V (cla.Array): Potential
         g11 (float): Intra-component interactions
         g12 (float): Inter-component interactions
         Isat1 (float): Saturation parameter of first component
         Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    sat = 1 / (1 + A_sq_1 * 1 / Isat1 + A_sq_2 * 1 / Isat2)
+    sat = 1 / (1 + (A_sq_1 + A_sq_2) / Isat)
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
@@ -100,27 +97,25 @@ def nl_prop_c(
     # Potential
     arg += 1j * V
     arg *= dz
-    cp.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A1 *= arg
 
 
-@cp.fuse(kernel_name="nl_prop_without_V_c")
 def nl_prop_without_V_c(
-    A1: cp.ndarray,
-    A_sq_1: cp.ndarray,
-    A_sq_2: cp.ndarray,
+    A1: cla.Array,
+    A_sq_1: cla.Array,
+    A_sq_2: cla.Array,
     dz: float,
     alpha: float,
     g11: float,
     g12: float,
-    Isat1: float,
-    Isat2: float,
+    Isat: float,
 ) -> None:
     """A fused kernel to apply real space terms
     Args:
-        A1 (cp.ndarray): The field to propagate (1st component)
-        A_sq_1 (cp.ndarray): The field modulus squared (1st component)
-        A_sq_2 (cp.ndarray): The field modulus squared (2nd component)
+        A1 (cla.Array): The field to propagate (1st component)
+        A_sq_1 (cla.Array): The field modulus squared (1st component)
+        A_sq_2 (cla.Array): The field modulus squared (2nd component)
         dz (float): Propagation step in m
         alpha (float): Losses
         g11 (float): Intra-component interactions
@@ -129,38 +124,36 @@ def nl_prop_without_V_c(
         Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    sat = 1 / (1 + A_sq_1 * 1 / Isat1 + A_sq_2 * 1 / Isat2)
+    sat = 1 / (1 + A_sq_1 / Isat)
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
     arg += -alpha / 2 * sat
     arg *= dz
-    cp.exp(arg, out=arg)
+    arg = clmath.exp(arg)
     A1 *= arg
 
 
-@cp.fuse(kernel_name="rabi_coupling")
 def rabi_coupling(A, dz: float, omega: float) -> None:
     """Apply a Rabi coupling term.
     This function implements the Rabi hopping term.
     It exchanges density between the two components.
 
     Args:
-        A1 (cp.ndarray): First field / component
-        A2 (cp.ndarray): Second field / component
+        A1 (cla.Array): First field / component
+        A2 (cla.Array): Second field / component
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
     A1 = A[..., 0, :, :]
     A2 = A[..., 1, :, :]
     A1_old = A1.copy()
-    A1[:] = cp.cos(omega * dz) * A1 - 1j * cp.sin(omega * dz) * A2
-    A2[:] = cp.cos(omega * dz) * A2 - 1j * cp.sin(omega * dz) * A1_old
+    A1[:] = clmath.cos(omega * dz) * A1 - 1j * clmath.sin(omega * dz) * A2
+    A2[:] = clmath.cos(omega * dz) * A2 - 1j * clmath.sin(omega * dz) * A1_old
 
 
-@cp.fuse(kernel_name="vortex_cp")
 def vortex_cp(
-    im: cp.ndarray, i: int, j: int, ii: cp.ndarray, jj: cp.ndarray, ll: int
+    im: cla.Array, i: int, j: int, ii: cla.Array, jj: cla.Array, ll: int
 ) -> None:
     """Generates a vortex of charge l at a position (i,j) on the image im.
 
@@ -175,18 +168,17 @@ def vortex_cp(
     Returns:
         None
     """
-    im += cp.angle(((ii - i) + 1j * (jj - j)) ** ll)
+    im += clmath.atan(((ii - i) + 1j * (jj - j)) ** ll)
 
 
-@cp.fuse(kernel_name="square_mod_cp")
-def square_mod(A: cp.ndarray, A_sq: cp.ndarray) -> None:
+def square_mod(A: cla.Array, A_sq: cla.Array) -> None:
     """Compute the square modulus of the field
 
     Args:
-        A (cp.ndarray): The field
-        A_sq (cp.ndarray): The modulus squared of the field
+        A (cla.Array): The field
+        A_sq (cla.Array): The modulus squared of the field
 
     Returns:
         None
     """
-    A_sq[:] = cp.abs(A) ** 2
+    A_sq[:] = A.real * A.real + A.imag * A.imag

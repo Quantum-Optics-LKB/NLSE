@@ -37,6 +37,7 @@ mkdocs, version 1.2.0 from /usr/local/lib/python3.8/site-packages/mkdocs (Python
 
 ### Extra packages
 
+
 You need to install packages to support the markdown extensions : [mkdocsmateral](https://github.com/squidfunk/mkdocs-material), [mkdocstrings](https://pypi.org/project/mkdocstrings/) and [mkdocs-jupyter](https://github.com/danielfrg/mkdocs-jupyter) used in the documentation. You can install these using pip:
 
 ```
@@ -80,4 +81,16 @@ That's looking good. You're ready to deploy the first pass of your MkLorum docum
 mkdocs build
 ```
 
-This will create a new directory, named `site`.
+# This will create a new directory, named `site`.
+
+# Documentation of NLSE
+
+## Installation
+
+pip install mkdocs
+
+## Dev server
+
+To launch the dev server : mkdocs serve
+Then go to [Here](http://127.0.0.1:8000/)
+

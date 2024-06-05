@@ -92,7 +92,6 @@ def nl_prop_c(
         Isat2 (float): Saturation parameter of second component
     """
     # Saturation parameter
-    # sat = 1 / (1 + (A_sq_1 + A_sq_2) / Isat)
     sat = 1 / (1 + A_sq_1 * 1 / Isat1 + A_sq_2 * 1 / Isat2)
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)

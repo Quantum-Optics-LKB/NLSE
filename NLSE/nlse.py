@@ -70,7 +70,7 @@ class NLSE:
             Isat (float): Saturation intensity in W/m^2
             nl_length (float): Non local length in m
             wvl (float): Wavelength in m
-            backend (str, optional): "GPU", "CPU" or "CL". Defaults to __BACKEND__.
+            backend (str, optional): Will run using the "GPU" or "CPU". Defaults to __BACKEND__.
         """
         # listof physical parameters
         self.backend = backend
@@ -559,10 +559,10 @@ class NLSE:
         fig, ax = plt.subplots(1, 3, layout="constrained", figsize=(15, 5))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
-            self.Y[0] * 1e3,
-            self.Y[-1] * 1e3,
+            np.min(self.X) * 1e3,
+            np.max(self.X) * 1e3,
+            np.min(self.Y) * 1e3,
+            np.max(self.Y) * 1e3,
         ]
         ext_fourier = [
             np.min(self.Kx) * 1e-3,

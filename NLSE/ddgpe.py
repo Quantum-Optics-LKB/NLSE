@@ -422,10 +422,10 @@ class DDGPE(CNLSE):
         fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $t$ = {t:} ps")
         ext_real = [
-            self.X[0],
-            self.X[-1],
-            self.Y[0],
-            self.Y[-1],
+            np.min(self.X) * 1e3,
+            np.max(self.X) * 1e3,
+            np.min(self.Y) * 1e3,
+            np.max(self.Y) * 1e3,
         ]
         rho0 = np.abs(A_plot[0]) ** 2
         phi0 = np.angle(A_plot[0])

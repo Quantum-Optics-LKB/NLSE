@@ -4,3 +4,5 @@ The class NLSE is the main class available in the package.
 
 
 ::: NLSE.nlse.NLSE
+    options:
+      show_source: true

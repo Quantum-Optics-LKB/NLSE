@@ -47,7 +47,7 @@ simu.out_field(E_0, L, verbose=True, plot=True, precision="single")
 
 ### Supported platforms
 
-This code has been tested on the three main platforms: Linux, MacOs and Windows.
+This code has been tested on the three main platforms: Linux, MacOs and Windows. The requirements are in the [`requirements.txt`](requirements.txt) at the root of the repo.
 
 ### GPU computing
 
@@ -58,6 +58,8 @@ For optimal speed, this code uses your GPU (graphics card). For this, you need s
 ### PyFFTW
 
 If the code does not find Cupy, it will fall back to a CPU based implementation that uses the CPU : [PyFFTW](https://pyfftw.readthedocs.io/en/latest/). To make the best out of your computer, this library is multithreaded. By default it will use all available threads. If this is not what you want, you can disable this by setting the variable `pyfftw.config.NUM_THREADS` to a number of your choosing.
+
+On Mac, you first need to install FFTW which can be done by simply using Homebrew `brew install fftw`. Some users reported this didn't work for them, in this case the next best bet is to build it from source following these instructions: [FFTW - Installation and customization](http://www.fftw.org/fftw2_doc/fftw_6.html).
 
 **WARNING** : The default flag passed to `FFTW` for planning is `FFTW_PATIENT` which means that the first run of the code can take a long time. This information is cached so subsequent runs just have to load the plans, removing this computation time.
 

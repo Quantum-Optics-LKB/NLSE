@@ -392,10 +392,10 @@ class CNLSE(NLSE):
         fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
-            self.Y[0] * 1e3,
-            self.Y[-1] * 1e3,
+            np.min(self.X) * 1e3,
+            np.max(self.X) * 1e3,
+            np.min(self.Y) * 1e3,
+            np.max(self.Y) * 1e3,
         ]
         rho0 = np.abs(A_plot[0]) ** 2 * 1e-4 * c / 2 * epsilon_0
         phi0 = np.angle(A_plot[0])

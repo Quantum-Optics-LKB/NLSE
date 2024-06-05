@@ -40,8 +40,7 @@ class NLSE_3d(NLSE):
         Args:
             alpha (float): alpha
             energy (float): Total energy in J
-            window (np.ndarray): Computanional window in the transverse plane (index 0) in m
-            and longitudinal direction (index 1) in s.
+            window (np.ndarray): Computanional window in the transverse plane (index 0) in m and longitudinal direction (index 1) in s.
             n2 (float): Non linear coeff in m^2/W.
             D0 (float): Dispersion in s^2/m.
             vg (float): Group velocity in m/s.

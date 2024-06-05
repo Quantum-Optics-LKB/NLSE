@@ -35,7 +35,6 @@ class CNLSE(NLSE):
         Args:
             alpha (float): alpha through the cell
             power (float): Optical power in W
-            waist (float): Beam waist in m
             window (float): Computational window in m
             n2 (float): Non linear index of the 1 st component in m^2/W
             n12 (float): Inter component interaction parameter
@@ -43,12 +42,11 @@ class CNLSE(NLSE):
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             omega (float, optional): Rabi coupling. Defaults to None.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         Returns:
             object: CNLSE class instance
         """
@@ -144,7 +142,8 @@ class CNLSE(NLSE):
         """Build the propagators.
 
         Returns:
-            np.ndarray: A tuple of linear propagators for each component.
+            propagator1 (np.ndarray): The propagator for the first component.
+            propagator2 (np.ndarray): The propagator for the second component.
         """
         propagator1 = super()._build_propagator()
         propagator2 = np.exp(
@@ -179,14 +178,9 @@ class CNLSE(NLSE):
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
             A_sq (np.ndarray): Intensity of the fields.
             V (np.ndarray): Potential field (can be None).
-            propagator1 (np.ndarray): Propagator matrix for field 1.
-            propagator2 (np.ndarray): Propagator matrix for field 2.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
-            (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the nonlinear
-            propagation step.
-            Defaults to "single".
+            propagator (np.ndarray): Propagator matrix for both fields [propagator1, propagator2].
+            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to "single".
         Returns:
             None
         """

@@ -40,7 +40,7 @@ class NLSE_1d(NLSE):
             Isat (float): Saturation intensity in W/m^2
             nl_length (float, optional): Non-local length in m. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         super().__init__(
             alpha=alpha,

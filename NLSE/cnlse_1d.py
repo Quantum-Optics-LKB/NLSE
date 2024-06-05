@@ -40,14 +40,12 @@ class CNLSE_1d(CNLSE):
             V (np.ndarray): Potential landscape in a.u
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             omega (float, optional): Rabi coupling. Defaults to None.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
 
         Returns:
             object: CNLSE class instance

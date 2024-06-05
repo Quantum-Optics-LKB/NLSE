@@ -126,22 +126,3 @@ def test_out_field() -> None:
         assert np.allclose(
             norm, puiss, rtol=1e-4
         ), f"Normalization failed. (Backend {backend})"
-
-
-def main() -> None:
-    print("Testing NLSE_1d class")
-    for backend in ["CPU", "GPU"]:
-        simu = NLSE_1d(
-            alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend=backend
-        )
-        simu.delta_z = 1e-5
-        simu.puiss2 = 10e-3
-        simu.n22 = 1e-10
-        simu.k2 = 2 * np.pi / 795e-9
-        E_0 = np.exp(-(simu.X**2) / waist**2).astype(PRECISION_COMPLEX)
-        simu.V = -1e-4 * np.exp(-(simu.X**2) / waist2**2).astype(PRECISION_COMPLEX)
-        simu.out_field(E_0, L, verbose=True, plot=False, precision="single")
-
-
-if __name__ == "__main__":
-    main()

@@ -327,34 +327,3 @@ def test_out_field() -> None:
         assert np.allclose(
             norm, simu.energy, rtol=1e-4
         ), f"Norm not conserved. (Backend {backend})"
-
-
-def main():
-    print("Testing NLSE_3d class")
-    for backend in ["GPU", "CPU"]:
-        simu = NLSE_3d(
-            alpha=alpha,
-            energy=energy,
-            window=window,
-            n2=n2,
-            D0=D0,
-            vg=vg,
-            V=None,
-            L=L,
-            NX=N,
-            NY=N,
-            NZ=NZ,
-            Isat=Isat,
-            backend=backend,
-        )
-        simu.delta_z = 0.25e-4
-        E_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2).astype(PRECISION_COMPLEX)
-        E_0 *= np.exp(-(simu.TT**2) / duration**2)
-        simu.V = -1e-4 * np.exp(-(simu.XX**2 + simu.YY**2) / waist2**2).astype(
-            PRECISION_COMPLEX
-        )
-        simu.out_field(E_0, L, verbose=True, plot=True, precision="single")
-
-
-if __name__ == "__main__":
-    main()

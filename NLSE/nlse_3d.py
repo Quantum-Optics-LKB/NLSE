@@ -141,19 +141,19 @@ class NLSE_3d(NLSE):
                 A_plot = A_plot[0]
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
-        fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
-            self.Y[0] * 1e3,
-            self.Y[-1] * 1e3,
+            np.min(self.X) * 1e3,
+            np.max(self.X) * 1e3,
+            np.min(self.Y) * 1e3,
+            np.max(self.Y) * 1e3,
         ]
         ext_time = [
-            self.T[0] * 1e6,
-            self.T[-1] * 1e6,
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
+            np.min(self.T) * 1e6,
+            np.max(self.T) * 1e6,
+            np.min(self.X) * 1e3,
+            np.max(self.X) * 1e3,
         ]
         rho = np.abs(A_plot) ** 2 * 1e-4 * c / 2 * epsilon_0
         phi = np.angle(A_plot)

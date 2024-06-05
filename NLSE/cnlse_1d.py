@@ -132,7 +132,7 @@ class CNLSE_1d(CNLSE):
             A_plot = A_plot.get()
         A_1_plot = A_plot[0]
         A_2_plot = A_plot[1]
-        fig, ax = plt.subplots(2, 2, layout="constrained")
+        fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         # plot amplitudes and phases
         ax[0, 0].plot(self.X * 1e3, np.abs(A_1_plot) ** 2 * epsilon_0 * c / 2 * 1e-4)

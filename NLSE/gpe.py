@@ -118,19 +118,19 @@ class GPE(NLSE):
                 A_plot = A_plot[0]
         if self.__CUPY_AVAILABLE__ and isinstance(A_plot, cp.ndarray):
             A_plot = A_plot.get()
-        fig, ax = plt.subplots(1, 3, layout="constrained")
+        fig, ax = plt.subplots(1, 3, layout="constrained", figsize=(15, 5))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         ext_real = [
-            self.X[0] * 1e3,
-            self.X[-1] * 1e3,
-            self.Y[0] * 1e3,
-            self.Y[-1] * 1e3,
+            np.min(self.X) * 1e3,
+            np.max(self.X) * 1e3,
+            np.min(self.Y) * 1e3,
+            np.max(self.Y) * 1e3,
         ]
         ext_fourier = [
-            self.Kx[0] * 1e-3,
-            self.Kx[-1] * 1e-3,
-            self.Ky[0] * 1e-3,
-            self.Ky[-1] * 1e-3,
+            np.min(self.Kx) * 1e-3,
+            np.max(self.Kx) * 1e-3,
+            np.min(self.Ky) * 1e-3,
+            np.max(self.Ky) * 1e-3,
         ]
         rho = np.abs(A_plot) ** 2
         phi = np.angle(A_plot)

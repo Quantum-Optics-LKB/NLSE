@@ -100,7 +100,7 @@ class NLSE_1d(NLSE):
             A_plot (np.ndarray): Field to plot
             z (float): Propagation distance in m.
         """
-        fig, ax = plt.subplots(1, 2, layout="constrained")
+        fig, ax = plt.subplots(1, 2, layout="constrained", figsize=(10, 5))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         if A_plot.ndim == 2:
             for i in range(A_plot.shape[0]):

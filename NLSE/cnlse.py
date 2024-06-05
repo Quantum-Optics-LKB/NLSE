@@ -16,7 +16,7 @@ class CNLSE(NLSE):
     def __init__(
         self,
         alpha: float,
-        puiss: float,
+        power: float,
         window: float,
         n2: float,
         n12: float,
@@ -34,7 +34,7 @@ class CNLSE(NLSE):
 
         Args:
             alpha (float): alpha through the cell
-            puiss (float): Optical power in W
+            power (float): Optical power in W
             waist (float): Beam waist in m
             window (float): Computational window in m
             n2 (float): Non linear index of the 1 st component in m^2/W
@@ -56,7 +56,7 @@ class CNLSE(NLSE):
             raise NotImplementedError("OpenCL backend is not yet supported for CNLSE.")
         super().__init__(
             alpha=alpha,
-            puiss=puiss,
+            power=power,
             window=window,
             n2=n2,
             V=V,
@@ -81,7 +81,7 @@ class CNLSE(NLSE):
         # wavenumbers
         self.k2 = self.k
         # powers
-        self.puiss2 = self.puiss
+        self.puiss2 = self.power
         # waists
         self.propagator1 = None
         self.propagator2 = None
@@ -101,11 +101,11 @@ class CNLSE(NLSE):
             A = cp.zeros_like(E)
             A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
-            puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = cp.array([self.power, self.puiss2], dtype=E.dtype)
         else:
             A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
             A_sq = np.zeros_like(A, dtype=A.real.dtype)
-            puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = np.array([self.power, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
             integral = (

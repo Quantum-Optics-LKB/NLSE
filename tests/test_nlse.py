@@ -18,7 +18,7 @@ n2 = -1.6e-9
 waist = 2.23e-3
 waist2 = 70e-6
 window = 4 * waist
-puiss = 1.05
+power = 1.05
 Isat = 10e4  # saturation intensity in W/m^2
 L = 10e-3
 alpha = 20
@@ -27,7 +27,7 @@ alpha = 20
 def test_build_propagator() -> None:
     for backend in ["CPU", "GPU"]:
         simu = NLSE(
-            alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            alpha, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         prop = simu._build_propagator()
         assert np.allclose(
@@ -39,7 +39,7 @@ def test_build_propagator() -> None:
 def test_build_fft_plan() -> None:
     for backend in ["CPU", "GPU"]:
         simu = NLSE(
-            alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            alpha, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         if backend == "CPU" or backend == "CL":
             A = np.random.random((N, N)) + 1j * np.random.random((N, N))
@@ -79,7 +79,7 @@ def test_build_fft_plan() -> None:
 def test_prepare_output_array() -> None:
     for backend in ["CPU", "GPU"]:
         simu = NLSE(
-            alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            alpha, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         if backend == "CPU" or backend == "CL":
             A = np.random.random((N, N)) + 1j * np.random.random((N, N))
@@ -117,8 +117,8 @@ def test_prepare_output_array() -> None:
             integral = integral.get()
         integral *= c * epsilon_0 / 2
         assert np.allclose(
-            integral, simu.puiss
-        ), f"Normalization failed. (Backend {simu.backend}) : {integral} != {simu.puiss}"
+            integral, simu.power
+        ), f"Normalization failed. (Backend {simu.backend}) : {integral} != {simu.power}"
         assert out.shape == (N, N), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(
@@ -153,7 +153,7 @@ def test_send_arrays_to_gpu() -> None:
         Isat = np.repeat(Isat, 2)
         Isat = Isat[..., cp.newaxis, cp.newaxis]
         simu = NLSE(
-            alpha, puiss, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
+            alpha, power, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
         )
         simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
@@ -185,7 +185,7 @@ def test_retrieve_arrays_from_gpu() -> None:
         Isat = np.repeat(Isat, 2)
         Isat = Isat[..., cp.newaxis, cp.newaxis]
         simu = NLSE(
-            alpha, puiss, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
+            alpha, power, window, n2, V, L, NX=N, NY=N, Isat=Isat, backend="GPU"
         )
         simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
@@ -208,7 +208,7 @@ def test_retrieve_arrays_from_gpu() -> None:
 def test_split_step() -> None:
     for backend in ["CPU", "GPU"]:
         simu = NLSE(
-            alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            alpha, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         simu.delta_z = 0
         simu.propagator = simu._build_propagator()
@@ -243,12 +243,12 @@ def test_out_field() -> None:
     E = np.ones((N, N), dtype=PRECISION_COMPLEX)
     for backend in ["CPU", "GPU"]:
         simu = NLSE(
-            0, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            0, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         E = simu.out_field(E, L, verbose=False, plot=False, precision="single")
         norm = np.sum(np.abs(E) ** 2 * simu.delta_X * simu.delta_Y)
         norm *= c * epsilon_0 / 2
         assert E.shape == (N, N), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
-            norm, simu.puiss, rtol=1e-4
+            norm, simu.power, rtol=1e-4
         ), f"Norm not conserved. (Backend {backend})"

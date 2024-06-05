@@ -47,7 +47,7 @@ class GPE(NLSE):
         """
         super().__init__(
             alpha=gamma,
-            puiss=N,
+            power=N,
             window=window,
             n2=g,
             V=V,
@@ -63,7 +63,7 @@ class GPE(NLSE):
         self.g = g
         self.V = V
         self.gamma = self.alpha
-        self.N = self.puiss
+        self.N = self.power
         self.m = self.k
         self.sat = sat
         self.delta_t = self.delta_z

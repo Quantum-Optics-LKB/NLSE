@@ -43,7 +43,7 @@ class NLSE:
     def __init__(
         self,
         alpha: float,
-        puiss: float,
+        power: float,
         window: float,
         n2: float,
         V: Union[np.ndarray, None],
@@ -60,7 +60,7 @@ class NLSE:
           k0 n2 psi**2 psi
         Args:
             alpha (float): alpha
-            puiss (float): Power in W
+            power (float): Power in W
             window (float): Computational window in the transverse plane in m.
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray): Potential.
@@ -95,13 +95,13 @@ class NLSE:
         self.k = 2 * np.pi / self.wl
         self.L = L  # length of the non linear medium
         self.alpha = alpha
-        self.puiss = puiss
+        self.power = power
         self.I_sat = Isat
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.NY = NY
         self.window = window
-        Dn = self.n2 * self.puiss / self.window**2
+        Dn = self.n2 * self.power / self.window**2
         z_nl = 1 / (self.k * abs(Dn))
         if isinstance(z_nl, np.ndarray):
             z_nl = z_nl.min()
@@ -258,7 +258,7 @@ class NLSE:
                     * self.delta_Y
                 ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
-            E_00 = (self.puiss / integral) ** 0.5
+            E_00 = (self.power / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in

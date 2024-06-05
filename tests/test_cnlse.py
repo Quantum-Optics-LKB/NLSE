@@ -14,7 +14,7 @@ n12 = -1e-10
 waist = 2.23e-3
 waist2 = 70e-6
 window = 4 * waist
-puiss = 1.05
+power = 1.05
 Isat = 10e4  # saturation intensity in W/m^2
 Isat2 = waist / waist2 * Isat
 L = 1e-3
@@ -25,7 +25,7 @@ def test_prepare_output_array() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE(
             alpha,
-            puiss,
+            power,
             window,
             n2,
             n12,
@@ -53,7 +53,7 @@ def test_prepare_output_array() -> None:
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
-            np.array([simu.puiss, simu.puiss2]),
+            np.array([simu.power, simu.puiss2]),
             rtol=1e-4,
         ), f"Normalization failed. (Backend {backend})"
         assert out.shape == (
@@ -98,7 +98,7 @@ def test_send_arrays_to_gpu() -> None:
         Isat = Isat[..., np.newaxis, np.newaxis, np.newaxis]
         simu = CNLSE(
             alpha,
-            puiss,
+            power,
             window,
             n2,
             n12,
@@ -146,7 +146,7 @@ def test_retrieve_arrays_from_gpu() -> None:
         Isat = Isat[..., np.newaxis, np.newaxis, np.newaxis]
         simu = CNLSE(
             alpha,
-            puiss,
+            power,
             window,
             n2,
             n12,
@@ -182,7 +182,7 @@ def test_take_components() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE(
             alpha,
-            puiss,
+            power,
             window,
             n2,
             n12,
@@ -215,7 +215,7 @@ def test_split_step() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE(
             alpha,
-            puiss,
+            power,
             window,
             n2,
             n12,
@@ -257,7 +257,7 @@ def test_out_field() -> None:
     E = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
     for backend in ["CPU", "GPU"]:
         simu = CNLSE(
-            0, puiss, window, n2, n12, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            0, power, window, n2, n12, None, L, NX=N, NY=N, Isat=Isat, backend=backend
         )
         E = simu.out_field(E, L, verbose=False, plot=False, precision="single")
         norm = np.sum(
@@ -265,5 +265,5 @@ def test_out_field() -> None:
             axis=simu._last_axes,
         )
         assert np.allclose(
-            norm, [simu.puiss, simu.puiss2], rtol=1e-4
+            norm, [simu.power, simu.puiss2], rtol=1e-4
         ), "Norm not conserved."

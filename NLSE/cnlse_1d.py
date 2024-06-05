@@ -15,7 +15,7 @@ class CNLSE_1d(CNLSE):
     def __init__(
         self,
         alpha: float,
-        puiss: float,
+        power: float,
         window: float,
         n2: float,
         n12: float,
@@ -32,7 +32,7 @@ class CNLSE_1d(CNLSE):
 
         Args:
             alpha (float): Alpha through the cell
-            puiss (float): Optical power in W
+            power (float): Optical power in W
             waist (float): Beam waist in m
             window (float): Computational window in m
             n2 (float): Non linear index of the 1 st component in m^2/W
@@ -54,7 +54,7 @@ class CNLSE_1d(CNLSE):
         """
         super().__init__(
             alpha=alpha,
-            puiss=puiss,
+            power=power,
             window=window,
             n2=n2,
             n12=n12,
@@ -86,11 +86,11 @@ class CNLSE_1d(CNLSE):
             A = cp.empty_like(E)
             A_sq = cp.empty_like(E, dtype=E.real.dtype)
             E = cp.asarray(E)
-            puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = cp.array([self.power, self.puiss2], dtype=E.dtype)
         else:
             A = pyfftw.empty_aligned(E.shape, dtype=E.dtype)
             A_sq = np.empty_like(E, dtype=E.real.dtype)
-            puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = np.array([self.power, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
             integral = ((E.real * E.real + E.imag * E.imag) * self.delta_X**2).sum(

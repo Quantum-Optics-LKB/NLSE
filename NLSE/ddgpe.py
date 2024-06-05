@@ -15,7 +15,7 @@ class DDGPE(CNLSE):
     def __init__(
         self,
         gamma: float,
-        puiss: float,
+        power: float,
         window: float,
         g: float,
         omega: float,
@@ -36,7 +36,7 @@ class DDGPE(CNLSE):
 
         Args:
             alpha (float): alpha through the cell
-            puiss (float): Optical power in W
+            power (float): Optical power in W
             waist (float): Beam waist in m
             window (float): Computational window in m
             n2 (float): Non linear index of the 1 st component in m^2/W
@@ -57,7 +57,7 @@ class DDGPE(CNLSE):
 
         super().__init__(
             alpha=gamma,
-            puiss=puiss,
+            power=power,
             window=window,
             n2=-g,
             n12=g12,

@@ -57,7 +57,7 @@ class NLSE_3d(NLSE):
         """
         super().__init__(
             alpha=alpha,
-            puiss=energy,
+            power=energy,
             window=window[0],
             n2=n2,
             V=V,
@@ -69,11 +69,11 @@ class NLSE_3d(NLSE):
             wvl=wvl,
             backend=backend,
         )
-        self.energy = self.puiss
+        self.energy = self.power
         self.NZ = NZ
         self.window_t = window[1]
-        self.puiss = self.energy / self.window_t
-        Dn = self.n2 * self.puiss / self.window**2
+        self.power = self.energy / self.window_t
+        Dn = self.n2 * self.power / self.window**2
         z_nl = 1 / (self.k * abs(Dn))
         if isinstance(z_nl, np.ndarray):
             z_nl = z_nl.min()

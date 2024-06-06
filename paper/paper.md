@@ -29,7 +29,7 @@ bibliography: paper.bib
 The non-linear Schrödinger equation (NLSE) is a general non-linear equation allowing to model the propagation of light in non-linear media.
 This equation is mathematically isomorphic to the Gross-Pitaevskii equation (GPE) [@pitaevskij_bose-einstein_2016] describing the evolution of cold atomic ensembles.
 Recently, the growing field of quantum fluids of light [@carusotto_quantum_2013] has proven a fruitful testbed for several fundamental quantum and classical phenomena such as superfluidity [@michel_superfluid_2018] or turbulence [@bakerrasooliTurbulentDynamicsTwodimensional2023].
-Providing a flexible, modern and performant framework to solve these equations is a crucial need to model realistic experimental scenarii.
+Providing a flexible, modern and performant framework to solve these equations is crucial to model realistic experimental scenarios.
 
 # Statement of need
 

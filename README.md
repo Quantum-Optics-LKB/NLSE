@@ -31,6 +31,7 @@ power = 1.05 # input optical power in W
 Isat = 10e4  # saturation intensity in W/m^2
 L = 10e-3 # Length of the medium in m
 alpha = 20 # linear losses coefficient in m^-1
+backend = "GPU" # whether to run on the GPU or the CPU
 
 simu = NLSE(
     alpha, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
@@ -67,7 +68,7 @@ On Mac, you first need to install FFTW which can be done by simply using Homebre
 
 ### PyVkFFT
 
-We found out that [PyVkFFT](https://github.com/vincefn/pyvkfft/tree/master) was outperforming CuFFT so the GPU implementation uses this library for optimal performance.
+We found out that [PyVkFFT](https://github.com/vincefn/pyvkfft/tree/master) was outperforming CuFFT for our application so the GPU implementation uses this library for optimal performance.
 
 Other than this, the code relies on these libraries :
 
@@ -255,6 +256,41 @@ $$
 
 It follows exactly the same conventions as the other classes a part from the fact that since it describes atoms, the units are the "atomic" units (masses in kg, times in s).
 
+### The `DDGPE` class
+
+The DDGPE class allows to solve the temporal evolution of two coupled fields in a driven-dissipative context. 
+
+It was designed to study problems like the evolution of exciton polaritons in microcavities. 
+
+The equation solved in this context is the following:
+
+$$
+\begin{split}
+i\hbar \partial_t\psi_X(\textbf{r}, t)&=
+(\frac{\hbar^2}{2m_X}\nabla^2 + 
+V_X(\textbf{r}) + 
+\hbar g_X|\psi_X(\textbf{r}, t)|^2 - 
+i\hbar\frac{\Gamma_X}{2})\psi_X(\textbf{r}, t)+ 
+\hbar\Omega_R\psi_C(\textbf{r}, t) \\
+
+i\hbar \partial_t \psi_C(\textbf{r}, t)&=
+(\frac{\hbar^2}{2m_C}\nabla^2 + 
+V_C(\textbf{r})  - 
+i\hbar\frac{\Gamma_C}{2})\psi_C(\textbf{r}, t) + 
+\hbar\Omega_R\psi_X(\textbf{r}, t) + 
+\hbar F_p(\textbf{r},t)
+\end{split}
+$$
+where 
+- $\psi_X$ is the exciton field
+- $\psi_C$ is the cavity field
+- $V_X$ is the exciton potential 
+- $V_C$ is the cavity potential
+- $g_X$ is the exciton interaction energy
+- $\Gamma_X$ is the exciton losses coefficient
+- $\Gamma_C$ is the cavity losses coefficient
+- $\Omega_R$ is the Rabi coupling between excitons and photons
+- $F_p$ is the pumping field impinging on the cavity
 
 ## Contributing and issues
 

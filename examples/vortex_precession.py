@@ -12,7 +12,7 @@ def vortex(x, y, xi=10e-6, ell=1):
 
 
 # Parameters
-N = 1024
+N = 512
 N_samples = 200
 n2 = -1.6e-9
 waist = 2.23e-3
@@ -20,7 +20,7 @@ window = 3.5 * waist
 power = 1.05
 intensity = power / (np.pi * waist**2)
 Isat = np.inf  # saturation intensity in W/m^2
-L = 20e-2
+L = 5e-2
 alpha = 0
 simu = NLSE(
     alpha,
@@ -32,9 +32,10 @@ simu = NLSE(
     NX=N,
     NY=N,
     Isat=Isat,
-    backend="GPU",
+    backend="CPU",
 )
-xi = 1 / (simu.k * np.sqrt(abs(n2) * intensity))
+cs = np.sqrt(abs(n2) * intensity) / (1 + intensity / Isat)
+xi = 1 / (simu.k * cs)
 simu.delta_z = 0.5e-4
 save_every = int((L / simu.delta_z) // N_samples)
 E_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2).astype(np.complex64)
@@ -47,23 +48,27 @@ def callback_samples(sim, A, z, i):
 
 
 # Add a vortex phase
-d = 1e-2 * waist
-vortex_plus = vortex(simu.XX + d, simu.YY + d, xi=xi, ell=1)
-vortex_minus = vortex(simu.XX - d, simu.YY - d, xi=xi, ell=-1)
+d = 4 * xi
+vortex_plus = vortex(simu.XX + d / 2, simu.YY + d / 2, xi=xi, ell=1)
+vortex_minus = vortex(simu.XX - d / 2, simu.YY - d / 2, xi=xi, ell=1)
 E_0 *= vortex_plus
 E_0 *= vortex_minus
 # Hand tuned potential for Thomas-Fermi
-simu.V = 4.311e-4 * np.exp(-2 * (simu.XX**2 + simu.YY**2) / waist**2)
+simu.V = 4.31e-4 * np.exp(-2 * (simu.XX**2 + simu.YY**2) / waist**2)
 simu.out_field(
-    E_0, L, verbose=True, plot=False, precision="single", callback=callback_samples
+    E_0, L, verbose=True, plot=True, precision="single", callback=callback_samples
 )
-fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+fig, ax = plt.subplots(1, 2, figsize=(10, 5), layout="constrained")
 rho = np.abs(E_samples) ** 2
 phi = np.angle(E_samples)
-im0 = ax[0].imshow(rho[0], cmap="hot", interpolation="none")
+ext = [simu.X.min() * 1e3, simu.X.max() * 1e3, simu.Y.min() * 1e3, simu.Y.max() * 1e3]
+im0 = ax[0].imshow(rho[0], cmap="viridis", interpolation="none", extent=ext)
 ax[0].set_title("Density")
-im1 = ax[1].imshow(phi[0], cmap="twilight_shifted", interpolation="none")
+im1 = ax[1].imshow(phi[0], cmap="twilight_shifted", interpolation="none", extent=ext)
 ax[1].set_title("Phase")
+for a in ax:
+    a.set_xlabel("x in mm")
+    a.set_ylabel("y in mm")
 
 
 def animate(i):
@@ -74,5 +79,5 @@ def animate(i):
     return im0, im1
 
 
-anim = FuncAnimation(fig, animate, frames=N_samples, interval=33, blit=True)
+anim = FuncAnimation(fig, animate, frames=N_samples, interval=60, blit=True)
 plt.show()

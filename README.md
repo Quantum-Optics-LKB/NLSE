@@ -274,7 +274,6 @@ V_X(\textbf{r}) +
 \hbar g_X|\psi_X(\textbf{r}, t)|^2 - 
 i\hbar\frac{\Gamma_X}{2})\psi_X(\textbf{r}, t)+ 
 \hbar\Omega_R\psi_C(\textbf{r}, t) \\
-
 i\hbar \partial_t \psi_C(\textbf{r}, t)&=
 (\frac{\hbar^2}{2m_C}\nabla^2 + 
 V_C(\textbf{r})  - 

@@ -81,10 +81,12 @@ Other than this, the code relies on these libraries :
 ## Tests
 
 Tests are included to check functionalities and benchmark performance.
-You can run all tests by executing `tests/run_all_tests.py` (warning: this might take some time !).
-It will test both CPU and GPU backends.
+You can run all tests by using [`pytest`](https://docs.pytest.org/en/8.2.x/) at the root of the repo.
+It will test both CPU and GPU backends (if available).
+This can take some time !
 
-The benchmarks can be run using `tests/benchmarks.py` and compare a "naive" numpy implementation of the main solver loop to our solver.
+The benchmarks can be run using [`examples/benchmarks.py`](examples/benchmarks.py) and compare a "naive" numpy implementation of the main solver loop to our solver.
+We also compare for the example of the vortex precession presented in [`FourierGPE.jl`](https://github.com/AshtonSBradley/FourierGPE.jl/blob/master/examples/2dvortexprecession.jl) to our solver.
 On a Nvidia RTX4090 GPU and Ryzen 7950X CPU, we test our solver to the following results:
 ![benchmarks](img/benchmarks.png)
 

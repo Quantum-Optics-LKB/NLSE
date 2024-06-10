@@ -71,7 +71,7 @@ This code has been developped during the author's PhD thesis [@aladjidiFullOptic
 
 # Reproducibility
 
-The code used to generate the figures can be found in the [`examples`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples) folder of the repo with the [`fig1_turbulence.py`](https://github.com/Quantum-Optics-LKB/NLSE/blob/main/examples/fig1_turbulence.py) and [`fig2_benchmarks.py`](https://github.com/Quantum-Optics-LKB/NLSE/blob/main/examples/fig2_benchmarks.py) scripts. 
+The code used to generate the figures can be found in the [`examples`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples) folder of the repository with the [`fig1_turbulence.py`](https://github.com/Quantum-Optics-LKB/NLSE/blob/main/examples/fig1_turbulence.py) and [`fig2_benchmarks.py`](https://github.com/Quantum-Optics-LKB/NLSE/blob/main/examples/fig2_benchmarks.py) scripts. 
 Note that you will need a Julia install to run the `JuliaGPE.jl` script.
 
 # Acknowledgements

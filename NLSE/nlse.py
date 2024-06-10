@@ -463,9 +463,6 @@ class NLSE:
             np.complex64,
             np.complex128,
         ], "Type mismatch, E_in should be complex64 or complex128"
-        Z = np.arange(
-            self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
-        )
         A, A_sq = self._prepare_output_array(E_in, normalize)
         self.plans = self._build_fft_plan(A)
         # define propagator if not already done
@@ -483,18 +480,30 @@ class NLSE:
         else:
             V = self.V.copy()
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(
+                total=z,
+                position=4,
+                desc="Propagation",
+                leave=False,
+                unit="m",
+                unit_scale=True,
+            )
         n2_old = self.n2
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
         t0 = time.perf_counter()
-        for i, z in enumerate(Z):
+        # TODO(Tangui) : Switch to a while loop and compute delta_z at runtime
+        # based on a delta_n map computed from the initial state normalization.
+        # The while loop would also allow to adapt the step size mid solve for optimal
+        # efficiency.
+        # We could include a set of default callbacks, one of them to adapt delta_z ?
+        z_prop = 0
+        i = 0
+        while z_prop < z:
             if z > self.L:
                 self.n2 = 0
-            if verbose:
-                pbar.update(1)
             self.split_step(A, A_sq, V, self.propagator, self.plans, precision)
             if callback is not None:
                 if isinstance(callback, Callable):
@@ -506,6 +515,10 @@ class NLSE:
                     raise ValueError(
                         "callbacks should be a callable or a list of callables"
                     )
+            if verbose:
+                pbar.update(self.delta_z)
+            z_prop += self.delta_z
+            i += 1
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

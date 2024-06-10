@@ -283,6 +283,7 @@ i\hbar\frac{\Gamma_C}{2})\psi_C(\textbf{r}, t) +
 \hbar F_p(\textbf{r},t)
 \end{split}
 $$
+
 where 
 - $\psi_X$ is the exciton field
 - $\psi_C$ is the cavity field

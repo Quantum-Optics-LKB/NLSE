@@ -4,6 +4,11 @@ import matplotlib.pyplot as plt
 
 if DDGPE.__CUPY_AVAILABLE__:
     import cupy as cp
+if DDGPE.__PYOPENCL_AVAILABLE__:
+    import pyopencl.array as cla
+    from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
+PRECISION_COMPLEX = np.complex64
+PRECISION_REAL = np.float32
 
 
 def turn_on(

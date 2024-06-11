@@ -1,6 +1,6 @@
 # NLSE
 
-A small utility to easily simulate all sorts of non linear Schrödinger equations. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equations.
+A package to easily simulate all sorts of non linear Schrödinger equations. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equations.
 
 ## Installation
 
@@ -81,10 +81,12 @@ Other than this, the code relies on these libraries :
 ## Tests
 
 Tests are included to check functionalities and benchmark performance.
-You can run all tests by executing `tests/run_all_tests.py` (warning: this might take some time !).
-It will test both CPU and GPU backends.
+You can run all tests by using [`pytest`](https://docs.pytest.org/en/8.2.x/) at the root of the repo.
+It will test both CPU and GPU backends (if available).
+This can take some time !
 
-The benchmarks can be run using `tests/benchmarks.py` and compare a "naive" numpy implementation of the main solver loop to our solver.
+The benchmarks can be run using [`examples/benchmarks.py`](examples/benchmarks.py) and compare a "naive" numpy implementation of the main solver loop to our solver.
+We also compare for the example of the vortex precession presented in [`FourierGPE.jl`](https://github.com/AshtonSBradley/FourierGPE.jl/blob/master/examples/2dvortexprecession.jl) to our solver.
 On a Nvidia RTX4090 GPU and Ryzen 7950X CPU, we test our solver to the following results:
 ![benchmarks](img/benchmarks.png)
 
@@ -272,7 +274,6 @@ V_X(\textbf{r}) +
 \hbar g_X|\psi_X(\textbf{r}, t)|^2 - 
 i\hbar\frac{\Gamma_X}{2})\psi_X(\textbf{r}, t)+ 
 \hbar\Omega_R\psi_C(\textbf{r}, t) \\
-
 i\hbar \partial_t \psi_C(\textbf{r}, t)&=
 (\frac{\hbar^2}{2m_C}\nabla^2 + 
 V_C(\textbf{r})  - 
@@ -281,6 +282,7 @@ i\hbar\frac{\Gamma_C}{2})\psi_C(\textbf{r}, t) +
 \hbar F_p(\textbf{r},t)
 \end{split}
 $$
+
 where 
 - $\psi_X$ is the exciton field
 - $\psi_C$ is the cavity field

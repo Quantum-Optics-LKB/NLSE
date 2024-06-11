@@ -1,5 +1,6 @@
 import numpy as np
-from nlse import NLSE
+from .nlse import NLSE
+from scipy.constants import c, epsilon_0
 
 
 def sample(
@@ -39,7 +40,7 @@ def norm(
         E_samples (np.ndarray): Array to store the samples.
     """
     if i % save_every == 0:
-        norms[i // save_every] = A.real @ A.real + A.imag @ A.imag
+        norms[i // save_every] = (A.real * A.real + A.imag * A.imag).sum()
 
 
 def evaluate_delta_n(
@@ -60,4 +61,31 @@ def evaluate_delta_n(
     """
     if i % save_every == 0:
         A_sq = A.real * A.real + A.imag * A.imag
-        delta_n[i // save_every] = simu.n2 * A_sq / (1 + A_sq / simu.Isat) ** 2
+        delta_n[i // save_every] = (
+            c * epsilon_0 / 2 * simu.n2 * A_sq / (1 + A_sq / simu.I_sat)
+        )
+
+
+def adapt_delta_z(
+    simu: NLSE, A: np.ndarray, z: float, i: int, update_every: int, delta_z: list
+) -> None:
+    """Update the simulation step size.
+
+    This callback will update the simulation step size every update_every steps by
+    computing the nonlinear refractive index change and adjusting the step size
+    accordingly.
+
+    Args:
+        simu (NLSE): Simulation object.
+        A (np.ndarray): The current field.
+        z (float): The current propagation distance.
+        i (int): Step number.
+        update_every (int): Update the step size every update_every steps.
+        delta_z (list): A list to store the size of the steps.
+    """
+    delta_z.append(simu.delta_z)
+    if i % update_every == 0:
+        A_sq = A.real * A.real + A.imag * A.imag * c * epsilon_0 / 2
+        delta_n = np.abs(simu.n2) * A_sq / (1 + A_sq / simu.I_sat)
+        z_nl = float(1 / (simu.k * delta_n.max()))
+        simu.delta_z = np.abs(z_nl) / 12

@@ -16,7 +16,6 @@ L = 10e-3
 alpha = 20
 
 
-# for integration testing
 def main():
     simu = NLSE(
         alpha,

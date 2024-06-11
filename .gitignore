@@ -105,3 +105,15 @@ tests/__pycache__/test_nlse3d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+build/lib/NLSE/callbacks.py
+examples/__pycache__/nlse.cpython-310.pyc
+examples/benchmarks_sizes.npy
+examples/benchmarks_times.npy
+examples/benchmarks.svg
+examples/julia_vortex_precession_sizes.npy
+examples/julia_vortex_precession_times.npy
+examples/python_vortex_precession_CPU_sizes.npy
+examples/python_vortex_precession_GPU_sizes.npy
+examples/python_vortex_precession_CPU_times.npy
+examples/python_vortex_precession_GPU_times.npy
+examples/vortex_precession.svg

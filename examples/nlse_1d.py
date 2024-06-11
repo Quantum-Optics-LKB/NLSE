@@ -16,7 +16,7 @@ alpha = 20
 
 
 def main() -> None:
-    simu = NLSE_1d(alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend="CPU")
+    simu = NLSE_1d(alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend="GPU")
     simu.delta_z = 1e-5
     simu.puiss2 = 10e-3
     simu.n22 = 1e-10

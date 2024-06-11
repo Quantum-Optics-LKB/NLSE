@@ -13,44 +13,39 @@ window = 4 * waist
 puiss = 1.05
 Isat = 10e4  # saturation intensity in W/m^2
 Isat2 = waist / waist2 * Isat
-L = 1e-3
+L = 10e-2
 alpha = 20
 
 
 def main():
-    print("Testing CNLSE class")
-    L = 10e-2
-    for backend in ["GPU", "CPU"]:
-        simu_c = CNLSE(
-            alpha,
-            puiss,
-            window,
-            n2,
-            n12,
-            None,
-            L,
-            NX=N,
-            NY=N,
-            Isat=Isat,
-            omega=None,
-            backend=backend,
-        )
-        simu_c.delta_z = 0.5e-4
-        simu_c.puiss2 = 10e-3
-        simu_c.n22 = 1e-10
-        simu_c.I_sat2 = Isat2
-        simu_c.k2 = 2 * np.pi / 795e-9
-        E_0 = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist**2).astype(
-            PRECISION_COMPLEX
-        )
-        V = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist2**2).astype(PRECISION_COMPLEX)
-        E, V = simu_c.out_field(
-            np.array([E_0, V]),
-            L,
-            verbose=True,
-            plot=True,
-            precision="single",
-        )
+    simu_c = CNLSE(
+        alpha,
+        puiss,
+        window,
+        n2,
+        n12,
+        None,
+        L,
+        NX=N,
+        NY=N,
+        Isat=Isat,
+        omega=None,
+        backend="GPU",
+    )
+    simu_c.delta_z = 0.5e-4
+    simu_c.puiss2 = 10e-3
+    simu_c.n22 = 1e-10
+    simu_c.I_sat2 = Isat2
+    simu_c.k2 = 2 * np.pi / 795e-9
+    E_0 = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist**2).astype(PRECISION_COMPLEX)
+    V = np.exp(-(simu_c.XX**2 + simu_c.YY**2) / waist2**2).astype(PRECISION_COMPLEX)
+    E, V = simu_c.out_field(
+        np.array([E_0, V]),
+        L,
+        verbose=True,
+        plot=True,
+        precision="single",
+    )
 
 
 if __name__ == "__main__":

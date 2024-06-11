@@ -140,7 +140,7 @@ def nl_prop_without_V_c(
 
 
 @cp.fuse(kernel_name="rabi_coupling")
-def rabi_coupling(A, dz: float, omega: float) -> None:
+def rabi_coupling(A1: cp.array, A2: cp.array, dz: float, omega: float) -> None:
     """Apply a Rabi coupling term.
     This function implements the Rabi hopping term.
     It exchanges density between the two components.
@@ -151,8 +151,6 @@ def rabi_coupling(A, dz: float, omega: float) -> None:
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
-    A1 = A[..., 0, :, :]
-    A2 = A[..., 1, :, :]
     A1_old = A1.copy()
     A1[:] = cp.cos(omega * dz) * A1 - 1j * cp.sin(omega * dz) * A2
     A2[:] = cp.cos(omega * dz) * A2 - 1j * cp.sin(omega * dz) * A1_old

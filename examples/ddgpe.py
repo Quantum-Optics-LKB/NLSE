@@ -1,5 +1,6 @@
 from NLSE import DDGPE
 import numpy as np
+import cupy as cp
 import matplotlib.pyplot as plt
 
 
@@ -48,10 +49,10 @@ def main():
     detuning = 0.17 / h_bar
     k_z = 27
     gamma = 0 * 0.07 / h_bar
-    puiss = 1
     waist = 50
     window = 256
     g = 1e-2 / h_bar
+    puiss = 1e-30
     T = 100
 
     dd = DDGPE(
@@ -67,17 +68,17 @@ def main():
         k_z,
         NX=256,
         NY=256,
+        backend="CPU",
     )
 
     dd.delta_z = 0.1 / 32  # need to be adjusted automatically
-    time = np.arange(dd.delta_z, T + dd.delta_z, step=dd.delta_z, dtype=np.float32)
+    time = np.arange(0, T+dd.delta_z, step=dd.delta_z, dtype=np.float32)
     save_every = 1  # np.argwhere(time == 1)[0][0]
     sample1 = np.zeros(time.size // save_every, dtype=np.float32)
     sample2 = np.zeros(time.size // save_every, dtype=np.float32)
     sample3 = np.zeros(time.size // save_every, dtype=np.float32)
     E0 = np.zeros((2, dd.NY, dd.NX), dtype=np.complex64)
-    E0[..., 0, :, :] = np.sqrt(detuning / g) * np.exp(-(dd.XX**2 + dd.YY**2) / waist**2)
-
+    
     F_pump = 0
     F_pump_r = F_pump * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
     F_pump_t = np.zeros(time.shape, dtype=np.complex64)
@@ -91,9 +92,9 @@ def main():
     callback = [callback_sample]
     callback_args = [
         [
-            F_pump_r,
+            cp.asarray(F_pump_r),
             F_pump_t,
-            F_probe_r,
+            cp.asarray(F_probe_r),
             F_probe_t,
         ],
         [save_every, sample1, sample2, sample3],

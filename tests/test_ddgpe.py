@@ -19,22 +19,23 @@ gamma = 0 * 0.07 / h_bar
 waist = 50
 window = 256
 g = 1e-2 / h_bar
-puiss = detuning/g
+puiss = detuning / g
+
 
 def test_prepare_output_array() -> None:
     for backend in ["CPU", "GPU"]:
         simu = DDGPE(
             gamma,
             puiss,
-            window, 
+            window,
             g,
             omega,
-            T, 
-            omega_exc, 
-            omega_cav, 
-            detuning, 
-            k_z, 
-            NX=N, 
+            T,
+            omega_exc,
+            omega_cav,
+            detuning,
+            k_z,
+            NX=N,
             NY=N,
             backend=backend,
         )
@@ -73,6 +74,7 @@ def test_prepare_output_array() -> None:
                 out, A
             ), f"Output array does not match input array. (Backend {backend})"
 
+
 def test_send_arrays_to_gpu() -> None:
     if DDGPE.__CUPY_AVAILABLE__:
         omega_exc = 1484.44 / h_bar
@@ -102,10 +104,10 @@ def test_send_arrays_to_gpu() -> None:
             T,
             omega_exc,
             omega_cav,
-            detuning, 
-            k_z, 
+            detuning,
+            k_z,
             V=V,
-            NX=N, 
+            NX=N,
             NY=N,
             backend="GPU",
         )
@@ -127,9 +129,10 @@ def test_send_arrays_to_gpu() -> None:
         ), "omega cav is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.omega_exc, cp.ndarray
-        ), "omega exc is not a cp.ndarray. (Backend GPU)"         
+        ), "omega exc is not a cp.ndarray. (Backend GPU)"
     else:
         pass
+
 
 def test_retrieve_arrays_from_gpu() -> None:
     if DDGPE.__CUPY_AVAILABLE__:
@@ -160,10 +163,10 @@ def test_retrieve_arrays_from_gpu() -> None:
             T,
             omega_exc,
             omega_cav,
-            detuning, 
-            k_z, 
+            detuning,
+            k_z,
             V=V,
-            NX=N, 
+            NX=N,
             NY=N,
             backend="GPU",
         )
@@ -185,25 +188,45 @@ def test_retrieve_arrays_from_gpu() -> None:
         ), "omega cav is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.omega_exc, np.ndarray
-        ), "omega exc is not a np.ndarray. (Backend GPU)"         
+        ), "omega exc is not a np.ndarray. (Backend GPU)"
     else:
         pass
 
+
 def test_build_propagator() -> None:
     for backend in ["GPU", "CPU"]:
-        simu = DDGPE(gamma, puiss, window, g, omega, T, omega_exc, omega_cav, detuning, k_z, NX=N, NY=N,
+        simu = DDGPE(
+            gamma,
+            puiss,
+            window,
+            g,
+            omega,
+            T,
+            omega_exc,
+            omega_cav,
+            detuning,
+            k_z,
+            NX=N,
+            NY=N,
         )
         prop = simu._build_propagator()
         assert np.allclose(
             prop[0],
-            np.exp(-1j * (simu.omega_exc * (1 + 0 * simu.Kxx**2) - simu.omega_pump) * simu.delta_z
-        )
+            np.exp(
+                -1j
+                * (simu.omega_exc * (1 + 0 * simu.Kxx**2) - simu.omega_pump)
+                * simu.delta_z
+            ),
         ), f"Propagator1 is wrong. (Backend {backend})"
         assert np.allclose(
             prop[1],
-            np.exp(-1j * (simu.omega_exc * (1 + 0 * simu.Kxx**2) - simu.omega_pump) * simu.delta_z
-        )
+            np.exp(
+                -1j
+                * (simu.omega_exc * (1 + 0 * simu.Kxx**2) - simu.omega_pump)
+                * simu.delta_z
+            ),
         ), f"Propagator2 is wrong. (Backend {backend})"
+
 
 def test_take_components() -> None:
     for backend in ["CPU", "GPU"]:
@@ -216,9 +239,9 @@ def test_take_components() -> None:
             T,
             omega_exc,
             omega_cav,
-            detuning, 
-            k_z, 
-            NX=N, 
+            detuning,
+            k_z,
+            NX=N,
             NY=N,
             backend="GPU",
         )
@@ -239,6 +262,7 @@ def test_take_components() -> None:
         assert A1.shape[0] == 3, f"A1 has wrong first dimensions. (Backend {backend})"
         assert A2.shape[0] == 3, f"A2 has wrong first dimensions. (Backend {backend})"
 
+
 def callback_sample(
     simu: DDGPE,
     A: np.ndarray,
@@ -257,6 +281,7 @@ def callback_sample(
         sample2[i // save_every] = sum_cav
         sample3[i // save_every] = sum_tot
 
+
 def turn_on(
     F_laser_t: np.ndarray,
     time: np.ndarray,
@@ -274,32 +299,35 @@ def turn_on(
     )
     F_laser_t[time >= t_up] = 1
 
+
 def test_out_field() -> None:
     for backend in ["CPU", "GPU"]:
         simu = DDGPE(
-            gamma, 
-            puiss, 
+            gamma,
+            puiss,
             window,
-            g, 
-            omega, 
-            T, 
-            omega_exc, 
-            omega_cav, 
-            detuning, 
+            g,
+            omega,
+            T,
+            omega_exc,
+            omega_cav,
+            detuning,
             k_z,
-            NX=N, 
+            NX=N,
             NY=N,
             backend=backend,
         )
         simu.delta_z = 0.1 / 32  # need to be adjusted automatically
-        time = np.arange(0, T+simu.delta_z, step=simu.delta_z, dtype=np.float32)
+        time = np.arange(0, T + simu.delta_z, step=simu.delta_z, dtype=np.float32)
         save_every = 1  # np.argwhere(time == 1)[0][0]
         sample1 = np.zeros(time.size // save_every, dtype=np.float32)
         sample2 = np.zeros(time.size // save_every, dtype=np.float32)
         sample3 = np.zeros(time.size // save_every, dtype=np.float32)
         E0 = np.zeros((2, simu.NY, simu.NX), dtype=np.complex64)
         F_pump = 0
-        F_pump_r = F_pump * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(np.complex64)
+        F_pump_r = F_pump * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(
+            np.complex64
+        )
         F_pump_t = np.zeros(time.shape, dtype=np.complex64)
         F_probe = 0
         F_probe_r = F_probe * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(
@@ -310,34 +338,35 @@ def test_out_field() -> None:
         callback = [callback_sample]
         if backend == "CPU":
             callback_args = [
-            [
-                F_pump_r,
-                F_pump_t,
-                F_probe_r,
-                F_probe_t,
-            ],
-            [save_every, sample1, sample2, sample3],
+                [
+                    F_pump_r,
+                    F_pump_t,
+                    F_probe_r,
+                    F_probe_t,
+                ],
+                [save_every, sample1, sample2, sample3],
             ]
         if backend == "GPU":
             callback_args = [
-            [
-                cp.asarray(F_pump_r),
-                F_pump_t,
-                cp.asarray(F_probe_r),
-                F_probe_t,
-            ],
-            [save_every, sample1, sample2, sample3],
+                [
+                    cp.asarray(F_pump_r),
+                    F_pump_t,
+                    cp.asarray(F_probe_r),
+                    F_probe_t,
+                ],
+                [save_every, sample1, sample2, sample3],
             ]
         E = simu.out_field(
             E0,
             T,
             simu.laser_excitation,
-            plot=True,
+            plot=False,
             callback=callback,
             callback_args=callback_args,
         )
-        #test stationarity here
-        
+        # test stationarity here
+
+
 def main():
     test_prepare_output_array()
     test_send_arrays_to_gpu()
@@ -345,6 +374,7 @@ def main():
     test_build_propagator()
     test_take_components()
     test_out_field()
+
 
 if __name__ == "__main__":
     main()

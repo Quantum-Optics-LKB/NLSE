@@ -103,8 +103,10 @@ class NLSE:
         self.window = window
         Dn = self.n2 * self.power / self.window**2
         z_nl = 1 / (self.k * abs(Dn))
-        if isinstance(z_nl, np.ndarray):
-            z_nl = z_nl.min()
+        if isinstance(z_nl, np.ndarray) or (
+            self.__CUPY_AVAILABLE__ and isinstance(z_nl, cp.ndarray)
+        ):
+            z_nl = float(z_nl.min())
         self.delta_z = 5e-3 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
@@ -275,6 +277,8 @@ class NLSE:
             self.propagator = cp.asarray(self.propagator)
             # for broadcasting of parameters in case they are
             # not already on the GPU
+            if isinstance(self.power, np.ndarray):
+                self.power = cp.asarray(self.power)
             if isinstance(self.n2, np.ndarray):
                 self.n2 = cp.asarray(self.n2)
             if isinstance(self.alpha, np.ndarray):
@@ -288,6 +292,8 @@ class NLSE:
             self.propagator = cla.to_device(self._cl_queue, self.propagator)
             # for broadcasting of parameters in case they are
             # not already on the GPU
+            if isinstance(self.power, np.ndarray):
+                self.power = cla.to_device(self._cl_queue, self.power)
             if isinstance(self.n2, np.ndarray):
                 self.n2 = cla.to_device(self._cl_queue, self.n2)
             if isinstance(self.alpha, np.ndarray):
@@ -303,6 +309,8 @@ class NLSE:
             self.V = self.V.get()
         self.nl_profile = self.nl_profile.get()
         self.propagator = self.propagator.get()
+        if isinstance(self.power, cp.ndarray):
+            self.power = self.power.get()
         if isinstance(self.n2, cp.ndarray):
             self.n2 = self.n2.get()
         if isinstance(self.alpha, cp.ndarray):
@@ -463,8 +471,6 @@ class NLSE:
             np.complex64,
             np.complex128,
         ], "Type mismatch, E_in should be complex64 or complex128"
-        A, A_sq = self._prepare_output_array(E_in, normalize)
-        self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:
             self.propagator = self._build_propagator()
@@ -479,6 +485,8 @@ class NLSE:
             V = self.V
         else:
             V = self.V.copy()
+        A, A_sq = self._prepare_output_array(E_in, normalize)
+        self.plans = self._build_fft_plan(A)
         if verbose:
             pbar = tqdm.tqdm(
                 total=z,

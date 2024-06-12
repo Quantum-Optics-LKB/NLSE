@@ -176,6 +176,7 @@ def callback(nlse, A, z, i):
 
 Notice that since the class instance is passed to the callback, you have access to all of the classes attributes.
 Be mindful however that since the callback is running in the main solver loop, this function should not be called too often in order to not slow down the execution too much.
+You can find several generic callbacks in the [`callbacks`](NLSE/callbacks.py) sublibrary.
 
 #### Propagation
 

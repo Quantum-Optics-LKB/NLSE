@@ -30,7 +30,7 @@ def nl_prop(
         # saturation
         sat = 1 / (1 + A_sq[i] / Isat)
         # Losses and interactions
-        arg = -alpha / 2 + 1j * g * A_sq[i] * sat + 1j * V[i]
+        arg = -alpha + 1j * g * A_sq[i] * sat + 1j * V[i]
         A[i] *= np.exp(dz * arg)
 
 
@@ -59,7 +59,7 @@ def nl_prop_without_V(
         # saturation
         sat = 1 / (1 + A_sq[i] / Isat)
         # Losses and interactions
-        arg = -alpha / 2 + 1j * g * A_sq[i] * sat
+        arg = -alpha + 1j * g * A_sq[i] * sat
         A[i] *= np.exp(dz * arg)
 
 
@@ -96,7 +96,7 @@ def nl_prop_c(
         # Saturation parameter
         sat = 1 / (1 + A_sq_1[i] * 1 / Isat1 + A_sq_2[i] * 1 / Isat2)
         # Losses
-        arg = -alpha / 2 * sat
+        arg = -alpha * sat
         # Interactions
         arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i] * sat)
         # Potential
@@ -135,7 +135,7 @@ def nl_prop_without_V_c(
         # Saturation parameter
         sat = 1 / (1 + A_sq_1[i] * 1 / Isat1 + A_sq_2[i] * 1 / Isat2)
         # Losses
-        arg = -alpha / 2 * sat
+        arg = -alpha * sat
         # Interactions
         arg += 1j * (g11 * A_sq_1[i] * sat + g12 * A_sq_2[i] * sat)
         A1[i] *= np.exp(dz * arg)

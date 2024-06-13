@@ -27,7 +27,7 @@ def nl_prop(
     # Interactions
     arg = 1j * g * A_sq * sat
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     # Potential
     arg += 1j * V
     arg *= dz
@@ -59,7 +59,7 @@ def nl_prop_without_V(
     # Interactions
     arg = 1j * g * A_sq * sat
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     arg *= dz
     cp.exp(arg, out=arg)
     A *= arg
@@ -96,7 +96,7 @@ def nl_prop_c(
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     # Potential
     arg += 1j * V
     arg *= dz
@@ -133,7 +133,7 @@ def nl_prop_without_V_c(
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     arg *= dz
     cp.exp(arg, out=arg)
     A1 *= arg

@@ -809,11 +809,11 @@
 
 <h1 id="how-to">How to</h1>
 <h2 id="benchmarking">Benchmarking</h2>
-<p>If you want to benchmark the performance of the code you could use the function <a href="/examples/benchmarks.py"><code>examples/benchmarks.py</code></a> which is a simple script that runs the code multiple times and calculates the average time taken to run the code.</p>
+<p>If you want to benchmark the performance of the code you could use the function <a href="https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/benchmarks.py"><code>examples/benchmarks.py</code></a> which is a simple script that runs the code multiple times and calculates the average time taken to run the code.</p>
 <h2 id="comparison-with-other-projects">Comparison with other projects</h2>
 <p>Compared to other related software like <a href="https://github.com/AshtonSBradley/FourierGPE.jl/tree/master"><code>FourierGPE.jl</code></a>, <code>NLSE</code> is much faster as it uses a much simpler solver (the latter uses the awesome <a href="https://docs.sciml.ai/DiffEqDocs/stable/"><code>DifferentialEquations.jl</code></a>).</p>
 <p>Of course this gives you less control over the numerical accuracy of your model, however we think it's worth it since performance often limits the possible physical scenarii.</p>
-<p>A comparison between the two projects can be found in <a href="/examples/comparison_juliaGPE.py"><code>comparison_juliaGPE.py</code></a> in our examples.</p>
+<p>A comparison between the two projects can be found in <a href="https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/comparison_juliaGPE.py"><code>comparison_juliaGPE.py</code></a> in our examples.</p>
 <h2 id="testing">Testing</h2>
 <p>The tests have been written to work in tandem with <a href="https://docs.pytest.org/en/8.2.x/"><code>pytest</code></a> and are run on each repository push using a GitHub action.</p>
 <p>These tests essentially check for the physical definitions of all the class methods.</p>
@@ -1074,7 +1074,7 @@ def test_out_field() -&gt; None:
         ), f&quot;Norm not conserved. (Backend {backend})&quot;
 </code></pre>
 <h2 id="examples">Examples</h2>
-<p>Minimum working examples for each class can be found in the <a href="/examples">examples</a> folder of the repo, as well as the code needed to benchmark performance on your machine and comparisons with other NLSE/GPE solvers.</p>
+<p>Minimum working examples for each class can be found in the <a href="https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples">examples</a> folder of the repo, as well as the code needed to benchmark performance on your machine and comparisons with other NLSE/GPE solvers.</p>
 
 
 

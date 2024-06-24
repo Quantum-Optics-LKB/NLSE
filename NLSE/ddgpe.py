@@ -35,11 +35,10 @@ class DDGPE(CNLSE):
         """Instantiates the class with all the relevant physical parameters
 
         Args:
-            alpha (float): alpha through the cell
+            gamma (float): Losses coefficient in s^-1
             power (float): Optical power in W
-            waist (float): Beam waist in m
             window (float): Computational window in m
-            n2 (float): Non linear index of the 1 st component in m^2/W
+            g (float): Interaction parameter
             n12 (float): Inter component interaction parameter
             V (np.ndarray): Potential landscape in a.u
             L (float): Length of the cell in m
@@ -173,7 +172,7 @@ class DDGPE(CNLSE):
             self.detuning = cp.asarray(self.detuning)
         if isinstance(self.omega_pump, np.ndarray):
             self.omega_pump = cp.asarray(self.omega_pump)
-        
+
     def _retrieve_arrays_from_gpu(self) -> None:
         """
         Retrieve arrays from GPU.
@@ -195,7 +194,7 @@ class DDGPE(CNLSE):
             self.detuning = self.detuning.get()
         if isinstance(self.omega_pump, cp.ndarray):
             self.omega_pump = self.omega_pump.get()
-        
+
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
 

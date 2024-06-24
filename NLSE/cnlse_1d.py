@@ -33,14 +33,12 @@ class CNLSE_1d(CNLSE):
         Args:
             alpha (float): Alpha through the cell
             power (float): Optical power in W
-            waist (float): Beam waist in m
             window (float): Computational window in m
             n2 (float): Non linear index of the 1 st component in m^2/W
             n12 (float): Inter component interaction parameter
             V (np.ndarray): Potential landscape in a.u
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
             Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.

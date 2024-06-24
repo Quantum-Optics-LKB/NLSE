@@ -14,7 +14,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.21">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.25">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.66ac8b77.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
       
       
 
@@ -729,6 +729,87 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#opencl-gpu-or-cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenCL (GPU or CPU)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl" class="md-nav__link">
+    <span class="md-ellipsis">
+      kernels_cl
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop_c" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop_c
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop_without_V" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop_without_V
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop_without_V_c" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop_without_V_c
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.rabi_coupling" class="md-nav__link">
+    <span class="md-ellipsis">
+      rabi_coupling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.square_mod" class="md-nav__link">
+    <span class="md-ellipsis">
+      square_mod
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.vortex_cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      vortex_cp
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -931,6 +1012,87 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#opencl-gpu-or-cpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenCL (GPU or CPU)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl" class="md-nav__link">
+    <span class="md-ellipsis">
+      kernels_cl
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop_c" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop_c
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop_without_V" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop_without_V
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.nl_prop_without_V_c" class="md-nav__link">
+    <span class="md-ellipsis">
+      nl_prop_without_V_c
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.rabi_coupling" class="md-nav__link">
+    <span class="md-ellipsis">
+      rabi_coupling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.square_mod" class="md-nav__link">
+    <span class="md-ellipsis">
+      square_mod
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#NLSE.kernels_cl.vortex_cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      vortex_cp
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -949,10 +1111,11 @@
   <h1>Kernels</h1>
 
 <h2 id="cpu">CPU</h2>
-<p>The CPU kernel in the <code>NLSE</code> package is responsible for solving the nonlinear Schrödinger equation using CPU resources. It utilizes the computational power of the central processing unit (CPU) to perform the necessary calculations.</p>
-<p>To use the CPU kernel, you can call the appropriate functions or methods provided by the <code>NLSE</code> package. These functions will internally invoke the CPU-specific implementation to solve the NLSE.</p>
-<p>The CPU kernel is suitable for small to medium-sized problems or when GPU resources are not available. It provides a reliable and efficient solution for solving the NLSE on CPU-based systems.</p>
-<p>If you have specific code or implementation details related to the CPU kernel that you would like assistance with, please provide more information and I'll be happy to help.</p>
+<p>CPU kernels in the <code>NLSE</code> package are responsible for solving the nonlinear Schrödinger equation using CPU resources.</p>
+<p>It uses the popular <a href="https://numba.readthedocs.io/en/stable/user/index.html">Numba</a> library to just-in-time compile array functions.</p>
+<p>These functions are not meant to be called directly and instead work as the backend specific implementations for the main classes methods.</p>
+<p>Due to the manual indexing involved in the implementations, these kernels <strong>do not support broadcasting</strong> (<em>for now</em>).</p>
+<p>CPU kernels are suitable for small to medium-sized problems or when GPU resources are not available. As it uses multithreading internally, they will benefit from higher core counts.</p>
 
 
 <div class="doc doc-object doc-module">
@@ -960,12 +1123,11 @@
 
 
 <a id="NLSE.kernels_cpu"></a>
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
 
-  
+
 
   <div class="doc doc-children">
-
 
 
 
@@ -978,134 +1140,132 @@
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.nl_prop" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A compiled parallel implementation to apply real space terms</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field to propagate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field modulus squared</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagation step in m</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Losses</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>V</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Potential</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>g</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Interactions</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field to propagate</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>A_sq</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field modulus squared</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>dz</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Propagation step in m</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>alpha</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Losses</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>V</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Potential</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>g</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Interactions</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>Isat</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Saturation</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 5</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 5</span>
 <span class="normal"> 6</span>
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
@@ -1162,27 +1322,25 @@
         <span class="c1"># saturation</span>
         <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
         <span class="c1"># Losses and interactions</span>
-        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">dz</span> <span class="o">*</span> <span class="n">arg</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.nl_prop_c" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat1</span><span class="p">,</span> <span class="n">Isat2</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms
 Args:
     A1 (cp.ndarray): The field to propagate (1st component)
@@ -1196,9 +1354,9 @@ Args:
     Isat1 (float): Saturation parameter of first component
     Isat2 (float): Saturation parameter of second component</p>
 
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 66</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 66</span>
 <span class="normal"> 67</span>
 <span class="normal"> 68</span>
 <span class="normal"> 69</span>
@@ -1235,7 +1393,8 @@ Args:
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
-<span class="normal">103</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">nl_prop_c</span><span class="p">(</span>
     <span class="n">A1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq_1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -1245,7 +1404,8 @@ Args:
     <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">g11</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">g12</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
 <span class="sd">    Args:</span>
@@ -1265,138 +1425,135 @@ Args:
     <span class="n">A_sq_2</span> <span class="o">=</span> <span class="n">A_sq_2</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="n">A1</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
         <span class="c1"># Saturation parameter</span>
-        <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+        <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat1</span> <span class="o">+</span> <span class="n">A_sq_2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat2</span><span class="p">)</span>
         <span class="c1"># Losses</span>
-        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sat</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
         <span class="c1"># Interactions</span>
         <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">g11</span> <span class="o">*</span> <span class="n">A_sq_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="n">g12</span> <span class="o">*</span> <span class="n">A_sq_2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span><span class="p">)</span>
         <span class="c1"># Potential</span>
         <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">A1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">dz</span> <span class="o">*</span> <span class="n">arg</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.nl_prop_without_V" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop_without_V</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop_without_V</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="cp.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field to propagate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="cp.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field modulus squared</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagation step in m</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Losses</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>g</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Interactions</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A</code></td>
-          <td>
-                <code><span title="cp.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field to propagate</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>A_sq</code></td>
-          <td>
-                <code><span title="cp.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field modulus squared</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>dz</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Propagation step in m</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>alpha</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Losses</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>g</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Interactions</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>Isat</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Saturation</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">37</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">37</span>
 <span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
@@ -1447,27 +1604,25 @@ Args:
         <span class="c1"># saturation</span>
         <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
         <span class="c1"># Losses and interactions</span>
-        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span>
         <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">dz</span> <span class="o">*</span> <span class="n">arg</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.nl_prop_without_V_c" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop_without_V_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop_without_V_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat1</span><span class="p">,</span> <span class="n">Isat2</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms
 Args:
     A1 (cp.ndarray): The field to propagate (1st component)
@@ -1480,10 +1635,9 @@ Args:
     Isat1 (float): Saturation parameter of first component
     Isat2 (float): Saturation parameter of second component</p>
 
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
-<span class="normal">107</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
@@ -1515,7 +1669,9 @@ Args:
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
-<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">nl_prop_without_V_c</span><span class="p">(</span>
     <span class="n">A1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq_1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -1524,7 +1680,8 @@ Args:
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">g11</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">g12</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
 <span class="sd">    Args:</span>
@@ -1543,112 +1700,107 @@ Args:
     <span class="n">A_sq_2</span> <span class="o">=</span> <span class="n">A_sq_2</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="n">A1</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
         <span class="c1"># Saturation parameter</span>
-        <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+        <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat1</span> <span class="o">+</span> <span class="n">A_sq_2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat2</span><span class="p">)</span>
         <span class="c1"># Losses</span>
-        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sat</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
         <span class="c1"># Interactions</span>
         <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">g11</span> <span class="o">*</span> <span class="n">A_sq_1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="n">g12</span> <span class="o">*</span> <span class="n">A_sq_2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sat</span><span class="p">)</span>
         <span class="n">A1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">dz</span> <span class="o">*</span> <span class="n">arg</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.rabi_coupling" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">rabi_coupling</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">rabi_coupling</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>Apply a Rabi coupling term.
 This function implements the Rabi hopping term.
 It exchanges density between the two components.</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A1</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>First field / component</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A2</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Second field / component</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Solver step</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>omega</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rabi coupling strength</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A1</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>First field / component</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>A2</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Second field / component</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>dz</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Solver step</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>omega</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Rabi coupling strength</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
 <span class="normal">145</span>
 <span class="normal">146</span>
 <span class="normal">147</span>
@@ -1663,7 +1815,9 @@ It exchanges density between the two components.</p>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
-<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">rabi_coupling</span><span class="p">(</span><span class="n">A1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">A2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a Rabi coupling term.</span>
 <span class="sd">    This function implements the Rabi hopping term.</span>
@@ -1682,99 +1836,93 @@ It exchanges density between the two components.</p>
         <span class="n">A1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
         <span class="n">A2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A1_old</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.square_mod" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>Compute the square modulus of the field</p>
 
 
-
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr class="doc-section-item">
-          <td><code>A_sq</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The modulus squared of the field</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The modulus squared of the field</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
         </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-
-
-  <p><span class="doc-section-title">Returns:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td>
-                <code>None</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>None</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">186</span>
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
@@ -1786,7 +1934,9 @@ It exchanges density between the two components.</p>
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the square modulus of the field</span>
 
@@ -1802,155 +1952,149 @@ It exchanges density between the two components.</p>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
         <span class="n">A_sq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_cpu.vortex" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">vortex</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ll</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">vortex</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ll</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>Generates a vortex of charge l at a position (i,j) on the image im.</p>
 
 
-
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>im</code></td>
-          <td>
-                <code><span title="numpy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Image</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr class="doc-section-item">
-          <td><code>i</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>position row of the vortex</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>j</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>position column of the vortex</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>ii</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>meshgrid position row (coordinates of the image)</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>jj</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>meshgrid position column (coordinates of the image)</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>l</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>vortex charge</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>im</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>i</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>position row of the vortex</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>j</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>position column of the vortex</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>ii</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>meshgrid position row (coordinates of the image)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>jj</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>meshgrid position column (coordinates of the image)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>l</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>vortex charge</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
-  <p><span class="doc-section-title">Returns:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td>
-                <code>None</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>None</p>
-            </div>
-          </td>
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
         </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">164</span>
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span>
@@ -1967,7 +2111,9 @@ It exchanges density between the two components.</p>
 <span class="normal">178</span>
 <span class="normal">179</span>
 <span class="normal">180</span>
-<span class="normal">181</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">vortex</span><span class="p">(</span>
     <span class="n">im</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ii</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">jj</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">ll</span><span class="p">:</span> <span class="nb">int</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1988,8 +2134,8 @@ It exchanges density between the two components.</p>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
             <span class="n">im</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(((</span><span class="n">ii</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">jj</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">j</span><span class="p">))</span> <span class="o">**</span> <span class="n">ll</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
 
@@ -1997,10 +2143,22 @@ It exchanges density between the two components.</p>
 
   </div>
 
-  </div>
+    </div>
 
 </div><h2 id="gpu-cuda">GPU (CUDA)</h2>
-<p>The GPU kernel in the <code>NLSE</code> package is responsible for solving the nonlinear Schrödinger equation using GPU resources. It utilizes the computational power of the graphics processing unit (GPU) to perform the necessary calculations.</p>
+<p>GPU kernels in the <code>NLSE</code> package are responsible for solving the nonlinear Schrödinger equation using GPU resources. 
+They utilize the computational power of the graphics processing unit (GPU) to perform the necessary calculations.</p>
+<p>These kernels use the <a href="https://docs.cupy.dev/en/stable/reference/generated/cupy.fuse.html"><code>cupy.fuse</code></a> API to just-in-time compile the array operations to
+a single kernel.</p>
+<p>The strategy here is to maximize GPU occupancy by grouping operations to a complex enough task such that we are not limited by memory bandwidth.
+As with the CPU kernels, the paradigm is to try and mutate arrays in place as much as possible to avoid costly memory transfers.</p>
+<p>To this end, most of these kernels have the following signature:</p>
+<pre><code class="language-python">@cp.fuse
+def kernel(A: cp.ndarray, *args):
+    # do something to A
+    A += args[0]
+    A *= args[1]
+</code></pre>
 
 
 <div class="doc doc-object doc-module">
@@ -2008,12 +2166,11 @@ It exchanges density between the two components.</p>
 
 
 <a id="NLSE.kernels_gpu"></a>
-  <div class="doc doc-contents first">
+    <div class="doc doc-contents first">
 
-  
+
 
   <div class="doc doc-children">
-
 
 
 
@@ -2026,134 +2183,132 @@ It exchanges density between the two components.</p>
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.nl_prop" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field to propagate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field modulus squared</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagation step in m</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Losses</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>V</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Potential</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>g</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Interactions</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field to propagate</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>A_sq</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field modulus squared</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>dz</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Propagation step in m</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>alpha</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Losses</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>V</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Potential</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>g</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Interactions</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>Isat</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Saturation</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 4</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 4</span>
 <span class="normal"> 5</span>
 <span class="normal"> 6</span>
 <span class="normal"> 7</span>
@@ -2210,31 +2365,29 @@ It exchanges density between the two components.</p>
     <span class="c1"># Interactions</span>
     <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span> <span class="o">*</span> <span class="n">sat</span>
     <span class="c1"># Losses</span>
-    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
     <span class="c1"># Potential</span>
     <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span>
     <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
     <span class="n">cp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
     <span class="n">A</span> <span class="o">*=</span> <span class="n">arg</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.nl_prop_c" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat1</span><span class="p">,</span> <span class="n">Isat2</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms
 Args:
     A1 (cp.ndarray): The field to propagate (1st component)
@@ -2248,9 +2401,9 @@ Args:
     Isat1 (float): Saturation parameter of first component
     Isat2 (float): Saturation parameter of second component</p>
 
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 68</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 68</span>
 <span class="normal"> 69</span>
 <span class="normal"> 70</span>
 <span class="normal"> 71</span>
@@ -2285,7 +2438,8 @@ Args:
 <span class="normal">100</span>
 <span class="normal">101</span>
 <span class="normal">102</span>
-<span class="normal">103</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@cp</span><span class="o">.</span><span class="n">fuse</span><span class="p">(</span><span class="n">kernel_name</span><span class="o">=</span><span class="s2">&quot;nl_prop_c&quot;</span><span class="p">)</span>
+<span class="normal">103</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@cp</span><span class="o">.</span><span class="n">fuse</span><span class="p">(</span><span class="n">kernel_name</span><span class="o">=</span><span class="s2">&quot;nl_prop_c&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">nl_prop_c</span><span class="p">(</span>
     <span class="n">A1</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq_1</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -2295,7 +2449,8 @@ Args:
     <span class="n">V</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">g11</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">g12</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
 <span class="sd">    Args:</span>
@@ -2311,140 +2466,137 @@ Args:
 <span class="sd">        Isat2 (float): Saturation parameter of second component</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Saturation parameter</span>
-    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">A_sq_1</span> <span class="o">+</span> <span class="n">A_sq_2</span><span class="p">)</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat1</span> <span class="o">+</span> <span class="n">A_sq_2</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat2</span><span class="p">)</span>
     <span class="c1"># Interactions</span>
     <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">g11</span> <span class="o">*</span> <span class="n">A_sq_1</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="n">g12</span> <span class="o">*</span> <span class="n">A_sq_2</span> <span class="o">*</span> <span class="n">sat</span><span class="p">)</span>
     <span class="c1"># Losses</span>
-    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
     <span class="c1"># Potential</span>
     <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span>
     <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
     <span class="n">cp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
     <span class="n">A1</span> <span class="o">*=</span> <span class="n">arg</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.nl_prop_without_V" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop_without_V</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop_without_V</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field to propagate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field modulus squared</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagation step in m</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Losses</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>g</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Interactions</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field to propagate</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>A_sq</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field modulus squared</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>dz</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Propagation step in m</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>alpha</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Losses</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>g</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Interactions</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>Isat</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Saturation</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
 <span class="normal">39</span>
 <span class="normal">40</span>
 <span class="normal">41</span>
@@ -2495,29 +2647,27 @@ Args:
     <span class="c1"># Interactions</span>
     <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span> <span class="o">*</span> <span class="n">sat</span>
     <span class="c1"># Losses</span>
-    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
     <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
     <span class="n">cp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
     <span class="n">A</span> <span class="o">*=</span> <span class="n">arg</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.nl_prop_without_V_c" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">nl_prop_without_V_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">nl_prop_without_V_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat1</span><span class="p">,</span> <span class="n">Isat2</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>A fused kernel to apply real space terms
 Args:
     A1 (cp.ndarray): The field to propagate (1st component)
@@ -2530,10 +2680,9 @@ Args:
     Isat1 (float): Saturation parameter of first component
     Isat2 (float): Saturation parameter of second component</p>
 
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
-<span class="normal">107</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
@@ -2563,7 +2712,9 @@ Args:
 <span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
-<span class="normal">137</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@cp</span><span class="o">.</span><span class="n">fuse</span><span class="p">(</span><span class="n">kernel_name</span><span class="o">=</span><span class="s2">&quot;nl_prop_without_V_c&quot;</span><span class="p">)</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@cp</span><span class="o">.</span><span class="n">fuse</span><span class="p">(</span><span class="n">kernel_name</span><span class="o">=</span><span class="s2">&quot;nl_prop_without_V_c&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">nl_prop_without_V_c</span><span class="p">(</span>
     <span class="n">A1</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq_1</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -2572,7 +2723,8 @@ Args:
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">g11</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">g12</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
 <span class="sd">    Args:</span>
@@ -2587,114 +2739,109 @@ Args:
 <span class="sd">        Isat2 (float): Saturation parameter of second component</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Saturation parameter</span>
-    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">A_sq_1</span> <span class="o">+</span> <span class="n">A_sa_2</span><span class="p">)</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat1</span> <span class="o">+</span> <span class="n">A_sq_2</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">Isat2</span><span class="p">)</span>
     <span class="c1"># Interactions</span>
     <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">g11</span> <span class="o">*</span> <span class="n">A_sq_1</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="n">g12</span> <span class="o">*</span> <span class="n">A_sq_2</span> <span class="o">*</span> <span class="n">sat</span><span class="p">)</span>
     <span class="c1"># Losses</span>
-    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
     <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
     <span class="n">cp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">arg</span><span class="p">)</span>
     <span class="n">A1</span> <span class="o">*=</span> <span class="n">arg</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.rabi_coupling" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">rabi_coupling</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">rabi_coupling</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>Apply a Rabi coupling term.
 This function implements the Rabi hopping term.
 It exchanges density between the two components.</p>
 
 
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A1</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>First field / component</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A2</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Second field / component</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Solver step</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>omega</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rabi coupling strength</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A1</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>First field / component</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>A2</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Second field / component</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>dz</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Solver step</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>omega</code></td>
-          <td>
-                <code>float</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Rabi coupling strength</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
@@ -2709,7 +2856,7 @@ It exchanges density between the two components.</p>
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@cp</span><span class="o">.</span><span class="n">fuse</span><span class="p">(</span><span class="n">kernel_name</span><span class="o">=</span><span class="s2">&quot;rabi_coupling&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">rabi_coupling</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">rabi_coupling</span><span class="p">(</span><span class="n">A1</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">A2</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a Rabi coupling term.</span>
 <span class="sd">    This function implements the Rabi hopping term.</span>
 <span class="sd">    It exchanges density between the two components.</span>
@@ -2720,103 +2867,97 @@ It exchanges density between the two components.</p>
 <span class="sd">        dz (float): Solver step</span>
 <span class="sd">        omega (float): Rabi coupling strength</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">A1</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
-    <span class="n">A2</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
     <span class="n">A1_old</span> <span class="o">=</span> <span class="n">A1</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">A1</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A1</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">cp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A2</span>
     <span class="n">A2</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">cp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A1_old</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.square_mod" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>Compute the square modulus of the field</p>
 
 
-
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>A</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The field</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr class="doc-section-item">
-          <td><code>A_sq</code></td>
-          <td>
-                <code><span title="cupy.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The modulus squared of the field</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="cupy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The modulus squared of the field</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
         </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-
-
-  <p><span class="doc-section-title">Returns:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td>
-                <code>None</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>None</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">179</span>
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span>
@@ -2840,153 +2981,149 @@ It exchanges density between the two components.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">A_sq</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
-
 <h2 id="NLSE.kernels_gpu.vortex_cp" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">vortex_cp</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ll</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">vortex_cp</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ll</span><span class="p">)</span></code>
 
 </h2>
 
 
-  <div class="doc doc-contents ">
-  
+    <div class="doc doc-contents ">
+
       <p>Generates a vortex of charge l at a position (i,j) on the image im.</p>
 
 
-
-  <p><span class="doc-section-title">Parameters:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td><code>im</code></td>
-          <td>
-                <code><span title="np.ndarray">ndarray</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Image</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
         </tr>
-        <tr class="doc-section-item">
-          <td><code>i</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>position row of the vortex</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>j</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>position column of the vortex</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>ii</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>meshgrid position row (coordinates of the image)</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>jj</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>meshgrid position column (coordinates of the image)</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr class="doc-section-item">
-          <td><code>l</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>vortex charge</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>im</code></td>
+            <td>
+                  <code><span title="NLSE.callbacks.np.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>i</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>position row of the vortex</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>j</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>position column of the vortex</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>ii</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>meshgrid position row (coordinates of the image)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>jj</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>meshgrid position column (coordinates of the image)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>l</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>vortex charge</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
-  <p><span class="doc-section-title">Returns:</span></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr class="doc-section-item">
-          <td>
-                <code>None</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>None</p>
-            </div>
-          </td>
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
         </tr>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
-          <details class="quote">
-            <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">159</span>
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_gpu.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">159</span>
 <span class="normal">160</span>
 <span class="normal">161</span>
 <span class="normal">162</span>
@@ -3022,8 +3159,8 @@ It exchanges density between the two components.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">im</span> <span class="o">+=</span> <span class="n">cp</span><span class="o">.</span><span class="n">angle</span><span class="p">(((</span><span class="n">ii</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">jj</span> <span class="o">-</span> <span class="n">j</span><span class="p">))</span> <span class="o">**</span> <span class="n">ll</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
 
@@ -3031,7 +3168,1009 @@ It exchanges density between the two components.</p>
 
   </div>
 
+    </div>
+
+</div><h2 id="opencl-gpu-or-cpu">OpenCL (GPU or CPU)</h2>
+<p>In order to take advantage of the modern hardware, there is experimental support for OpenCL for the <code>NLSE</code> class.</p>
+<p>The long-term goal is to use a unified interface for GPU and CPU (which is what OpenCL already does).</p>
+<p>This uses <a href="https://github.com/inducer/pyopencl"><code>PyOpenCL</code></a> and its <a href="https://github.com/inducer/pyopencl/blob/main/pyopencl/array.py"><code>array</code></a> interface to follow the same approach as the other two implementations.</p>
+<p>Due to the limited support for OpenCL on newer hardware (mostly Macs), this might not be the winning strategy so use at your own risk ! 😇</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="NLSE.kernels_cl"></a>
+    <div class="doc doc-contents first">
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.nl_prop" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">nl_prop</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>A fused kernel to apply real space terms</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field to propagate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field modulus squared</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagation step in m</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Losses</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>V</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Potential</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>g</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Interactions</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nl_prop</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">A_sq</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">V</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">g</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A (cla.Array): The field to propagate</span>
+<span class="sd">        A_sq (cla.Array): The field modulus squared</span>
+<span class="sd">        dz (float): Propagation step in m</span>
+<span class="sd">        alpha (float): Losses</span>
+<span class="sd">        V (cla.Array): Potential</span>
+<span class="sd">        g (float): Interactions</span>
+<span class="sd">        Isat (float): Saturation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># saturation</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+    <span class="c1"># Interactions</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="c1"># Losses</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="c1"># Potential</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span>
+    <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">*=</span> <span class="n">arg</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.nl_prop_c" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">nl_prop_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>A fused kernel to apply real space terms
+Args:
+    A1 (cla.Array): The field to propagate (1st component)
+    A_sq_1 (cla.Array): The field modulus squared (1st component)
+    A_sq_2 (cla.Array): The field modulus squared (2nd component)
+    dz (float): Propagation step in m
+    alpha (float): Losses
+    V (cla.Array): Potential
+    g11 (float): Intra-component interactions
+    g12 (float): Inter-component interactions
+    Isat1 (float): Saturation parameter of first component
+    Isat2 (float): Saturation parameter of second component</p>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 67</span>
+<span class="normal"> 68</span>
+<span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nl_prop_c</span><span class="p">(</span>
+    <span class="n">A1</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">A_sq_1</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">A_sq_2</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">V</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">g11</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">g12</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
+<span class="sd">    Args:</span>
+<span class="sd">        A1 (cla.Array): The field to propagate (1st component)</span>
+<span class="sd">        A_sq_1 (cla.Array): The field modulus squared (1st component)</span>
+<span class="sd">        A_sq_2 (cla.Array): The field modulus squared (2nd component)</span>
+<span class="sd">        dz (float): Propagation step in m</span>
+<span class="sd">        alpha (float): Losses</span>
+<span class="sd">        V (cla.Array): Potential</span>
+<span class="sd">        g11 (float): Intra-component interactions</span>
+<span class="sd">        g12 (float): Inter-component interactions</span>
+<span class="sd">        Isat1 (float): Saturation parameter of first component</span>
+<span class="sd">        Isat2 (float): Saturation parameter of second component</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Saturation parameter</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">A_sq_1</span> <span class="o">+</span> <span class="n">A_sq_2</span><span class="p">)</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+    <span class="c1"># Interactions</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">g11</span> <span class="o">*</span> <span class="n">A_sq_1</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="n">g12</span> <span class="o">*</span> <span class="n">A_sq_2</span> <span class="o">*</span> <span class="n">sat</span><span class="p">)</span>
+    <span class="c1"># Losses</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="c1"># Potential</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">V</span>
+    <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">A1</span> <span class="o">*=</span> <span class="n">arg</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.nl_prop_without_V" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">nl_prop_without_V</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>A fused kernel to apply real space terms</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field to propagate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field modulus squared</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Propagation step in m</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Losses</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>g</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Interactions</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nl_prop_without_V</span><span class="p">(</span>
+    <span class="n">A</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">A_sq</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">g</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A (cla.Array): The field to propagate</span>
+<span class="sd">        A_sq (cla.Array): The field modulus squared</span>
+<span class="sd">        dz (float): Propagation step in m</span>
+<span class="sd">        alpha (float): Losses</span>
+<span class="sd">        g (float): Interactions</span>
+<span class="sd">        Isat (float): Saturation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># saturation</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+    <span class="c1"># Interactions</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">A_sq</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="c1"># Losses</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">*=</span> <span class="n">arg</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.nl_prop_without_V_c" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">nl_prop_without_V_c</span><span class="p">(</span><span class="n">A1</span><span class="p">,</span> <span class="n">A_sq_1</span><span class="p">,</span> <span class="n">A_sq_2</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">g11</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">Isat</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>A fused kernel to apply real space terms
+Args:
+    A1 (cla.Array): The field to propagate (1st component)
+    A_sq_1 (cla.Array): The field modulus squared (1st component)
+    A_sq_2 (cla.Array): The field modulus squared (2nd component)
+    dz (float): Propagation step in m
+    alpha (float): Losses
+    g11 (float): Intra-component interactions
+    g12 (float): Inter-component interactions
+    Isat1 (float): Saturation parameter of first component
+    Isat2 (float): Saturation parameter of second component</p>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">nl_prop_without_V_c</span><span class="p">(</span>
+    <span class="n">A1</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">A_sq_1</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">A_sq_2</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span>
+    <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">g11</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">g12</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">Isat</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A fused kernel to apply real space terms</span>
+<span class="sd">    Args:</span>
+<span class="sd">        A1 (cla.Array): The field to propagate (1st component)</span>
+<span class="sd">        A_sq_1 (cla.Array): The field modulus squared (1st component)</span>
+<span class="sd">        A_sq_2 (cla.Array): The field modulus squared (2nd component)</span>
+<span class="sd">        dz (float): Propagation step in m</span>
+<span class="sd">        alpha (float): Losses</span>
+<span class="sd">        g11 (float): Intra-component interactions</span>
+<span class="sd">        g12 (float): Inter-component interactions</span>
+<span class="sd">        Isat1 (float): Saturation parameter of first component</span>
+<span class="sd">        Isat2 (float): Saturation parameter of second component</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Saturation parameter</span>
+    <span class="n">sat</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">A_sq_1</span> <span class="o">/</span> <span class="n">Isat</span><span class="p">)</span>
+    <span class="c1"># Interactions</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">g11</span> <span class="o">*</span> <span class="n">A_sq_1</span> <span class="o">*</span> <span class="n">sat</span> <span class="o">+</span> <span class="n">g12</span> <span class="o">*</span> <span class="n">A_sq_2</span> <span class="o">*</span> <span class="n">sat</span><span class="p">)</span>
+    <span class="c1"># Losses</span>
+    <span class="n">arg</span> <span class="o">+=</span> <span class="o">-</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">sat</span>
+    <span class="n">arg</span> <span class="o">*=</span> <span class="n">dz</span>
+    <span class="n">arg</span> <span class="o">=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">A1</span> <span class="o">*=</span> <span class="n">arg</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.rabi_coupling" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">rabi_coupling</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">omega</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Apply a Rabi coupling term.
+This function implements the Rabi hopping term.
+It exchanges density between the two components.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A1</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>First field / component</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A2</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Second field / component</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>dz</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Solver step</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>omega</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Rabi coupling strength</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">rabi_coupling</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a Rabi coupling term.</span>
+<span class="sd">    This function implements the Rabi hopping term.</span>
+<span class="sd">    It exchanges density between the two components.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A1 (cla.Array): First field / component</span>
+<span class="sd">        A2 (cla.Array): Second field / component</span>
+<span class="sd">        dz (float): Solver step</span>
+<span class="sd">        omega (float): Rabi coupling strength</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A1</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">A2</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+    <span class="n">A1_old</span> <span class="o">=</span> <span class="n">A1</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">A1</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A1</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">clmath</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A2</span>
+    <span class="n">A2</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A2</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">clmath</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dz</span><span class="p">)</span> <span class="o">*</span> <span class="n">A1_old</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.square_mod" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Compute the square modulus of the field</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>A</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The field</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>A_sq</code></td>
+            <td>
+                  <code><span title="pyopencl.array.Array">Array</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The modulus squared of the field</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the square modulus of the field</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        A (cla.Array): The field</span>
+<span class="sd">        A_sq (cla.Array): The modulus squared of the field</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A_sq</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">A</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">A</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">A</span><span class="o">.</span><span class="n">imag</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="NLSE.kernels_cl.vortex_cp" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">vortex_cp</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ll</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Generates a vortex of charge l at a position (i,j) on the image im.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>im</code></td>
+            <td>
+                  <code><span title="NLSE.callbacks.np.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Image</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>i</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>position row of the vortex</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>j</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>position column of the vortex</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>ii</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>meshgrid position row (coordinates of the image)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>jj</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>meshgrid position column (coordinates of the image)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>l</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>vortex charge</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>None</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">vortex_cp</span><span class="p">(</span>
+    <span class="n">im</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ii</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jj</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">ll</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a vortex of charge l at a position (i,j) on the image im.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        im (np.ndarray): Image</span>
+<span class="sd">        i (int): position row of the vortex</span>
+<span class="sd">        j (int): position column of the vortex</span>
+<span class="sd">        ii (int): meshgrid position row (coordinates of the image)</span>
+<span class="sd">        jj (int): meshgrid position column (coordinates of the image)</span>
+<span class="sd">        l (int): vortex charge</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">im</span> <span class="o">+=</span> <span class="n">clmath</span><span class="o">.</span><span class="n">atan</span><span class="p">(((</span><span class="n">ii</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">jj</span> <span class="o">-</span> <span class="n">j</span><span class="p">))</span> <span class="o">**</span> <span class="n">ll</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
   </div>
+
+    </div>
 
 </div>
 
@@ -3083,7 +4222,7 @@ It exchanges density between the two components.</p>
     <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.a7c05c9e.min.js"></script>
+      <script src="../assets/javascripts/bundle.081f42fc.min.js"></script>
       
         <script src="../javascripts/mathjax.js"></script>
       

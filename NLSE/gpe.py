@@ -38,11 +38,15 @@ class GPE(NLSE):
             window (float): Window size in m
             g (float): Interaction energy in Hz*m^2
             V (np.ndarray): Potential in Hz
-            m (float, optionnal): mass of one atom in kg. Defaults to 87*atomic_mass for Rubidium 87.
-            NX (int, optional): Number of points in x. Defaults to 1024.
-            NY (int, optional): Number of points in y. Defaults to 1024.
+            m (float, optionnal): mass of one atom in kg.
+                Defaults to 87*atomic_mass for Rubidium 87.
+            NX (int, optional): Number of points in x.
+                Defaults to 1024.
+            NY (int, optional): Number of points in y.
+                Defaults to 1024.
             sat (float): Saturation parameter in Hz/m^2.
-            nl_length (float, optional): Non local length scale in m. Defaults to 0.
+            nl_length (float, optional): Non local length scale in m.
+                Defaults to 0.
             backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         super().__init__(

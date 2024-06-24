@@ -67,12 +67,15 @@ class NLSE:
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray): Potential.
             L (float): Length in m of the nonlinear medium
-            NX (int, optional): Number of points in the x direction. Defaults to 1024.
-            NY (int, optional): Number of points in the y direction. Defaults to 1024.
+            NX (int, optional): Number of points in the x direction.
+                Defaults to 1024.
+            NY (int, optional): Number of points in the y direction.
+                Defaults to 1024.
             Isat (float): Saturation intensity in W/m^2
             nl_length (float): Non local length in m
             wvl (float): Wavelength in m
-            backend (str, optional): Will run using the "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): Will run using the "GPU" or "CPU".
+                Defaults to __BACKEND__.
         """
         # listof physical parameters
         self.backend = backend
@@ -337,8 +340,11 @@ class NLSE:
             A_sq (np.ndarray): Field modulus squared.
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to "single".
+            plans (list): List of FFT plan objects.
+                Either a single FFT plan for both directions (GPU case)
+                or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of
+                the nonlinear propagation step. Defaults to "single".
         """
         if (
             self.backend == "GPU"
@@ -452,18 +458,19 @@ class NLSE:
         calling the split step function in a loop.
 
         Args:
-            E_in (np.ndarray): Normalized input field (between 0 and 1)
-            z (float): propagation distance in m
+            E_in (np.ndarray): Normalized input field (between 0 and 1).
+            z (float): propagation distance in m.
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-            of the nonlinear term.
-            This leads to a dz (single) or dz^3 (double) precision.
-            Defaults to "single".
+                of the nonlinear term. This leads to a dz (single) or dz^3 (double)
+                precision. Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
             normalize (bool, optional): Normalize the field to the total power.
-            Defaults to True.
-            callback (callable, optional): Callback function. Defaults to None.
-            *args: Additional arguments for the callback function.
+                Defaults to True.
+            callback (callable, optional): Callback function.
+                Defaults to None.
+            callback_args (tuple, optional): Additional arguments for the callback
+                function.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """

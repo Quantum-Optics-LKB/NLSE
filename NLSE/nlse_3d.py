@@ -42,19 +42,24 @@ class NLSE_3d(NLSE):
         Args:
             alpha (float): alpha
             energy (float): Total energy in J
-            window (np.ndarray): Computanional window in the transverse plane (index 0) in m and longitudinal direction (index 1) in s.
+            window (np.ndarray): Computanional window in the transverse plane
+                (index 0) in m and longitudinal direction (index 1) in s.
             n2 (float): Non linear coeff in m^2/W.
             D0 (float): Dispersion in s^2/m.
             vg (float): Group velocity in m/s.
             V (np.ndarray): Potential.
             L (float): Length in m of the nonlinear medium
-            NX (int, optional): Number of points in the x direction. Defaults to 1024.
-            NY (int, optional): Number of points in the y direction. Defaults to 1024.
-            NZ (int, optional): Number of points in the t direction. Defaults to 1024.
+            NX (int, optional): Number of points in the x direction.
+                Defaults to 1024.
+            NY (int, optional): Number of points in the y direction.
+                Defaults to 1024.
+            NZ (int, optional): Number of points in the t direction.
+                Defaults to 1024.
             Isat (float): Saturation intensity in W/m^2
             nl_length (float): Non local length in m
             wvl (float): Wavelength in m
-            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU".
+                Defaults to __BACKEND__.
         """
         super().__init__(
             alpha=alpha,

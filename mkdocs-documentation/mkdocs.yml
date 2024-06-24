@@ -26,8 +26,13 @@ nav:
   - How to:
       - How to ?: "how_to.md"
   - Reference:
-      - NLSE: reference.md
+      - NLSE: nlse.md
+      - 1D NLSE : nlse_1d.md
+      - 3D NLSE : nlse_3d.md
       - Coupled NLSE: cnlse.md
+      - 1D Coupled NLSE: cnlse_1d.md
+      - GPE: gpe.md
+      - Driven dissipative GPE: ddgpe.md
       - Kernels: kernels.md
 
 markdown_extensions:

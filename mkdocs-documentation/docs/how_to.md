@@ -10,7 +10,7 @@ Compared to other related software like [`FourierGPE.jl`](https://github.com/Ash
 
 Of course this gives you less control over the numerical accuracy of your model, however we think it's worth it since performance often limits the possible physical scenarii.
 
-A comparison between the two projects can be found in [`comparison_juliaGPE.py`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/comparison_juliaGPE.py) in our examples.
+A comparison between the two projects can be found in [`comparison_juliaGPE.py`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/juliaGPE_vs_NLSE.py) in our examples.
 
 ## Testing
 

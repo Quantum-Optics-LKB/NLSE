@@ -1004,7 +1004,7 @@ Be mindful however that since the callback is running in the main solver loop, t
 The propagation step <span class="arithmatex">\(\delta z\)</span> is chosen to be the minimum between <code>1e-5</code> the Rayleigh length of the beam or <code>2.5e-2</code> <span class="arithmatex">\(z_{NL}=\frac{1}{k_0 n_2 I}\)</span>, but this can be hand tuned to reach desired speed or precision by setting the <code>delta_z</code> attribute.</p>
 <h2 id="inheritance">Inheritance</h2>
 <p>In order to minimize duplication, all classes inherit from the main <code>NLSE</code> class according to the following graph:
-<img alt="inheritance" src="img/inheritance_graph.png" /></p>
+<img alt="inheritance" src="/img/inheritance_graph.png" /></p>
 <h2 id="the-nlse_1d-class">The <code>NLSE_1d</code> class</h2>
 <p><code>NLSE_1d</code> is a 1D specialization of <code>NLSE</code> for performance. 
 It supports all of the features of the main <code>NLSE</code> class.</p>

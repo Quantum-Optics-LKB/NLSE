@@ -1413,8 +1413,7 @@
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DDGPE</span><span class="p">(</span><span class="n">CNLSE</span><span class="p">):</span>
+<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">DDGPE</span><span class="p">(</span><span class="n">CNLSE</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve the 2D driven dissipative Gross-Pitaevskii equation&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -1440,11 +1439,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates the class with all the relevant physical parameters</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            alpha (float): alpha through the cell</span>
+<span class="sd">            gamma (float): Losses coefficient in s^-1</span>
 <span class="sd">            power (float): Optical power in W</span>
-<span class="sd">            waist (float): Beam waist in m</span>
 <span class="sd">            window (float): Computational window in m</span>
-<span class="sd">            n2 (float): Non linear index of the 1 st component in m^2/W</span>
+<span class="sd">            g (float): Interaction parameter</span>
 <span class="sd">            n12 (float): Inter component interaction parameter</span>
 <span class="sd">            V (np.ndarray): Potential landscape in a.u</span>
 <span class="sd">            L (float): Length of the cell in m</span>
@@ -1996,13 +1994,13 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>alpha</code></td>
+            <td><code>gamma</code></td>
             <td>
                   <code>float</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>alpha through the cell</p>
+                <p>Losses coefficient in s^-1</p>
               </div>
             </td>
             <td>
@@ -2024,20 +2022,6 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>waist</code></td>
-            <td>
-                  <code>float</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Beam waist in m</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code>window</code></td>
             <td>
                   <code>float</code>
@@ -2052,13 +2036,13 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>n2</code></td>
+            <td><code>g</code></td>
             <td>
                   <code>float</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Non linear index of the 1 st component in m^2/W</p>
+                <p>Interaction parameter</p>
               </div>
             </td>
             <td>
@@ -2285,8 +2269,7 @@
 <span class="normal">85</span>
 <span class="normal">86</span>
 <span class="normal">87</span>
-<span class="normal">88</span>
-<span class="normal">89</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -2309,11 +2292,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the class with all the relevant physical parameters</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        alpha (float): alpha through the cell</span>
+<span class="sd">        gamma (float): Losses coefficient in s^-1</span>
 <span class="sd">        power (float): Optical power in W</span>
-<span class="sd">        waist (float): Beam waist in m</span>
 <span class="sd">        window (float): Computational window in m</span>
-<span class="sd">        n2 (float): Non linear index of the 1 st component in m^2/W</span>
+<span class="sd">        g (float): Interaction parameter</span>
 <span class="sd">        n12 (float): Inter component interaction parameter</span>
 <span class="sd">        V (np.ndarray): Potential landscape in a.u</span>
 <span class="sd">        L (float): Length of the cell in m</span>
@@ -2458,7 +2440,8 @@
 
             <details class="quote">
               <summary>Source code in <code>NLSE/ddgpe.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 91</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 90</span>
+<span class="normal"> 91</span>
 <span class="normal"> 92</span>
 <span class="normal"> 93</span>
 <span class="normal"> 94</span>
@@ -2486,8 +2469,7 @@
 <span class="normal">116</span>
 <span class="normal">117</span>
 <span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">119</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">add_noise</span><span class="p">(</span>
     <span class="n">simu</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
     <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -2673,7 +2655,8 @@ cavity field at each propagation step.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/ddgpe.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">122</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">121</span>
+<span class="normal">122</span>
 <span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
@@ -2701,8 +2684,7 @@ cavity field at each propagation step.</p>
 <span class="normal">147</span>
 <span class="normal">148</span>
 <span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">150</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">laser_excitation</span><span class="p">(</span>
     <span class="n">simu</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
     <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -2903,7 +2885,8 @@ cavity field at each propagation step.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/ddgpe.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">506</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">505</span>
+<span class="normal">506</span>
 <span class="normal">507</span>
 <span class="normal">508</span>
 <span class="normal">509</span>
@@ -2948,8 +2931,7 @@ cavity field at each propagation step.</p>
 <span class="normal">548</span>
 <span class="normal">549</span>
 <span class="normal">550</span>
-<span class="normal">551</span>
-<span class="normal">552</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
+<span class="normal">551</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">E_in</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -3060,7 +3042,8 @@ cavity field at each propagation step.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/ddgpe.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">454</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">453</span>
+<span class="normal">454</span>
 <span class="normal">455</span>
 <span class="normal">456</span>
 <span class="normal">457</span>
@@ -3109,8 +3092,7 @@ cavity field at each propagation step.</p>
 <span class="normal">500</span>
 <span class="normal">501</span>
 <span class="normal">502</span>
-<span class="normal">503</span>
-<span class="normal">504</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">503</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the field for monitoring.</span>
 
 <span class="sd">    Args:</span>
@@ -3297,7 +3279,8 @@ cavity field at each propagation step.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/ddgpe.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">242</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">241</span>
+<span class="normal">242</span>
 <span class="normal">243</span>
 <span class="normal">244</span>
 <span class="normal">245</span>
@@ -3506,8 +3489,7 @@ cavity field at each propagation step.</p>
 <span class="normal">448</span>
 <span class="normal">449</span>
 <span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
+<span class="normal">451</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>

@@ -952,9 +952,7 @@
 <span class="normal">159</span>
 <span class="normal">160</span>
 <span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CNLSE_1d</span><span class="p">(</span><span class="n">CNLSE</span><span class="p">):</span>
+<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">CNLSE_1d</span><span class="p">(</span><span class="n">CNLSE</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve the 1D coupled NLSE&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -978,14 +976,12 @@
 <span class="sd">        Args:</span>
 <span class="sd">            alpha (float): Alpha through the cell</span>
 <span class="sd">            power (float): Optical power in W</span>
-<span class="sd">            waist (float): Beam waist in m</span>
 <span class="sd">            window (float): Computational window in m</span>
 <span class="sd">            n2 (float): Non linear index of the 1 st component in m^2/W</span>
 <span class="sd">            n12 (float): Inter component interaction parameter</span>
 <span class="sd">            V (np.ndarray): Potential landscape in a.u</span>
 <span class="sd">            L (float): Length of the cell in m</span>
 <span class="sd">            NX (int, optional): Number of points along x. Defaults to 1024.</span>
-<span class="sd">            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.</span>
 <span class="sd">            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.</span>
 <span class="sd">            nl_length (float, optional): Nonlocal length. Defaults to 0.</span>
 <span class="sd">            wvl (float, optional): Wavelength in m. Defaults to 780 nm.</span>
@@ -1176,20 +1172,6 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>waist</code></td>
-            <td>
-                  <code>float</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Beam waist in m</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
             <td><code>window</code></td>
             <td>
                   <code>float</code>
@@ -1271,20 +1253,6 @@
             </td>
             <td>
                   <code>1024</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code>Isat</code></td>
-            <td>
-                  <code>float</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Saturation intensity, assumed to be the same for both components. Defaults to infinity.</p>
-              </div>
-            </td>
-            <td>
-                  <code><span title="numpy.inf">inf</span></code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -1438,9 +1406,7 @@
 <span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
-<span class="normal">68</span>
-<span class="normal">69</span>
-<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1461,14 +1427,12 @@
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float): Alpha through the cell</span>
 <span class="sd">        power (float): Optical power in W</span>
-<span class="sd">        waist (float): Beam waist in m</span>
 <span class="sd">        window (float): Computational window in m</span>
 <span class="sd">        n2 (float): Non linear index of the 1 st component in m^2/W</span>
 <span class="sd">        n12 (float): Inter component interaction parameter</span>
 <span class="sd">        V (np.ndarray): Potential landscape in a.u</span>
 <span class="sd">        L (float): Length of the cell in m</span>
 <span class="sd">        NX (int, optional): Number of points along x. Defaults to 1024.</span>
-<span class="sd">        Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.</span>
 <span class="sd">        Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.</span>
 <span class="sd">        nl_length (float, optional): Nonlocal length. Defaults to 0.</span>
 <span class="sd">        wvl (float, optional): Wavelength in m. Defaults to 780 nm.</span>
@@ -1560,7 +1524,9 @@
 
             <details class="quote">
               <summary>Source code in <code>NLSE/cnlse_1d.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
 <span class="normal">131</span>
 <span class="normal">132</span>
 <span class="normal">133</span>
@@ -1592,9 +1558,7 @@
 <span class="normal">159</span>
 <span class="normal">160</span>
 <span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a field for monitoring.</span>
 
 <span class="sd">    Args:</span>

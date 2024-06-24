@@ -275,7 +275,7 @@ def test_out_field() -> None:
         assert np.allclose(
             norm, simu.power, rtol=1e-4
         ), f"Norm not conserved. (Backend {backend})"
-``````
+```
 
 ## Examples
 

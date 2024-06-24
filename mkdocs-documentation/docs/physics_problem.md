@@ -1,6 +1,7 @@
 ## Physical situation
 
 The code offers to solve a typical [non linear Schrödinger](https://en.wikipedia.org/wiki/Nonlinear_Schr%C3%B6dinger_equation) / [Gross-Pitaevskii](https://en.wikipedia.org/wiki/Gross%E2%80%93Pitaevskii_equation) equation of the type :
+
 $$i\partial_{t}\psi = -\frac{1}{2}\nabla^2\psi+V\psi+g|\psi|^2\psi$$
 
 In this particular instance, we solve in the formalism of the propagation of a pulse of light in a non linear medium.

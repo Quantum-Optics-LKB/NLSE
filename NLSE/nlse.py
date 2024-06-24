@@ -55,9 +55,11 @@ class NLSE:
         wvl: float = 780e-9,
         backend: str = __BACKEND__,
     ) -> object:
-        """Instantiates the simulation.
+        """Instantiate the simulation.
+
         Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
           k0 n2 psi**2 psi
+
         Args:
             alpha (float): alpha
             power (float): Power in W
@@ -162,7 +164,7 @@ class NLSE:
         return propagator
 
     def _build_fft_plan(self, A: np.ndarray) -> list:
-        """Builds the FFT plan objects for propagation
+        """Build the FFT plan objects for propagation.
 
         Args:
             A (np.ndarray): Array to transform.
@@ -223,6 +225,7 @@ class NLSE:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
+
         Args:
             E_in (np.ndarray): Input array
             normalize (bool): Normalize the field to the total power.
@@ -443,7 +446,11 @@ class NLSE:
         callback: Union[list[callable], callable] = None,
         callback_args: Union[list[tuple], tuple] = (),
     ) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
+        This function propagates the field E_in over a distance z by
+        calling the split step function in a loop.
+
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1)
             z (float): propagation distance in m

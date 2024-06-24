@@ -33,10 +33,12 @@ class NLSE_3d(NLSE):
         wvl: float = 780e-9,
         backend: str = __BACKEND__,
     ) -> object:
-        """Instantiates the simulation.
+        """Instantiate the simulation.
+
         Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +
           D0/2 (d2/dt2) psi + k0 dn psi +
           k0 n2 psi**2 psi
+
         Args:
             alpha (float): alpha
             energy (float): Total energy in J
@@ -102,6 +104,7 @@ class NLSE_3d(NLSE):
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
+
         Args:
             E_in (np.ndarray): Input array
             normalize (bool): Normalize the field to the total power.

@@ -27,13 +27,14 @@ class NLSE_1d(NLSE):
         wvl: float = 780e-9,
         backend: str = __BACKEND__,
     ) -> object:
-        """Instantiates the simulation.
+        """Instantiate the simulation.
+
         Solves an equation : d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +
           k0 n2 psi**2 psi
+
         Args:
             alpha (float): Transmission coeff
             power (float): Power in W
-            waist (float): Waist size in m
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray) : Potential
             L (float): Length of the medium.

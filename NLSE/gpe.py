@@ -31,6 +31,7 @@ class GPE(NLSE):
 
         Solves an equation : d/dt psi = -1/2m(d2/dx2 + d2/dy2) psi + V psi +
           g psi**2 psi
+
         Args:
             gamma (float): Losses in Hz
             N (float): Total number of atoms

@@ -915,7 +915,8 @@
 <span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
-<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE_1d</span><span class="p">(</span><span class="n">NLSE</span><span class="p">):</span>
+<span class="normal">126</span>
+<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE_1d</span><span class="p">(</span><span class="n">NLSE</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve NLSE in 1d&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -932,13 +933,14 @@
         <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates the simulation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
+
 <span class="sd">        Solves an equation : d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +</span>
 <span class="sd">          k0 n2 psi**2 psi</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            alpha (float): Transmission coeff</span>
 <span class="sd">            power (float): Power in W</span>
-<span class="sd">            waist (float): Waist size in m</span>
 <span class="sd">            n2 (float): Non linear coeff in m^2/W</span>
 <span class="sd">            V (np.ndarray) : Potential</span>
 <span class="sd">            L (float): Length of the medium.</span>
@@ -1055,20 +1057,153 @@
 
     <div class="doc doc-contents ">
 
-      <p>Instantiates the simulation.
-Solves an equation : d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +
-  k0 n2 psi**2 psi
-Args:
-    alpha (float): Transmission coeff
-    power (float): Power in W
-    waist (float): Waist size in m
-    n2 (float): Non linear coeff in m^2/W
-    V (np.ndarray) : Potential
-    L (float): Length of the medium.
-    Isat (float): Saturation intensity in W/m^2
-    nl_length (float, optional): Non-local length in m. Defaults to 0.
-    wvl (float, optional): Wavelength in m. Defaults to 780 nm.
-    backend (str, optional): "GPU" or "CPU". Defaults to <strong>BACKEND</strong>.</p>
+      <p>Instantiate the simulation.</p>
+
+
+<details class="solves-an-equation-" open>
+  <summary>d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +</summary>
+  <p>k0 n2 psi**2 psi</p>
+</details>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Transmission coeff</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>power</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Power in W</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>n2</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non linear coeff in m^2/W</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>V</code></td>
+            <td>
+                  <code>np.ndarray) </code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Potential</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>L</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Length of the medium.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation intensity in W/m^2</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="numpy.inf">inf</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>nl_length</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non-local length in m. Defaults to 0.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>wvl</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Wavelength in m. Defaults to 780 nm.</p>
+              </div>
+            </td>
+            <td>
+                  <code>7.8e-07</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>backend</code></td>
+            <td>
+                  <code>str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>"GPU" or "CPU". Defaults to <strong>BACKEND</strong>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="NLSE.utils.__BACKEND__">__BACKEND__</span></code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse_1d.py</code></summary>
@@ -1116,7 +1251,8 @@ Args:
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">60</span>
+<span class="normal">61</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1130,13 +1266,14 @@ Args:
     <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the simulation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
+
 <span class="sd">    Solves an equation : d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +</span>
 <span class="sd">      k0 n2 psi**2 psi</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float): Transmission coeff</span>
 <span class="sd">        power (float): Power in W</span>
-<span class="sd">        waist (float): Waist size in m</span>
 <span class="sd">        n2 (float): Non linear coeff in m^2/W</span>
 <span class="sd">        V (np.ndarray) : Potential</span>
 <span class="sd">        L (float): Length of the medium.</span>
@@ -1225,8 +1362,7 @@ Args:
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse_1d.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
-<span class="normal">102</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
@@ -1250,7 +1386,8 @@ Args:
 <span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
-<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">126</span>
+<span class="normal">127</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a field for monitoring.</span>
 
 <span class="sd">    Args:</span>

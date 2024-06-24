@@ -1413,7 +1413,21 @@
 <span class="normal">611</span>
 <span class="normal">612</span>
 <span class="normal">613</span>
-<span class="normal">614</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE</span><span class="p">:</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve NLSE&quot;&quot;&quot;</span>
 
     <span class="n">__CUPY_AVAILABLE__</span> <span class="o">=</span> <span class="n">__CUPY_AVAILABLE__</span>
@@ -1434,9 +1448,11 @@
         <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates the simulation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
+
 <span class="sd">        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +</span>
 <span class="sd">          k0 n2 psi**2 psi</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            alpha (float): alpha</span>
 <span class="sd">            power (float): Power in W</span>
@@ -1444,12 +1460,15 @@
 <span class="sd">            n2 (float): Non linear coeff in m^2/W</span>
 <span class="sd">            V (np.ndarray): Potential.</span>
 <span class="sd">            L (float): Length in m of the nonlinear medium</span>
-<span class="sd">            NX (int, optional): Number of points in the x direction. Defaults to 1024.</span>
-<span class="sd">            NY (int, optional): Number of points in the y direction. Defaults to 1024.</span>
+<span class="sd">            NX (int, optional): Number of points in the x direction.</span>
+<span class="sd">                Defaults to 1024.</span>
+<span class="sd">            NY (int, optional): Number of points in the y direction.</span>
+<span class="sd">                Defaults to 1024.</span>
 <span class="sd">            Isat (float): Saturation intensity in W/m^2</span>
 <span class="sd">            nl_length (float): Non local length in m</span>
 <span class="sd">            wvl (float): Wavelength in m</span>
-<span class="sd">            backend (str, optional): Will run using the &quot;GPU&quot; or &quot;CPU&quot;. Defaults to __BACKEND__.</span>
+<span class="sd">            backend (str, optional): Will run using the &quot;GPU&quot; or &quot;CPU&quot;.</span>
+<span class="sd">                Defaults to __BACKEND__.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># listof physical parameters</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
@@ -1541,7 +1560,7 @@
         <span class="k">return</span> <span class="n">propagator</span>
 
     <span class="k">def</span> <span class="nf">_build_fft_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds the FFT plan objects for propagation</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the FFT plan objects for propagation.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            A (np.ndarray): Array to transform.</span>
@@ -1602,6 +1621,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the output arrays depending on __BACKEND__.</span>
 
 <span class="sd">        Prepares the A and A_sq arrays to store the field and its modulus.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            E_in (np.ndarray): Input array</span>
 <span class="sd">            normalize (bool): Normalize the field to the total power.</span>
@@ -1713,8 +1733,11 @@
 <span class="sd">            A_sq (np.ndarray): Field modulus squared.</span>
 <span class="sd">            V (np.ndarray): Potential field (can be None).</span>
 <span class="sd">            propagator (np.ndarray): Propagator matrix.</span>
-<span class="sd">            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.</span>
-<span class="sd">            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to &quot;single&quot;.</span>
+<span class="sd">            plans (list): List of FFT plan objects.</span>
+<span class="sd">                Either a single FFT plan for both directions (GPU case)</span>
+<span class="sd">                or distinct FFT and IFFT plans for FFTW.</span>
+<span class="sd">            precision (str, optional): Single or double application of</span>
+<span class="sd">                the nonlinear propagation step. Defaults to &quot;single&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span>
@@ -1822,20 +1845,25 @@
         <span class="n">callback</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">callable</span><span class="p">],</span> <span class="nb">callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">callback_args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Propagates the field at a distance z</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Propagate the field at a distance z.</span>
+
+<span class="sd">        This function propagates the field E_in over a distance z by</span>
+<span class="sd">        calling the split step function in a loop.</span>
+
 <span class="sd">        Args:</span>
-<span class="sd">            E_in (np.ndarray): Normalized input field (between 0 and 1)</span>
-<span class="sd">            z (float): propagation distance in m</span>
+<span class="sd">            E_in (np.ndarray): Normalized input field (between 0 and 1).</span>
+<span class="sd">            z (float): propagation distance in m.</span>
 <span class="sd">            plot (bool, optional): Plots the results. Defaults to False.</span>
 <span class="sd">            precision (str, optional): Does a &quot;double&quot; or a &quot;single&quot; application</span>
-<span class="sd">            of the nonlinear term.</span>
-<span class="sd">            This leads to a dz (single) or dz^3 (double) precision.</span>
-<span class="sd">            Defaults to &quot;single&quot;.</span>
+<span class="sd">                of the nonlinear term. This leads to a dz (single) or dz^3 (double)</span>
+<span class="sd">                precision. Defaults to &quot;single&quot;.</span>
 <span class="sd">            verbose (bool, optional): Prints progress and time. Defaults to True.</span>
 <span class="sd">            normalize (bool, optional): Normalize the field to the total power.</span>
-<span class="sd">            Defaults to True.</span>
-<span class="sd">            callback (callable, optional): Callback function. Defaults to None.</span>
-<span class="sd">            *args: Additional arguments for the callback function.</span>
+<span class="sd">                Defaults to True.</span>
+<span class="sd">            callback (callable, optional): Callback function.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            callback_args (tuple, optional): Additional arguments for the callback</span>
+<span class="sd">                function.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            np.ndarray: Propagated field in proper units V/m</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -2017,22 +2045,198 @@
 
     <div class="doc doc-contents ">
 
-      <p>Instantiates the simulation.
-Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
-  k0 n2 psi**2 psi
-Args:
-    alpha (float): alpha
-    power (float): Power in W
-    window (float): Computational window in the transverse plane in m.
-    n2 (float): Non linear coeff in m^2/W
-    V (np.ndarray): Potential.
-    L (float): Length in m of the nonlinear medium
-    NX (int, optional): Number of points in the x direction. Defaults to 1024.
-    NY (int, optional): Number of points in the y direction. Defaults to 1024.
-    Isat (float): Saturation intensity in W/m^2
-    nl_length (float): Non local length in m
-    wvl (float): Wavelength in m
-    backend (str, optional): Will run using the "GPU" or "CPU". Defaults to <strong>BACKEND</strong>.</p>
+      <p>Instantiate the simulation.</p>
+
+
+<details class="solves-an-equation-" open>
+  <summary>d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +</summary>
+  <p>k0 n2 psi**2 psi</p>
+</details>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>alpha</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>power</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Power in W</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>window</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Computational window in the transverse plane in m.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>n2</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non linear coeff in m^2/W</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>V</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Potential.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>L</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Length in m of the nonlinear medium</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>NX</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of points in the x direction.
+Defaults to 1024.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1024</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>NY</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of points in the y direction.
+Defaults to 1024.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1024</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation intensity in W/m^2</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="numpy.inf">inf</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>nl_length</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non local length in m</p>
+              </div>
+            </td>
+            <td>
+                  <code>0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>wvl</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Wavelength in m</p>
+              </div>
+            </td>
+            <td>
+                  <code>7.8e-07</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>backend</code></td>
+            <td>
+                  <code>str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Will run using the "GPU" or "CPU".
+Defaults to <strong>BACKEND</strong>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="NLSE.utils.__BACKEND__">__BACKEND__</span></code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
@@ -2144,7 +2348,12 @@ Args:
 <span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
-<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -2159,9 +2368,11 @@ Args:
     <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the simulation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
+
 <span class="sd">    Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +</span>
 <span class="sd">      k0 n2 psi**2 psi</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float): alpha</span>
 <span class="sd">        power (float): Power in W</span>
@@ -2169,12 +2380,15 @@ Args:
 <span class="sd">        n2 (float): Non linear coeff in m^2/W</span>
 <span class="sd">        V (np.ndarray): Potential.</span>
 <span class="sd">        L (float): Length in m of the nonlinear medium</span>
-<span class="sd">        NX (int, optional): Number of points in the x direction. Defaults to 1024.</span>
-<span class="sd">        NY (int, optional): Number of points in the y direction. Defaults to 1024.</span>
+<span class="sd">        NX (int, optional): Number of points in the x direction.</span>
+<span class="sd">            Defaults to 1024.</span>
+<span class="sd">        NY (int, optional): Number of points in the y direction.</span>
+<span class="sd">            Defaults to 1024.</span>
 <span class="sd">        Isat (float): Saturation intensity in W/m^2</span>
 <span class="sd">        nl_length (float): Non local length in m</span>
 <span class="sd">        wvl (float): Wavelength in m</span>
-<span class="sd">        backend (str, optional): Will run using the &quot;GPU&quot; or &quot;CPU&quot;. Defaults to __BACKEND__.</span>
+<span class="sd">        backend (str, optional): Will run using the &quot;GPU&quot; or &quot;CPU&quot;.</span>
+<span class="sd">            Defaults to __BACKEND__.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># listof physical parameters</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
@@ -2270,35 +2484,147 @@ Args:
 
     <div class="doc doc-contents ">
 
-      <p>Propagates the field at a distance z
-Args:
-    E_in (np.ndarray): Normalized input field (between 0 and 1)
-    z (float): propagation distance in m
-    plot (bool, optional): Plots the results. Defaults to False.
-    precision (str, optional): Does a "double" or a "single" application
-    of the nonlinear term.
-    This leads to a dz (single) or dz^3 (double) precision.
-    Defaults to "single".
-    verbose (bool, optional): Prints progress and time. Defaults to True.
-    normalize (bool, optional): Normalize the field to the total power.
-    Defaults to True.
-    callback (callable, optional): Callback function. Defaults to None.
-    *args: Additional arguments for the callback function.
-Returns:
+      <p>Propagate the field at a distance z.</p>
+<p>This function propagates the field E_in over a distance z by
+calling the split step function in a loop.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>E_in</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Normalized input field (between 0 and 1).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>z</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>propagation distance in m.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>plot</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Plots the results. Defaults to False.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>precision</code></td>
+            <td>
+                  <code>str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Does a "double" or a "single" application
+of the nonlinear term. This leads to a dz (single) or dz^3 (double)
+precision. Defaults to "single".</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;single&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>verbose</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Prints progress and time. Defaults to True.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>normalize</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Normalize the field to the total power.
+Defaults to True.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>callback</code></td>
+            <td>
+                  <code>callable</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Callback function.
+Defaults to None.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>callback_args</code></td>
+            <td>
+                  <code>tuple</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional arguments for the callback
+function.</p>
+              </div>
+            </td>
+            <td>
+                  <code>()</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+      <p>Returns:
     np.ndarray: Propagated field in proper units V/m</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">444</span>
 <span class="normal">445</span>
 <span class="normal">446</span>
 <span class="normal">447</span>
@@ -2410,7 +2736,21 @@ Returns:
 <span class="normal">553</span>
 <span class="normal">554</span>
 <span class="normal">555</span>
-<span class="normal">556</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">E_in</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -2421,20 +2761,25 @@ Returns:
     <span class="n">callback</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">callable</span><span class="p">],</span> <span class="nb">callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">callback_args</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Propagates the field at a distance z</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Propagate the field at a distance z.</span>
+
+<span class="sd">    This function propagates the field E_in over a distance z by</span>
+<span class="sd">    calling the split step function in a loop.</span>
+
 <span class="sd">    Args:</span>
-<span class="sd">        E_in (np.ndarray): Normalized input field (between 0 and 1)</span>
-<span class="sd">        z (float): propagation distance in m</span>
+<span class="sd">        E_in (np.ndarray): Normalized input field (between 0 and 1).</span>
+<span class="sd">        z (float): propagation distance in m.</span>
 <span class="sd">        plot (bool, optional): Plots the results. Defaults to False.</span>
 <span class="sd">        precision (str, optional): Does a &quot;double&quot; or a &quot;single&quot; application</span>
-<span class="sd">        of the nonlinear term.</span>
-<span class="sd">        This leads to a dz (single) or dz^3 (double) precision.</span>
-<span class="sd">        Defaults to &quot;single&quot;.</span>
+<span class="sd">            of the nonlinear term. This leads to a dz (single) or dz^3 (double)</span>
+<span class="sd">            precision. Defaults to &quot;single&quot;.</span>
 <span class="sd">        verbose (bool, optional): Prints progress and time. Defaults to True.</span>
 <span class="sd">        normalize (bool, optional): Normalize the field to the total power.</span>
-<span class="sd">        Defaults to True.</span>
-<span class="sd">        callback (callable, optional): Callback function. Defaults to None.</span>
-<span class="sd">        *args: Additional arguments for the callback function.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">        callback (callable, optional): Callback function.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        callback_args (tuple, optional): Additional arguments for the callback</span>
+<span class="sd">            function.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        np.ndarray: Propagated field in proper units V/m</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2596,21 +2941,7 @@ Returns:
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">572</span>
 <span class="normal">573</span>
 <span class="normal">574</span>
 <span class="normal">575</span>
@@ -2652,7 +2983,21 @@ Returns:
 <span class="normal">611</span>
 <span class="normal">612</span>
 <span class="normal">613</span>
-<span class="normal">614</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a field for monitoring.</span>
 
 <span class="sd">    Args:</span>
@@ -2803,7 +3148,9 @@ Returns:
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.</p>
+                <p>List of FFT plan objects.
+Either a single FFT plan for both directions (GPU case)
+or distinct FFT and IFFT plans for FFTW.</p>
               </div>
             </td>
             <td>
@@ -2817,7 +3164,8 @@ Returns:
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Single or double application of the nonlinear propagation step. Defaults to "single".</p>
+                <p>Single or double application of
+the nonlinear propagation step. Defaults to "single".</p>
               </div>
             </td>
             <td>
@@ -2829,13 +3177,7 @@ Returns:
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">327</span>
 <span class="normal">328</span>
 <span class="normal">329</span>
 <span class="normal">330</span>
@@ -2941,7 +3283,16 @@ Returns:
 <span class="normal">430</span>
 <span class="normal">431</span>
 <span class="normal">432</span>
-<span class="normal">433</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -2957,8 +3308,11 @@ Returns:
 <span class="sd">        A_sq (np.ndarray): Field modulus squared.</span>
 <span class="sd">        V (np.ndarray): Potential field (can be None).</span>
 <span class="sd">        propagator (np.ndarray): Propagator matrix.</span>
-<span class="sd">        plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.</span>
-<span class="sd">        precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to &quot;single&quot;.</span>
+<span class="sd">        plans (list): List of FFT plan objects.</span>
+<span class="sd">            Either a single FFT plan for both directions (GPU case)</span>
+<span class="sd">            or distinct FFT and IFFT plans for FFTW.</span>
+<span class="sd">        precision (str, optional): Single or double application of</span>
+<span class="sd">            the nonlinear propagation step. Defaults to &quot;single&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span>

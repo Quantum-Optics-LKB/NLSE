@@ -988,7 +988,15 @@ of light in nonlinear media.</p>
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE_3d</span><span class="p">(</span><span class="n">NLSE</span><span class="p">):</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE_3d</span><span class="p">(</span><span class="n">NLSE</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve the 3D NLSE i.e propagation of pulses</span>
 <span class="sd">    of light in nonlinear media.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1011,26 +1019,33 @@ of light in nonlinear media.</p>
         <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates the simulation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
+
 <span class="sd">        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +</span>
 <span class="sd">          D0/2 (d2/dt2) psi + k0 dn psi +</span>
 <span class="sd">          k0 n2 psi**2 psi</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            alpha (float): alpha</span>
 <span class="sd">            energy (float): Total energy in J</span>
-<span class="sd">            window (np.ndarray): Computanional window in the transverse plane (index 0) in m and longitudinal direction (index 1) in s.</span>
+<span class="sd">            window (np.ndarray): Computanional window in the transverse plane</span>
+<span class="sd">                (index 0) in m and longitudinal direction (index 1) in s.</span>
 <span class="sd">            n2 (float): Non linear coeff in m^2/W.</span>
 <span class="sd">            D0 (float): Dispersion in s^2/m.</span>
 <span class="sd">            vg (float): Group velocity in m/s.</span>
 <span class="sd">            V (np.ndarray): Potential.</span>
 <span class="sd">            L (float): Length in m of the nonlinear medium</span>
-<span class="sd">            NX (int, optional): Number of points in the x direction. Defaults to 1024.</span>
-<span class="sd">            NY (int, optional): Number of points in the y direction. Defaults to 1024.</span>
-<span class="sd">            NZ (int, optional): Number of points in the t direction. Defaults to 1024.</span>
+<span class="sd">            NX (int, optional): Number of points in the x direction.</span>
+<span class="sd">                Defaults to 1024.</span>
+<span class="sd">            NY (int, optional): Number of points in the y direction.</span>
+<span class="sd">                Defaults to 1024.</span>
+<span class="sd">            NZ (int, optional): Number of points in the t direction.</span>
+<span class="sd">                Defaults to 1024.</span>
 <span class="sd">            Isat (float): Saturation intensity in W/m^2</span>
 <span class="sd">            nl_length (float): Non local length in m</span>
 <span class="sd">            wvl (float): Wavelength in m</span>
-<span class="sd">            backend (str, optional): &quot;GPU&quot; or &quot;CPU&quot;. Defaults to __BACKEND__.</span>
+<span class="sd">            backend (str, optional): &quot;GPU&quot; or &quot;CPU&quot;.</span>
+<span class="sd">                Defaults to __BACKEND__.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
@@ -1080,6 +1095,7 @@ of light in nonlinear media.</p>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the output arrays depending on __BACKEND__.</span>
 
 <span class="sd">        Prepares the A and A_sq arrays to store the field and its modulus.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            E_in (np.ndarray): Input array</span>
 <span class="sd">            normalize (bool): Normalize the field to the total power.</span>
@@ -1200,26 +1216,243 @@ of light in nonlinear media.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Instantiates the simulation.
-Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +
-  D0/2 (d2/dt2) psi + k0 dn psi +
-  k0 n2 psi**2 psi
-Args:
-    alpha (float): alpha
-    energy (float): Total energy in J
-    window (np.ndarray): Computanional window in the transverse plane (index 0) in m and longitudinal direction (index 1) in s.
-    n2 (float): Non linear coeff in m^2/W.
-    D0 (float): Dispersion in s^2/m.
-    vg (float): Group velocity in m/s.
-    V (np.ndarray): Potential.
-    L (float): Length in m of the nonlinear medium
-    NX (int, optional): Number of points in the x direction. Defaults to 1024.
-    NY (int, optional): Number of points in the y direction. Defaults to 1024.
-    NZ (int, optional): Number of points in the t direction. Defaults to 1024.
-    Isat (float): Saturation intensity in W/m^2
-    nl_length (float): Non local length in m
-    wvl (float): Wavelength in m
-    backend (str, optional): "GPU" or "CPU". Defaults to <strong>BACKEND</strong>.</p>
+      <p>Instantiate the simulation.</p>
+
+
+<details class="solves-an-equation-" open>
+  <summary>d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +</summary>
+  <p>D0/2 (d2/dt2) psi + k0 dn psi +
+k0 n2 psi**2 psi</p>
+</details>
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>alpha</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>alpha</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>energy</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Total energy in J</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>window</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Computanional window in the transverse plane
+(index 0) in m and longitudinal direction (index 1) in s.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>n2</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non linear coeff in m^2/W.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>D0</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Dispersion in s^2/m.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>vg</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Group velocity in m/s.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>V</code></td>
+            <td>
+                  <code><span title="numpy.ndarray">ndarray</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Potential.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>L</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Length in m of the nonlinear medium</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>NX</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of points in the x direction.
+Defaults to 1024.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1024</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>NY</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of points in the y direction.
+Defaults to 1024.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1024</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>NZ</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Number of points in the t direction.
+Defaults to 1024.</p>
+              </div>
+            </td>
+            <td>
+                  <code>1024</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>Isat</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Saturation intensity in W/m^2</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="numpy.inf">inf</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>nl_length</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Non local length in m</p>
+              </div>
+            </td>
+            <td>
+                  <code>0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>wvl</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Wavelength in m</p>
+              </div>
+            </td>
+            <td>
+                  <code>7.8e-07</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>backend</code></td>
+            <td>
+                  <code>str</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>"GPU" or "CPU".
+Defaults to <strong>BACKEND</strong>.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="NLSE.utils.__BACKEND__">__BACKEND__</span></code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse_3d.py</code></summary>
@@ -1293,7 +1526,14 @@ Args:
 <span class="normal">85</span>
 <span class="normal">86</span>
 <span class="normal">87</span>
-<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">88</span>
+<span class="normal">89</span>
+<span class="normal">90</span>
+<span class="normal">91</span>
+<span class="normal">92</span>
+<span class="normal">93</span>
+<span class="normal">94</span>
+<span class="normal">95</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">energy</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1311,26 +1551,33 @@ Args:
     <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiates the simulation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
+
 <span class="sd">    Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +</span>
 <span class="sd">      D0/2 (d2/dt2) psi + k0 dn psi +</span>
 <span class="sd">      k0 n2 psi**2 psi</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float): alpha</span>
 <span class="sd">        energy (float): Total energy in J</span>
-<span class="sd">        window (np.ndarray): Computanional window in the transverse plane (index 0) in m and longitudinal direction (index 1) in s.</span>
+<span class="sd">        window (np.ndarray): Computanional window in the transverse plane</span>
+<span class="sd">            (index 0) in m and longitudinal direction (index 1) in s.</span>
 <span class="sd">        n2 (float): Non linear coeff in m^2/W.</span>
 <span class="sd">        D0 (float): Dispersion in s^2/m.</span>
 <span class="sd">        vg (float): Group velocity in m/s.</span>
 <span class="sd">        V (np.ndarray): Potential.</span>
 <span class="sd">        L (float): Length in m of the nonlinear medium</span>
-<span class="sd">        NX (int, optional): Number of points in the x direction. Defaults to 1024.</span>
-<span class="sd">        NY (int, optional): Number of points in the y direction. Defaults to 1024.</span>
-<span class="sd">        NZ (int, optional): Number of points in the t direction. Defaults to 1024.</span>
+<span class="sd">        NX (int, optional): Number of points in the x direction.</span>
+<span class="sd">            Defaults to 1024.</span>
+<span class="sd">        NY (int, optional): Number of points in the y direction.</span>
+<span class="sd">            Defaults to 1024.</span>
+<span class="sd">        NZ (int, optional): Number of points in the t direction.</span>
+<span class="sd">            Defaults to 1024.</span>
 <span class="sd">        Isat (float): Saturation intensity in W/m^2</span>
 <span class="sd">        nl_length (float): Non local length in m</span>
 <span class="sd">        wvl (float): Wavelength in m</span>
-<span class="sd">        backend (str, optional): &quot;GPU&quot; or &quot;CPU&quot;. Defaults to __BACKEND__.</span>
+<span class="sd">        backend (str, optional): &quot;GPU&quot; or &quot;CPU&quot;.</span>
+<span class="sd">            Defaults to __BACKEND__.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
         <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
@@ -1428,15 +1675,7 @@ Args:
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse_3d.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">144</span>
 <span class="normal">145</span>
 <span class="normal">146</span>
 <span class="normal">147</span>
@@ -1490,7 +1729,15 @@ Args:
 <span class="normal">195</span>
 <span class="normal">196</span>
 <span class="normal">197</span>
-<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a field for monitoring.</span>
 
 <span class="sd">    Args:</span>

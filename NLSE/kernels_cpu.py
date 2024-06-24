@@ -173,7 +173,7 @@ def vortex(
         j (int): position column of the vortex
         ii (int): meshgrid position row (coordinates of the image)
         jj (int): meshgrid position column (coordinates of the image)
-        l (int): vortex charge
+        ll (int): vortex charge
 
     Returns:
         None

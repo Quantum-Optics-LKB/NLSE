@@ -140,8 +140,7 @@ def rabi_coupling(A, dz: float, omega: float) -> None:
     It exchanges density between the two components.
 
     Args:
-        A1 (cla.Array): First field / component
-        A2 (cla.Array): Second field / component
+        A (cla.Array): First field / component
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
@@ -163,7 +162,7 @@ def vortex_cp(
         j (int): position column of the vortex
         ii (int): meshgrid position row (coordinates of the image)
         jj (int): meshgrid position column (coordinates of the image)
-        l (int): vortex charge
+        ll (int): vortex charge
 
     Returns:
         None

@@ -327,19 +327,15 @@ class NLSE:
         plans: list,
         precision: str = "single",
     ) -> None:
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Field to propagate
             A_sq (np.ndarray): Field modulus squared.
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
-            (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the nonlinear
-            propagation step.
-            Defaults to "single".
+            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to "single".
         """
         if (
             self.backend == "GPU"

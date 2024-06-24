@@ -65,7 +65,7 @@ The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the R
 ## Inheritance 
 
 In order to minimize duplication, all classes inherit from the main `NLSE` class according to the following graph:
-![inheritance](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/img/inheritance_graph.png)
+![inheritance](img/inheritance_graph.png)
 ## The `NLSE_1d` class
 
 `NLSE_1d` is a 1D specialization of `NLSE` for performance. 

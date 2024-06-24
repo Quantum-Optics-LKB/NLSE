@@ -2,7 +2,7 @@
 
 ## Benchmarking
 
-If you want to benchmark the performance of the code you could use the function [`examples/benchmarks.py`](/examples/benchmarks.py) which is a simple script that runs the code multiple times and calculates the average time taken to run the code.
+If you want to benchmark the performance of the code you could use the function [`examples/benchmarks.py`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/benchmarks.py) which is a simple script that runs the code multiple times and calculates the average time taken to run the code.
 
 ## Comparison with other projects
 
@@ -10,7 +10,7 @@ Compared to other related software like [`FourierGPE.jl`](https://github.com/Ash
 
 Of course this gives you less control over the numerical accuracy of your model, however we think it's worth it since performance often limits the possible physical scenarii.
 
-A comparison between the two projects can be found in [`comparison_juliaGPE.py`](/examples/comparison_juliaGPE.py) in our examples.
+A comparison between the two projects can be found in [`comparison_juliaGPE.py`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/comparison_juliaGPE.py) in our examples.
 
 ## Testing
 
@@ -279,4 +279,4 @@ def test_out_field() -> None:
 
 ## Examples
 
-Minimum working examples for each class can be found in the [examples](/examples) folder of the repo, as well as the code needed to benchmark performance on your machine and comparisons with other NLSE/GPE solvers.
+Minimum working examples for each class can be found in the [examples](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples) folder of the repo, as well as the code needed to benchmark performance on your machine and comparisons with other NLSE/GPE solvers.

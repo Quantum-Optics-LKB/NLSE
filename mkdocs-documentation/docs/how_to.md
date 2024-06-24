@@ -4,7 +4,7 @@
 
 If you want to benchmark the performance of the code you could use the function [`examples/benchmarks.py`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples/benchmarks.py) which is a simple script that runs the code multiple times and calculates the average time taken to run the code.
 
-[!benchmarks](img/benchmarks.png)
+![benchmarks](img/benchmarks.png)
 
 ## Comparison with other projects
 

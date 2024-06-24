@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../reference/">
+        <link rel="prev" href="../nlse_3d/">
       
       
-        <link rel="next" href="../kernels/">
+        <link rel="next" href="../cnlse_1d/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#NLSE.cnlse" class="md-skip">
+        <a href="#NLSE.cnlse.CNLSE" class="md-skip">
           Skip to content
         </a>
       
@@ -486,11 +486,53 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/" class="md-nav__link">
+      <a href="../nlse/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     NLSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nlse_1d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1D NLSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nlse_3d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    3D NLSE
   </span>
   
 
@@ -549,25 +591,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#NLSE.cnlse" class="md-nav__link">
-    <span class="md-ellipsis">
-      cnlse
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE" class="md-nav__link">
     <span class="md-ellipsis">
       CNLSE
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="CNLSE">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE.__init__" class="md-nav__link">
     <span class="md-ellipsis">
       __init__
@@ -575,8 +607,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE.plot_field" class="md-nav__link">
     <span class="md-ellipsis">
       plot_field
@@ -584,8 +616,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE.split_step" class="md-nav__link">
     <span class="md-ellipsis">
       split_step
@@ -593,16 +625,74 @@
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
-  
-</li>
       
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cnlse_1d/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1D Coupled NLSE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gpe/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    GPE
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ddgpe/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Driven dissipative GPE
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -661,25 +751,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#NLSE.cnlse" class="md-nav__link">
-    <span class="md-ellipsis">
-      cnlse
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE" class="md-nav__link">
     <span class="md-ellipsis">
       CNLSE
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="CNLSE">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE.__init__" class="md-nav__link">
     <span class="md-ellipsis">
       __init__
@@ -687,8 +767,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE.plot_field" class="md-nav__link">
     <span class="md-ellipsis">
       plot_field
@@ -696,18 +776,13 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#NLSE.cnlse.CNLSE.split_step" class="md-nav__link">
     <span class="md-ellipsis">
       split_step
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -728,41 +803,17 @@
 
   <h1>Coupled NLSE</h1>
 
-<p><code>CNLSE</code> is a Python package for solving the complex nonlinear Schrödinger equation (CNLSE) in one and two dimensions. The CNLSE is a partial differential equation that describes the evolution of a complex-valued wave function in a nonlinear medium. The CNLSE is a fundamental equation in the study of nonlinear optics, Bose-Einstein condensates, and other physical systems.</p>
-
-
-<div class="doc doc-object doc-module">
-
-
-
-<a id="NLSE.cnlse"></a>
-    <div class="doc doc-contents first">
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
+<p>In this page you will find the reference documentation for the CNLSE class.</p>
 
 
 <div class="doc doc-object doc-class">
 
 
 
-<h2 id="NLSE.cnlse.CNLSE" class="doc doc-heading">
-            <code>CNLSE</code>
-
-
-</h2>
-
-
-    <div class="doc doc-contents ">
+<a id="NLSE.cnlse.CNLSE"></a>
+    <div class="doc doc-contents first">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="NLSE.nlse.NLSE" href="../reference/#NLSE.nlse.NLSE">NLSE</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="NLSE.nlse.NLSE" href="../nlse/#NLSE.nlse.NLSE">NLSE</a></code></p>
 
 
       <p>A class to solve the coupled NLSE</p>
@@ -1608,10 +1659,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="NLSE.cnlse.CNLSE.__init__" class="doc doc-heading">
+<h2 id="NLSE.cnlse.CNLSE.__init__" class="doc doc-heading">
             <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">power</span><span class="p">,</span> <span class="n">window</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n12</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">NX</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">NY</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">Isat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">nl_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">wvl</span><span class="o">=</span><span class="mf">7.8e-07</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">__BACKEND__</span><span class="p">)</span></code>
 
-</h3>
+</h2>
 
 
     <div class="doc doc-contents ">
@@ -1981,10 +2032,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="NLSE.cnlse.CNLSE.plot_field" class="doc doc-heading">
+<h2 id="NLSE.cnlse.CNLSE.plot_field" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">plot_field</span><span class="p">(</span><span class="n">A_plot</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span></code>
 
-</h3>
+</h2>
 
 
     <div class="doc doc-contents ">
@@ -2146,10 +2197,10 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="NLSE.cnlse.CNLSE.split_step" class="doc doc-heading">
+<h2 id="NLSE.cnlse.CNLSE.split_step" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">split_step</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">propagator</span><span class="p">,</span> <span class="n">plans</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span></code>
 
-</h3>
+</h2>
 
 
     <div class="doc doc-contents ">
@@ -2675,15 +2726,6 @@
     </div>
 
 </div>
-
-
-
-  </div>
-
-    </div>
-
-</div>
-
 
 
 

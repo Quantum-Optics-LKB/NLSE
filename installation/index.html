@@ -864,7 +864,7 @@ cd NLSE
 <p>This code has been tested on the three main platforms: Linux, MacOs and Windows.</p>
 <h3 id="gpu-computing">GPU computing</h3>
 <p>For optimal speed, this code uses your GPU (graphics card). For this, you need specific libraries. For Nvidia cards, you need a <a href="https://developer.nvidia.com/cuda-toolkit">CUDA</a> install. For AMD cards, you need a <a href="https://rocmdocs.amd.com/en/latest/">ROCm</a> install. Of course, you need to update your graphics driver to take full advantage of these. In any case we use <a href="https://cupy.dev">CuPy</a> for the Python interface to these libraries.</p>
-<p><strong>The <code>cupy</code> dependency is not included in <a href="/setup.py"><code>setup.py</code></a> in order to not break installation on platforms that do not support it !</strong></p>
+<p><strong>The <code>cupy</code> dependency is not included in <a href="https://github.com/Quantum-Optics-LKB/NLSE/tree/main/setup.py"><code>setup.py</code></a> in order to not break installation on platforms that do not support it !</strong></p>
 <h3 id="pyfftw">PyFFTW</h3>
 <p>If the code does not find Cupy, it will fall back to a CPU based implementation that uses the CPU : <a href="https://pyfftw.readthedocs.io/en/latest/">PyFFTW</a>. To make the best out of your computer, this library is multithreaded. By default it will use all available threads. If this is not what you want, you can disable this by setting the variable <code>pyfftw.config.NUM_THREADS</code> to a number of your choosing.</p>
 <p><strong>WARNING</strong> : The default flag passed to <code>FFTW</code> for planning is <code>FFTW_PATIENT</code> which means that the first run of the code can take a long time. This information is cached so subsequent runs just have to load the plans, removing this computation time.</p>
@@ -880,9 +880,9 @@ cd NLSE
 <p>Tests are included to check functionalities and benchmark performance.
 You can run all tests by executing <code>pytest</code> at the root of the package (warning: this might take some time !).
 It will test both CPU and GPU backends.</p>
-<p>The benchmarks can be run using <a href="/tests/benchmarks.py"><code>tests/benchmarks.py</code></a> and compare a "naive" numpy implementation of the main solver loop to our solver.
+<p>The benchmarks can be run using <a href="https://github.com/Quantum-Optics-LKB/NLSE/tree/main/tests/benchmarks.py"><code>tests/benchmarks.py</code></a> and compare a "naive" numpy implementation of the main solver loop to our solver.
 On a Nvidia RTX4090 GPU and Ryzen 7950X CPU, we test our solver to the following results:
-<img alt="benchmarks" src="/img/benchmarks.png" /></p>
+<img alt="benchmarks" src="https://github.com/Quantum-Optics-LKB/NLSE/tree/main/img/benchmarks.png" /></p>
 
 
 

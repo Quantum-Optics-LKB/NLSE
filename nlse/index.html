@@ -1413,11 +1413,7 @@
 <span class="normal">611</span>
 <span class="normal">612</span>
 <span class="normal">613</span>
-<span class="normal">614</span>
-<span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE</span><span class="p">:</span>
+<span class="normal">614</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve NLSE&quot;&quot;&quot;</span>
 
     <span class="n">__CUPY_AVAILABLE__</span> <span class="o">=</span> <span class="n">__CUPY_AVAILABLE__</span>
@@ -1710,19 +1706,15 @@
         <span class="n">plans</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
         <span class="n">precision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;single&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Split step function for one propagation step</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Split step function for one propagation step.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            A (np.ndarray): Field to propagate</span>
 <span class="sd">            A_sq (np.ndarray): Field modulus squared.</span>
 <span class="sd">            V (np.ndarray): Potential field (can be None).</span>
 <span class="sd">            propagator (np.ndarray): Propagator matrix.</span>
-<span class="sd">            plans (list): List of FFT plan objects. Either a single FFT plan for</span>
-<span class="sd">            both directions</span>
-<span class="sd">            (GPU case) or distinct FFT and IFFT plans for FFTW.</span>
-<span class="sd">            precision (str, optional): Single or double application of the nonlinear</span>
-<span class="sd">            propagation step.</span>
-<span class="sd">            Defaults to &quot;single&quot;.</span>
+<span class="sd">            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.</span>
+<span class="sd">            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to &quot;single&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span>
@@ -2297,7 +2289,11 @@ Returns:
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">439</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
 <span class="normal">440</span>
 <span class="normal">441</span>
 <span class="normal">442</span>
@@ -2414,11 +2410,7 @@ Returns:
 <span class="normal">553</span>
 <span class="normal">554</span>
 <span class="normal">555</span>
-<span class="normal">556</span>
-<span class="normal">557</span>
-<span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
+<span class="normal">556</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">E_in</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -2604,7 +2596,11 @@ Returns:
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">562</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
 <span class="normal">563</span>
 <span class="normal">564</span>
 <span class="normal">565</span>
@@ -2656,11 +2652,7 @@ Returns:
 <span class="normal">611</span>
 <span class="normal">612</span>
 <span class="normal">613</span>
-<span class="normal">614</span>
-<span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">614</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a field for monitoring.</span>
 
 <span class="sd">    Args:</span>
@@ -2734,7 +2726,7 @@ Returns:
 
     <div class="doc doc-contents ">
 
-      <p>Split step function for one propagation step</p>
+      <p>Split step function for one propagation step.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2811,7 +2803,7 @@ Returns:
             </td>
             <td>
               <div class="doc-md-description">
-                <p>List of FFT plan objects. Either a single FFT plan for</p>
+                <p>List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.</p>
               </div>
             </td>
             <td>
@@ -2825,7 +2817,7 @@ Returns:
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Single or double application of the nonlinear</p>
+                <p>Single or double application of the nonlinear propagation step. Defaults to "single".</p>
               </div>
             </td>
             <td>
@@ -2949,11 +2941,7 @@ Returns:
 <span class="normal">430</span>
 <span class="normal">431</span>
 <span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
+<span class="normal">433</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -2962,19 +2950,15 @@ Returns:
     <span class="n">plans</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
     <span class="n">precision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;single&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split step function for one propagation step</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split step function for one propagation step.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        A (np.ndarray): Field to propagate</span>
 <span class="sd">        A_sq (np.ndarray): Field modulus squared.</span>
 <span class="sd">        V (np.ndarray): Potential field (can be None).</span>
 <span class="sd">        propagator (np.ndarray): Propagator matrix.</span>
-<span class="sd">        plans (list): List of FFT plan objects. Either a single FFT plan for</span>
-<span class="sd">        both directions</span>
-<span class="sd">        (GPU case) or distinct FFT and IFFT plans for FFTW.</span>
-<span class="sd">        precision (str, optional): Single or double application of the nonlinear</span>
-<span class="sd">        propagation step.</span>
-<span class="sd">        Defaults to &quot;single&quot;.</span>
+<span class="sd">        plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.</span>
+<span class="sd">        precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to &quot;single&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span>

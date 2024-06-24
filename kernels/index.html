@@ -2158,7 +2158,7 @@ It exchanges density between the two components.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>l</code></td>
+            <td><code>ll</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -2230,7 +2230,7 @@ It exchanges density between the two components.</p>
 <span class="sd">        j (int): position column of the vortex</span>
 <span class="sd">        ii (int): meshgrid position row (coordinates of the image)</span>
 <span class="sd">        jj (int): meshgrid position column (coordinates of the image)</span>
-<span class="sd">        l (int): vortex charge</span>
+<span class="sd">        ll (int): vortex charge</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        None</span>
@@ -3187,7 +3187,7 @@ It exchanges density between the two components.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>l</code></td>
+            <td><code>ll</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -3257,7 +3257,7 @@ It exchanges density between the two components.</p>
 <span class="sd">        j (int): position column of the vortex</span>
 <span class="sd">        ii (int): meshgrid position row (coordinates of the image)</span>
 <span class="sd">        jj (int): meshgrid position column (coordinates of the image)</span>
-<span class="sd">        l (int): vortex charge</span>
+<span class="sd">        ll (int): vortex charge</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        None</span>
@@ -3890,27 +3890,13 @@ It exchanges density between the two components.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td><code>A1</code></td>
+            <td><code>A</code></td>
             <td>
                   <code><span title="pyopencl.array.Array">Array</span></code>
             </td>
             <td>
               <div class="doc-md-description">
                 <p>First field / component</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code>A2</code></td>
-            <td>
-                  <code><span title="pyopencl.array.Array">Array</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Second field / component</p>
               </div>
             </td>
             <td>
@@ -3964,15 +3950,13 @@ It exchanges density between the two components.</p>
 <span class="normal">148</span>
 <span class="normal">149</span>
 <span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">rabi_coupling</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">rabi_coupling</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">omega</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a Rabi coupling term.</span>
 <span class="sd">    This function implements the Rabi hopping term.</span>
 <span class="sd">    It exchanges density between the two components.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        A1 (cla.Array): First field / component</span>
-<span class="sd">        A2 (cla.Array): Second field / component</span>
+<span class="sd">        A (cla.Array): First field / component</span>
 <span class="sd">        dz (float): Solver step</span>
 <span class="sd">        omega (float): Rabi coupling strength</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -4068,7 +4052,8 @@ It exchanges density between the two components.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">174</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">173</span>
+<span class="normal">174</span>
 <span class="normal">175</span>
 <span class="normal">176</span>
 <span class="normal">177</span>
@@ -4077,8 +4062,7 @@ It exchanges density between the two components.</p>
 <span class="normal">180</span>
 <span class="normal">181</span>
 <span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">square_mod</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the square modulus of the field</span>
 
 <span class="sd">    Args:</span>
@@ -4191,7 +4175,7 @@ It exchanges density between the two components.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td><code>l</code></td>
+            <td><code>ll</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -4232,7 +4216,8 @@ It exchanges density between the two components.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/kernels_cl.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">155</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">154</span>
+<span class="normal">155</span>
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
@@ -4247,8 +4232,7 @@ It exchanges density between the two components.</p>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">vortex_cp</span><span class="p">(</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">vortex_cp</span><span class="p">(</span>
     <span class="n">im</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ii</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">jj</span><span class="p">:</span> <span class="n">cla</span><span class="o">.</span><span class="n">Array</span><span class="p">,</span> <span class="n">ll</span><span class="p">:</span> <span class="nb">int</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a vortex of charge l at a position (i,j) on the image im.</span>
@@ -4259,7 +4243,7 @@ It exchanges density between the two components.</p>
 <span class="sd">        j (int): position column of the vortex</span>
 <span class="sd">        ii (int): meshgrid position row (coordinates of the image)</span>
 <span class="sd">        jj (int): meshgrid position column (coordinates of the image)</span>
-<span class="sd">        l (int): vortex charge</span>
+<span class="sd">        ll (int): vortex charge</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        None</span>

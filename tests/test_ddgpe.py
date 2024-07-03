@@ -346,7 +346,7 @@ def test_out_field() -> None:
                 ],
                 [save_every, sample1, sample2, sample3],
             ]
-        if backend == "GPU":
+        if backend == "GPU" and DDGPE.__CUPY_AVAILABLE__:
             callback_args = [
                 [
                     cp.asarray(F_pump_r),
@@ -365,16 +365,3 @@ def test_out_field() -> None:
             callback_args=callback_args,
         )
         # test stationarity here
-
-
-def main():
-    test_prepare_output_array()
-    test_send_arrays_to_gpu()
-    test_retrieve_arrays_from_gpu()
-    test_build_propagator()
-    test_take_components()
-    test_out_field()
-
-
-if __name__ == "__main__":
-    main()

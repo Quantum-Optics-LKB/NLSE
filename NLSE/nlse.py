@@ -44,7 +44,7 @@ class NLSE:
         self,
         alpha: float,
         power: float,
-        window: float,
+        window: Union[float, tuple, list],
         n2: float,
         V: Union[np.ndarray, None],
         L: float,
@@ -63,7 +63,8 @@ class NLSE:
         Args:
             alpha (float): alpha
             power (float): Power in W
-            window (float): Computational window in the transverse plane in m.
+            window (float, list or tuple): Computational window in the transverse plane in m.
+                Can be different in x and y.
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray): Potential.
             L (float): Length in m of the nonlinear medium
@@ -105,8 +106,12 @@ class NLSE:
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.NY = NY
-        self.window = window
-        Dn = self.n2 * self.power / self.window**2
+        # self.window = window
+        if isinstance(window, float) or isinstance(window, int):
+            self.window = [window, window]
+        elif isinstance(window, tuple) or isinstance(window, list):
+            self.window = window
+        Dn = self.n2 * self.power / min(self.window) ** 2
         z_nl = 1 / (self.k * abs(Dn))
         if isinstance(z_nl, np.ndarray) or (
             self.__CUPY_AVAILABLE__ and isinstance(z_nl, cp.ndarray)
@@ -115,16 +120,16 @@ class NLSE:
         self.delta_z = 5e-3 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
-            -self.window / 2,
-            self.window / 2,
+            -self.window[0] / 2,
+            self.window[0] / 2,
             num=NX,
             endpoint=False,
             retstep=True,
             dtype=np.float32,
         )
         self.Y, self.delta_Y = np.linspace(
-            -self.window / 2,
-            self.window / 2,
+            -self.window[1] / 2,
+            self.window[1] / 2,
             num=NY,
             endpoint=False,
             retstep=True,

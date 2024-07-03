@@ -19,7 +19,7 @@ class NLSE_3d(NLSE):
         self,
         alpha: float,
         energy: float,
-        window: np.ndarray,
+        window: Union[list, tuple],
         n2: float,
         D0: float,
         vg: float,
@@ -44,6 +44,7 @@ class NLSE_3d(NLSE):
             energy (float): Total energy in J
             window (np.ndarray): Computanional window in the transverse plane
                 (index 0) in m and longitudinal direction (index 1) in s.
+                Can also be window = [window_x, window_y, window_t]
             n2 (float): Non linear coeff in m^2/W.
             D0 (float): Dispersion in s^2/m.
             vg (float): Group velocity in m/s.
@@ -61,10 +62,12 @@ class NLSE_3d(NLSE):
             backend (str, optional): "GPU" or "CPU".
                 Defaults to __BACKEND__.
         """
+        if len(window) == 2:
+            window = [window[0], window[0], window[-1]]
         super().__init__(
             alpha=alpha,
             power=energy,
-            window=window[0],
+            window=window[0:2],
             n2=n2,
             V=V,
             L=L,
@@ -77,9 +80,9 @@ class NLSE_3d(NLSE):
         )
         self.energy = self.power
         self.NZ = NZ
-        self.window_t = window[1]
+        self.window_t = window[-1]
         self.power = self.energy / self.window_t
-        Dn = self.n2 * self.power / self.window**2
+        Dn = self.n2 * self.power / min(self.window[0:2]) ** 2
         z_nl = 1 / (self.k * abs(Dn))
         if isinstance(z_nl, np.ndarray):
             z_nl = z_nl.min()

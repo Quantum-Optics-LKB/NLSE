@@ -117,3 +117,4 @@ examples/python_vortex_precession_GPU_sizes.npy
 examples/python_vortex_precession_CPU_times.npy
 examples/python_vortex_precession_GPU_times.npy
 examples/vortex_precession.svg
+

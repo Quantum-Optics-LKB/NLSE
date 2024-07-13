@@ -105,3 +105,4 @@ tests/__pycache__/test_nlse3d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
 tests/__pycache__/test_cnlse_1d.cpython-310-pytest-8.1.1.pyc
+build/lib/NLSE/callbacks.py

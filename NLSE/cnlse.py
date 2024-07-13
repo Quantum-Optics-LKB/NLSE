@@ -16,7 +16,7 @@ class CNLSE(NLSE):
     def __init__(
         self,
         alpha: float,
-        puiss: float,
+        power: float,
         window: float,
         n2: float,
         n12: float,
@@ -34,8 +34,7 @@ class CNLSE(NLSE):
 
         Args:
             alpha (float): alpha through the cell
-            puiss (float): Optical power in W
-            waist (float): Beam waist in m
+            power (float): Optical power in W
             window (float): Computational window in m
             n2 (float): Non linear index of the 1 st component in m^2/W
             n12 (float): Inter component interaction parameter
@@ -43,12 +42,11 @@ class CNLSE(NLSE):
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             omega (float, optional): Rabi coupling. Defaults to None.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         Returns:
             object: CNLSE class instance
         """
@@ -56,7 +54,7 @@ class CNLSE(NLSE):
             raise NotImplementedError("OpenCL backend is not yet supported for CNLSE.")
         super().__init__(
             alpha=alpha,
-            puiss=puiss,
+            power=power,
             window=window,
             n2=n2,
             V=V,
@@ -81,7 +79,7 @@ class CNLSE(NLSE):
         # wavenumbers
         self.k2 = self.k
         # powers
-        self.puiss2 = self.puiss
+        self.puiss2 = self.power
         # waists
         self.propagator1 = None
         self.propagator2 = None
@@ -101,11 +99,11 @@ class CNLSE(NLSE):
             A = cp.zeros_like(E)
             A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
-            puiss_arr = cp.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = cp.array([self.power, self.puiss2], dtype=E.dtype)
         else:
             A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
             A_sq = np.zeros_like(A, dtype=A.real.dtype)
-            puiss_arr = np.array([self.puiss, self.puiss2], dtype=E.dtype)
+            puiss_arr = np.array([self.power, self.puiss2], dtype=E.dtype)
         if normalize:
             # normalization of the field
             integral = (
@@ -144,7 +142,8 @@ class CNLSE(NLSE):
         """Build the propagators.
 
         Returns:
-            np.ndarray: A tuple of linear propagators for each component.
+            propagator1 (np.ndarray): The propagator for the first component.
+            propagator2 (np.ndarray): The propagator for the second component.
         """
         propagator1 = super()._build_propagator()
         propagator2 = np.exp(
@@ -179,14 +178,9 @@ class CNLSE(NLSE):
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
             A_sq (np.ndarray): Intensity of the fields.
             V (np.ndarray): Potential field (can be None).
-            propagator1 (np.ndarray): Propagator matrix for field 1.
-            propagator2 (np.ndarray): Propagator matrix for field 2.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
-            (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the nonlinear
-            propagation step.
-            Defaults to "single".
+            propagator (np.ndarray): Propagator matrix for both fields [propagator1, propagator2].
+            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to "single".
         Returns:
             None
         """
@@ -374,8 +368,8 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
-                self._kernels.rabi_coupling(A, self.delta_z, self.omega / 2)
-
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.
 

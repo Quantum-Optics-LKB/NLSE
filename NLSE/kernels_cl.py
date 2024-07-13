@@ -27,7 +27,7 @@ def nl_prop(
     # Interactions
     arg = 1j * g * A_sq * sat
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     # Potential
     arg += 1j * V
     arg *= dz
@@ -58,7 +58,7 @@ def nl_prop_without_V(
     # Interactions
     arg = 1j * g * A_sq * sat
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     arg *= dz
     arg = clmath.exp(arg)
     A *= arg
@@ -93,7 +93,7 @@ def nl_prop_c(
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     # Potential
     arg += 1j * V
     arg *= dz
@@ -128,7 +128,7 @@ def nl_prop_without_V_c(
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     arg *= dz
     arg = clmath.exp(arg)
     A1 *= arg
@@ -140,8 +140,7 @@ def rabi_coupling(A, dz: float, omega: float) -> None:
     It exchanges density between the two components.
 
     Args:
-        A1 (cla.Array): First field / component
-        A2 (cla.Array): Second field / component
+        A (cla.Array): First field / component
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
@@ -163,7 +162,7 @@ def vortex_cp(
         j (int): position column of the vortex
         ii (int): meshgrid position row (coordinates of the image)
         jj (int): meshgrid position column (coordinates of the image)
-        l (int): vortex charge
+        ll (int): vortex charge
 
     Returns:
         None

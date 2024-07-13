@@ -12,7 +12,7 @@ n12 = -1e-10
 waist = 2.23e-3
 waist2 = 70e-6
 window = 4 * waist
-puiss = 1.05
+power = 1.05
 Isat = 10e4  # saturation intensity in W/m^2
 L = 1e-3
 alpha = 20
@@ -21,7 +21,7 @@ alpha = 20
 def test_build_propagator() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(
-            alpha, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+            alpha, power, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
         )
         prop = simu._build_propagator()
         prop1 = np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
@@ -35,7 +35,7 @@ def test_prepare_output_array() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(
             alpha,
-            puiss,
+            power,
             window,
             n2,
             n12,
@@ -69,7 +69,7 @@ def test_prepare_output_array() -> None:
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
-            np.array([simu.puiss, simu.puiss2]),
+            np.array([simu.power, simu.puiss2]),
             rtol=1e-4,
         ), f"Normalization failed. (Backend {backend})"
         assert out.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
@@ -96,7 +96,7 @@ def test_prepare_output_array() -> None:
 def test_split_step() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(
-            alpha, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+            alpha, power, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
         )
         simu.delta_z = 0
         simu.propagator = simu._build_propagator()
@@ -123,7 +123,7 @@ def test_split_step() -> None:
 def test_out_field() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(
-            0, puiss, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+            0, power, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
         )
         E0 = np.ones((2, N), dtype=PRECISION_COMPLEX)
         A = simu.out_field(
@@ -135,40 +135,5 @@ def test_out_field() -> None:
         integral *= c * epsilon_0 / 2
         assert A.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
-            integral, [simu.puiss, simu.puiss2], rtol=1e-4
+            integral, [simu.power, simu.puiss2], rtol=1e-4
         ), f"Normalization failed. (Backend {backend})"
-
-
-def main() -> None:
-    print("Testing CNLSE_1d class")
-    for backend in ["CPU", "GPU"]:
-        simu_c = CNLSE_1d(
-            alpha,
-            puiss,
-            window,
-            n2,
-            n12,
-            None,
-            L,
-            NX=N,
-            Isat=Isat,
-            omega=1,
-            backend=backend,
-        )
-        simu_c.delta_z = 1e-5
-        simu_c.puiss2 = 10e-3
-        simu_c.n22 = 1e-10
-        simu_c.k2 = 2 * np.pi / 795e-9
-        E_0 = np.exp(-(simu_c.X**2) / waist**2).astype(PRECISION_COMPLEX)
-        V = np.exp(-(simu_c.X**2) / waist2**2).astype(PRECISION_COMPLEX)
-        E, V = simu_c.out_field(
-            np.array([E_0, V]),
-            L,
-            verbose=True,
-            plot=False,
-            precision="single",
-        )
-
-
-if __name__ == "__main__":
-    main()

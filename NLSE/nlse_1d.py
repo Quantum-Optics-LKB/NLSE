@@ -16,7 +16,7 @@ class NLSE_1d(NLSE):
     def __init__(
         self,
         alpha: float,
-        puiss: float,
+        power: float,
         window: float,
         n2: float,
         V: Union[np.ndarray, None],
@@ -27,24 +27,25 @@ class NLSE_1d(NLSE):
         wvl: float = 780e-9,
         backend: str = __BACKEND__,
     ) -> object:
-        """Instantiates the simulation.
+        """Instantiate the simulation.
+
         Solves an equation : d/dz psi = -1/2k0(d2/dx2) psi + k0 dn psi +
           k0 n2 psi**2 psi
+
         Args:
             alpha (float): Transmission coeff
-            puiss (float): Power in W
-            waist (float): Waist size in m
+            power (float): Power in W
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray) : Potential
             L (float): Length of the medium.
             Isat (float): Saturation intensity in W/m^2
             nl_length (float, optional): Non-local length in m. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         super().__init__(
             alpha=alpha,
-            puiss=puiss,
+            power=power,
             window=window,
             n2=n2,
             V=V,
@@ -83,7 +84,7 @@ class NLSE_1d(NLSE):
                 (E_in.real * E_in.real + E_in.imag * E_in.imag) * self.delta_X**2
             ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
-            E_00 = (self.puiss / integral) ** 0.5
+            E_00 = (self.power / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in

@@ -31,23 +31,27 @@ class GPE(NLSE):
 
         Solves an equation : d/dt psi = -1/2m(d2/dx2 + d2/dy2) psi + V psi +
           g psi**2 psi
+
         Args:
             gamma (float): Losses in Hz
             N (float): Total number of atoms
             window (float): Window size in m
             g (float): Interaction energy in Hz*m^2
             V (np.ndarray): Potential in Hz
-            m (float, optionnal): mass of one atom in kg. Defaults to 87*atomic_mass for
-            Rubidium 87.
-            NX (int, optional): Number of points in x. Defaults to 1024.
-            NY (int, optional): Number of points in y. Defaults to 1024.
+            m (float, optionnal): mass of one atom in kg.
+                Defaults to 87*atomic_mass for Rubidium 87.
+            NX (int, optional): Number of points in x.
+                Defaults to 1024.
+            NY (int, optional): Number of points in y.
+                Defaults to 1024.
             sat (float): Saturation parameter in Hz/m^2.
-            nl_length (float, optional): Non local length scale in m. Defaults to 0.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            nl_length (float, optional): Non local length scale in m.
+                Defaults to 0.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         super().__init__(
             alpha=gamma,
-            puiss=N,
+            power=N,
             window=window,
             n2=g,
             V=V,
@@ -63,7 +67,7 @@ class GPE(NLSE):
         self.g = g
         self.V = V
         self.gamma = self.alpha
-        self.N = self.puiss
+        self.N = self.power
         self.m = self.k
         self.sat = sat
         self.delta_t = self.delta_z

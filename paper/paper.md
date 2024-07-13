@@ -29,9 +29,12 @@ bibliography: paper.bib
 The non-linear Schrödinger equation (NLSE) is a general non-linear equation allowing to model the propagation of light in non-linear media.
 This equation is mathematically isomorphic to the Gross-Pitaevskii equation (GPE) [@pitaevskij_bose-einstein_2016] describing the evolution of cold atomic ensembles.
 Recently, the growing field of quantum fluids of light [@carusotto_quantum_2013] has proven a fruitful testbed for several fundamental quantum and classical phenomena such as superfluidity [@michel_superfluid_2018] or turbulence [@bakerrasooliTurbulentDynamicsTwodimensional2023].
-Providing a flexible, modern and performant framework to solve these equations is a crucial need to model realistic experimental scenarii.
+Providing a flexible, modern and performant framework to solve these equations is crucial to model realistic experimental scenarios.
 
 # Statement of need
+
+[`Numpy`](https://numpy.org/doc/stable/) [@harris2020array] is the default package for array operations in Python, which is the language of choice for most physicists.
+However, the performance of `Numpy` for large arrays and Fourier transforms quickly bottlenecks homemade implementations of popular solvers like the split-step spectral scheme.
 
 Over the years, there have been several packages striving to provide performant split-step solvers for NLSE type equations.
 Here are a few examples:
@@ -40,31 +43,36 @@ Here are a few examples:
 - [`GPUE`](https://github.com/GPUE-group/GPUE) [@Schloss2018] for 1D to 3D Gross-Pitaevskii equations accelerated on GPU, in C++ (currently unmaintained).
 - [`py-fmas`](https://github.com/omelchert/py-fmas) for 1D NLSE in optical fibers, with a split-step method (currently unmaintained).
 
-With our project, we bring similar performance to C++ and Julia implementations, while striving for accessibility and maintainability by using the prevalant language in the physics community, Python.
+With our project, we bring similar performance to C++ and Julia implementations, while striving for accessibility and maintainability by using Python.
 Using an easy to extend object-oriented classes, users can readily input experimental parameters to quickly model real setups.
 
 # Functionality
 
-`NLSE` harnesses the power of pseudo-spectral schemes in order to solve efficiently the following general type of equation:
+`NLSE` harnesses the power of pseudo-spectral schemes to solve efficiently the following general type of equation:
 
 $$i\partial_t\psi = -\frac{1}{2m}\nabla^2\psi + V\psi + g|\psi|^2\psi.$$
 
-In order to take advantage of the computing power of modern Graphics Processing Units (GPU) for Fast Fourier Transforms (FFT), the main workhorse of this code is the [`Cupy`](https://cupy.dev/) [@cupy_learningsys2017]  package that maps [`Numpy`](https://numpy.org/) [@harris2020array] functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
-It also heavily uses just-in-time compilation using [`Numba`](https://numba.pydata.org/) [@lam2015numba] in order to optimize performance while having an easily maintainable Python codebase.
-Compared to naive Numpy based CPU implementations, this package provides a 100 to 10000 times speedup for typical sizes \autoref{fig:bench}.
-While optimized for the use with GPU, it also provides a performant CPU fallback layer.
+To take advantage of the computing power of modern Graphics Processing Units (GPUs) for Fast Fourier Transforms (FFTs), the main workhorse of this code is the [`Cupy`](https://cupy.dev/) [@cupy_learningsys2017]  package that maps [`Numpy`](https://numpy.org/) functionalities onto the GPU using NVIDIA's [`CUDA`](https://developer.nvidia.com/cuda-downloads) API.
+It also heavily uses just-in-time compilation using [`Numba`](https://numba.pydata.org/) [@lam2015numba] to optimize performance while having an easily maintainable Python codebase.
+Compared to naive Numpy-based CPU implementations, this package provides a 100 to 10000 times speedup for typical sizes \autoref{fig:bench}.
+While optimized for the use with GPU, NLSE also provides a performant CPU fallback layer.
 
-The goal of this package is to provide a natural framework for all physicists wishing to model the propagation of light in non-linear media or the temporal evolution of Bose gases. It can also be used to model the propagation of light in general.
+The goal of this package is to provide a natural framework to model the propagation of light in non-linear media or the temporal evolution of Bose gases. It can also be used to model the propagation of light in general.
 It supports lossy, non-linear and non-local media.
 
-It provides several classes to model 1D, 2D or 3D propagation, and leverages the array functionalities of `Numpy` like broadcasting in order to allow scans of physical parameters to most faithfully replicate experimental setups.
+It provides several classes to model 1D, 2D or 3D propagation, and leverages the array functionalities of `Numpy` like broadcasting to allow scans of physical parameters to most faithfully replicate experimental setups.
 The typical output of a simulation run is presented in \autoref{fig:output}.
 
-This code has been developped during the author's PhD thesis [@aladjidiFullOpticalControl2023] and used as the main simulation tool for several publications like [@glorieuxHotAtomicVapors2023] and [@bakerrasooliTurbulentDynamicsTwodimensional2023].
+This code has been developed initially developed in @aladjidiFullOpticalControl2023 and used as the main simulation tool for several publications like @glorieuxHotAtomicVapors2023 and @bakerrasooliTurbulentDynamicsTwodimensional2023.
 
-![Example of an output of the solver. A shearing layer is observed nucleating vortices, that are attracted towards the center due to an attractive potential. The density and phase of the field are represented as well as the momentum distribution in order to get a quick overview of the state of the field.\label{fig:output}](../img/output.png)
+![Example of an output of the solver. A shearing layer is observed nucleating vortices, that are attracted towards the center due to an attractive potential. The density and phase of the field are represented as well as the momentum distribution  get a quick overview of the state of the field.\label{fig:output}](../img/output.png)
 
-![CPU vs GPU benchmark for 1 cm of propagation (200 evolution steps).\label{fig:bench}](../img/benchmarks.png)
+![Left: CPU vs GPU vs Numpy benchmark for 1 cm of propagation (200 evolution steps).Right: Comparison versus the `JuliaGPE.jl` package on the study of vortex precession. \label{fig:bench}](../img/benchmarks.png)
+
+# Reproducibility
+
+The code used to generate the figures can be found in the [`examples`](https://github.com/Quantum-Optics-LKB/NLSE/tree/main/examples) folder of the repository with the [`fig1_turbulence.py`](https://github.com/Quantum-Optics-LKB/NLSE/blob/main/examples/fig1_turbulence.py) and [`fig2_benchmarks.py`](https://github.com/Quantum-Optics-LKB/NLSE/blob/main/examples/fig2_benchmarks.py) scripts. 
+Note that you will need a Julia install to run the `JuliaGPE.jl` script.
 
 # Acknowledgements
 
@@ -72,6 +80,6 @@ We acknowledge contributions from Myrann Baker-Rasooli as our most faithful beta
 
 # Authors contribution
 
-T.A wrote the original code and is the main maintainer, C.P extended the functionalities to include coupled systems. Q.G supervised the project.
+TA wrote the original code and is the main maintainer, CP extended the functionalities to include coupled systems. QG supervised the project.
 
 # References

@@ -1,6 +1,6 @@
 # NLSE
 
-A small utility to easily simulate all sorts of non linear Schrödinger equations. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equations.
+A package to easily simulate all sorts of non linear Schrödinger equations. It uses a [split-step spectral scheme](https://en.wikipedia.org/wiki/Split-step_method) to solve the equations.
 
 ## Installation
 
@@ -27,13 +27,14 @@ n2 = -1.6e-9 # nonlinear index in m^2/W
 waist = 2.23e-3 # initial beam waist in m
 waist2 = 70e-6 # potential beam waist in m
 window = 4*waist # total computational window size in m
-puiss = 1.05 # input optical power in W
+power = 1.05 # input optical power in W
 Isat = 10e4  # saturation intensity in W/m^2
 L = 10e-3 # Length of the medium in m
 alpha = 20 # linear losses coefficient in m^-1
+backend = "GPU" # whether to run on the GPU or the CPU
 
 simu = NLSE(
-    alpha, puiss, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+    alpha, power, window, n2, None, L, NX=N, NY=N, Isat=Isat, backend=backend
 )
 # Define input field and potential
 E_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2)
@@ -67,7 +68,7 @@ On Mac, you first need to install FFTW which can be done by simply using Homebre
 
 ### PyVkFFT
 
-We found out that [PyVkFFT](https://github.com/vincefn/pyvkfft/tree/master) was outperforming CuFFT so the GPU implementation uses this library for optimal performance.
+We found out that [PyVkFFT](https://github.com/vincefn/pyvkfft/tree/master) was outperforming CuFFT for our application so the GPU implementation uses this library for optimal performance.
 
 Other than this, the code relies on these libraries :
 
@@ -80,10 +81,12 @@ Other than this, the code relies on these libraries :
 ## Tests
 
 Tests are included to check functionalities and benchmark performance.
-You can run all tests by executing `tests/run_all_tests.py` (warning: this might take some time !).
-It will test both CPU and GPU backends.
+You can run all tests by using [`pytest`](https://docs.pytest.org/en/8.2.x/) at the root of the repo.
+It will test both CPU and GPU backends (if available).
+This can take some time !
 
-The benchmarks can be run using `tests/benchmarks.py` and compare a "naive" numpy implementation of the main solver loop to our solver.
+The benchmarks can be run using [`examples/benchmarks.py`](examples/benchmarks.py) and compare a "naive" numpy implementation of the main solver loop to our solver.
+We also compare for the example of the vortex precession presented in [`FourierGPE.jl`](https://github.com/AshtonSBradley/FourierGPE.jl/blob/master/examples/2dvortexprecession.jl) to our solver.
 On a Nvidia RTX4090 GPU and Ryzen 7950X CPU, we test our solver to the following results:
 ![benchmarks](img/benchmarks.png)
 
@@ -173,6 +176,7 @@ def callback(nlse, A, z, i):
 
 Notice that since the class instance is passed to the callback, you have access to all of the classes attributes.
 Be mindful however that since the callback is running in the main solver loop, this function should not be called too often in order to not slow down the execution too much.
+You can find several generic callbacks in the [`callbacks`](NLSE/callbacks.py) sublibrary.
 
 #### Propagation
 
@@ -255,6 +259,41 @@ $$
 
 It follows exactly the same conventions as the other classes a part from the fact that since it describes atoms, the units are the "atomic" units (masses in kg, times in s).
 
+### The `DDGPE` class
+
+The DDGPE class allows to solve the temporal evolution of two coupled fields in a driven-dissipative context. 
+
+It was designed to study problems like the evolution of exciton polaritons in microcavities. 
+
+The equation solved in this context is the following:
+
+$$
+\begin{split}
+i\hbar \partial_t\psi_X(\textbf{r}, t)&=
+(\frac{\hbar^2}{2m_X}\nabla^2 + 
+V_X(\textbf{r}) + 
+\hbar g_X|\psi_X(\textbf{r}, t)|^2 - 
+i\hbar\frac{\Gamma_X}{2})\psi_X(\textbf{r}, t)+ 
+\hbar\Omega_R\psi_C(\textbf{r}, t) \\
+i\hbar \partial_t \psi_C(\textbf{r}, t)&=
+(\frac{\hbar^2}{2m_C}\nabla^2 + 
+V_C(\textbf{r})  - 
+i\hbar\frac{\Gamma_C}{2})\psi_C(\textbf{r}, t) + 
+\hbar\Omega_R\psi_X(\textbf{r}, t) + 
+\hbar F_p(\textbf{r},t)
+\end{split}
+$$
+
+where 
+- $\psi_X$ is the exciton field
+- $\psi_C$ is the cavity field
+- $V_X$ is the exciton potential 
+- $V_C$ is the cavity potential
+- $g_X$ is the exciton interaction energy
+- $\Gamma_X$ is the exciton losses coefficient
+- $\Gamma_C$ is the cavity losses coefficient
+- $\Omega_R$ is the Rabi coupling between excitons and photons
+- $F_p$ is the pumping field impinging on the cavity
 
 ## Contributing and issues
 

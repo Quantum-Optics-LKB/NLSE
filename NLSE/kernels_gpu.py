@@ -27,7 +27,7 @@ def nl_prop(
     # Interactions
     arg = 1j * g * A_sq * sat
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     # Potential
     arg += 1j * V
     arg *= dz
@@ -59,7 +59,7 @@ def nl_prop_without_V(
     # Interactions
     arg = 1j * g * A_sq * sat
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     arg *= dz
     cp.exp(arg, out=arg)
     A *= arg
@@ -96,7 +96,7 @@ def nl_prop_c(
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     # Potential
     arg += 1j * V
     arg *= dz
@@ -133,14 +133,14 @@ def nl_prop_without_V_c(
     # Interactions
     arg = 1j * (g11 * A_sq_1 * sat + g12 * A_sq_2 * sat)
     # Losses
-    arg += -alpha / 2 * sat
+    arg += -alpha * sat
     arg *= dz
     cp.exp(arg, out=arg)
     A1 *= arg
 
 
 @cp.fuse(kernel_name="rabi_coupling")
-def rabi_coupling(A, dz: float, omega: float) -> None:
+def rabi_coupling(A1: cp.array, A2: cp.array, dz: float, omega: float) -> None:
     """Apply a Rabi coupling term.
     This function implements the Rabi hopping term.
     It exchanges density between the two components.
@@ -151,8 +151,6 @@ def rabi_coupling(A, dz: float, omega: float) -> None:
         dz (float): Solver step
         omega (float): Rabi coupling strength
     """
-    A1 = A[..., 0, :, :]
-    A2 = A[..., 1, :, :]
     A1_old = A1.copy()
     A1[:] = cp.cos(omega * dz) * A1 - 1j * cp.sin(omega * dz) * A2
     A2[:] = cp.cos(omega * dz) * A2 - 1j * cp.sin(omega * dz) * A1_old
@@ -170,7 +168,7 @@ def vortex_cp(
         j (int): position column of the vortex
         ii (int): meshgrid position row (coordinates of the image)
         jj (int): meshgrid position column (coordinates of the image)
-        l (int): vortex charge
+        ll (int): vortex charge
 
     Returns:
         None

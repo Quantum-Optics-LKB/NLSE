@@ -15,7 +15,7 @@ class DDGPE(CNLSE):
     def __init__(
         self,
         gamma: float,
-        puiss: float,
+        power: float,
         window: float,
         g: float,
         omega: float,
@@ -35,29 +35,27 @@ class DDGPE(CNLSE):
         """Instantiates the class with all the relevant physical parameters
 
         Args:
-            alpha (float): alpha through the cell
-            puiss (float): Optical power in W
-            waist (float): Beam waist in m
+            gamma (float): Losses coefficient in s^-1
+            power (float): Optical power in W
             window (float): Computational window in m
-            n2 (float): Non linear index of the 1 st component in m^2/W
+            g (float): Interaction parameter
             n12 (float): Inter component interaction parameter
             V (np.ndarray): Potential landscape in a.u
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same
-            for both components. Defaults to infinity.
+            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
             nl_length (float, optional): Nonlocal length. Defaults to 0.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             omega (float, optional): Rabi coupling. Defaults to None.
-            __BACKEND__ (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         Returns:
             object: CNLSE class instance
         """
 
         super().__init__(
             alpha=gamma,
-            puiss=puiss,
+            power=power,
             window=window,
             n2=-g,
             n12=g12,
@@ -150,6 +148,52 @@ class DDGPE(CNLSE):
         """
         A[..., 1, :, :] -= F_pump_r * F_pump_t[i] * simu.delta_z * 1j
         A[..., 1, :, :] -= F_probe_r * F_probe_t[i] * simu.delta_z * 1j
+
+    def _send_arrays_to_gpu(self) -> None:
+        """
+        Send arrays to GPU.
+        """
+        super()._send_arrays_to_gpu()
+        # for broadcasting of parameters in case they are
+        # not already on the GPU
+        if isinstance(self.gamma, np.ndarray):
+            self.gamma = cp.asarray(self.gamma)
+        if isinstance(self.g, np.ndarray):
+            self.g = cp.asarray(self.g)
+        if isinstance(self.omega, np.ndarray):
+            self.omega = cp.asarray(self.omega)
+        if isinstance(self.k_z, np.ndarray):
+            self.k_z = cp.asarray(self.k_z)
+        if isinstance(self.omega_exc, np.ndarray):
+            self.omega_exc = cp.asarray(self.omega_exc)
+        if isinstance(self.omega_cav, np.ndarray):
+            self.omega_cav = cp.asarray(self.omega_cav)
+        if isinstance(self.detuning, np.ndarray):
+            self.detuning = cp.asarray(self.detuning)
+        if isinstance(self.omega_pump, np.ndarray):
+            self.omega_pump = cp.asarray(self.omega_pump)
+
+    def _retrieve_arrays_from_gpu(self) -> None:
+        """
+        Retrieve arrays from GPU.
+        """
+        super()._retrieve_arrays_from_gpu()
+        if isinstance(self.gamma, cp.ndarray):
+            self.gamma = self.gamma.get()
+        if isinstance(self.g, cp.ndarray):
+            self.g = self.g.get()
+        if isinstance(self.omega, cp.ndarray):
+            self.omega = self.omega.get()
+        if isinstance(self.k_z, cp.ndarray):
+            self.k_z = self.k_z.get()
+        if isinstance(self.omega_exc, cp.ndarray):
+            self.omega_exc = self.omega_exc.get()
+        if isinstance(self.omega_cav, cp.ndarray):
+            self.omega_cav = self.omega_cav.get()
+        if isinstance(self.detuning, cp.ndarray):
+            self.detuning = self.detuning.get()
+        if isinstance(self.omega_pump, cp.ndarray):
+            self.omega_pump = self.omega_pump.get()
 
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
@@ -404,7 +448,7 @@ class DDGPE(CNLSE):
                     self.I_sat2,
                 )
             if self.omega is not None:
-                self._kernels.rabi_coupling(A, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
 
     def plot_field(self, A_plot: np.ndarray, t: float) -> None:
         """Plot the field for monitoring.

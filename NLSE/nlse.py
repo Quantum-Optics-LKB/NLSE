@@ -43,8 +43,8 @@ class NLSE:
     def __init__(
         self,
         alpha: float,
-        puiss: float,
-        window: float,
+        power: float,
+        window: Union[float, tuple, list],
         n2: float,
         V: Union[np.ndarray, None],
         L: float,
@@ -55,22 +55,28 @@ class NLSE:
         wvl: float = 780e-9,
         backend: str = __BACKEND__,
     ) -> object:
-        """Instantiates the simulation.
+        """Instantiate the simulation.
+
         Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
           k0 n2 psi**2 psi
+
         Args:
             alpha (float): alpha
-            puiss (float): Power in W
-            window (float): Computational window in the transverse plane in m.
+            power (float): Power in W
+            window (float, list or tuple): Computational window in the transverse plane in m.
+                Can be different in x and y.
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray): Potential.
             L (float): Length in m of the nonlinear medium
-            NX (int, optional): Number of points in the x direction. Defaults to 1024.
-            NY (int, optional): Number of points in the y direction. Defaults to 1024.
+            NX (int, optional): Number of points in the x direction.
+                Defaults to 1024.
+            NY (int, optional): Number of points in the y direction.
+                Defaults to 1024.
             Isat (float): Saturation intensity in W/m^2
             nl_length (float): Non local length in m
             wvl (float): Wavelength in m
-            backend (str, optional): Will run using the "GPU" or "CPU". Defaults to __BACKEND__.
+            backend (str, optional): Will run using the "GPU" or "CPU".
+                Defaults to __BACKEND__.
         """
         # listof physical parameters
         self.backend = backend
@@ -95,29 +101,35 @@ class NLSE:
         self.k = 2 * np.pi / self.wl
         self.L = L  # length of the non linear medium
         self.alpha = alpha
-        self.puiss = puiss
+        self.power = power
         self.I_sat = Isat
         # number of grid points in X (even, best is power of 2 or low prime factors)
         self.NX = NX
         self.NY = NY
-        self.window = window
-        Dn = self.n2 * self.puiss / self.window**2
+        # self.window = window
+        if isinstance(window, float) or isinstance(window, int):
+            self.window = [window, window]
+        elif isinstance(window, tuple) or isinstance(window, list):
+            self.window = window
+        Dn = self.n2 * self.power / min(self.window) ** 2
         z_nl = 1 / (self.k * abs(Dn))
-        if isinstance(z_nl, np.ndarray):
-            z_nl = z_nl.min()
+        if isinstance(z_nl, np.ndarray) or (
+            self.__CUPY_AVAILABLE__ and isinstance(z_nl, cp.ndarray)
+        ):
+            z_nl = float(z_nl.min())
         self.delta_z = 5e-3 * z_nl
         # transverse coordinate
         self.X, self.delta_X = np.linspace(
-            -self.window / 2,
-            self.window / 2,
+            -self.window[0] / 2,
+            self.window[0] / 2,
             num=NX,
             endpoint=False,
             retstep=True,
             dtype=np.float32,
         )
         self.Y, self.delta_Y = np.linspace(
-            -self.window / 2,
-            self.window / 2,
+            -self.window[1] / 2,
+            self.window[1] / 2,
             num=NY,
             endpoint=False,
             retstep=True,
@@ -160,7 +172,7 @@ class NLSE:
         return propagator
 
     def _build_fft_plan(self, A: np.ndarray) -> list:
-        """Builds the FFT plan objects for propagation
+        """Build the FFT plan objects for propagation.
 
         Args:
             A (np.ndarray): Array to transform.
@@ -221,6 +233,7 @@ class NLSE:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
+
         Args:
             E_in (np.ndarray): Input array
             normalize (bool): Normalize the field to the total power.
@@ -258,7 +271,7 @@ class NLSE:
                     * self.delta_Y
                 ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
-            E_00 = (self.puiss / integral) ** 0.5
+            E_00 = (self.power / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in
@@ -275,6 +288,8 @@ class NLSE:
             self.propagator = cp.asarray(self.propagator)
             # for broadcasting of parameters in case they are
             # not already on the GPU
+            if isinstance(self.power, np.ndarray):
+                self.power = cp.asarray(self.power)
             if isinstance(self.n2, np.ndarray):
                 self.n2 = cp.asarray(self.n2)
             if isinstance(self.alpha, np.ndarray):
@@ -288,6 +303,8 @@ class NLSE:
             self.propagator = cla.to_device(self._cl_queue, self.propagator)
             # for broadcasting of parameters in case they are
             # not already on the GPU
+            if isinstance(self.power, np.ndarray):
+                self.power = cla.to_device(self._cl_queue, self.power)
             if isinstance(self.n2, np.ndarray):
                 self.n2 = cla.to_device(self._cl_queue, self.n2)
             if isinstance(self.alpha, np.ndarray):
@@ -303,6 +320,8 @@ class NLSE:
             self.V = self.V.get()
         self.nl_profile = self.nl_profile.get()
         self.propagator = self.propagator.get()
+        if isinstance(self.power, cp.ndarray):
+            self.power = self.power.get()
         if isinstance(self.n2, cp.ndarray):
             self.n2 = self.n2.get()
         if isinstance(self.alpha, cp.ndarray):
@@ -319,19 +338,18 @@ class NLSE:
         plans: list,
         precision: str = "single",
     ) -> None:
-        """Split step function for one propagation step
+        """Split step function for one propagation step.
 
         Args:
             A (np.ndarray): Field to propagate
             A_sq (np.ndarray): Field modulus squared.
             V (np.ndarray): Potential field (can be None).
             propagator (np.ndarray): Propagator matrix.
-            plans (list): List of FFT plan objects. Either a single FFT plan for
-            both directions
-            (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the nonlinear
-            propagation step.
-            Defaults to "single".
+            plans (list): List of FFT plan objects.
+                Either a single FFT plan for both directions (GPU case)
+                or distinct FFT and IFFT plans for FFTW.
+            precision (str, optional): Single or double application of
+                the nonlinear propagation step. Defaults to "single".
         """
         if (
             self.backend == "GPU"
@@ -439,20 +457,25 @@ class NLSE:
         callback: Union[list[callable], callable] = None,
         callback_args: Union[list[tuple], tuple] = (),
     ) -> np.ndarray:
-        """Propagates the field at a distance z
+        """Propagate the field at a distance z.
+
+        This function propagates the field E_in over a distance z by
+        calling the split step function in a loop.
+
         Args:
-            E_in (np.ndarray): Normalized input field (between 0 and 1)
-            z (float): propagation distance in m
+            E_in (np.ndarray): Normalized input field (between 0 and 1).
+            z (float): propagation distance in m.
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-            of the nonlinear term.
-            This leads to a dz (single) or dz^3 (double) precision.
-            Defaults to "single".
+                of the nonlinear term. This leads to a dz (single) or dz^3 (double)
+                precision. Defaults to "single".
             verbose (bool, optional): Prints progress and time. Defaults to True.
             normalize (bool, optional): Normalize the field to the total power.
-            Defaults to True.
-            callback (callable, optional): Callback function. Defaults to None.
-            *args: Additional arguments for the callback function.
+                Defaults to True.
+            callback (callable, optional): Callback function.
+                Defaults to None.
+            callback_args (tuple, optional): Additional arguments for the callback
+                function.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
@@ -463,11 +486,6 @@ class NLSE:
             np.complex64,
             np.complex128,
         ], "Type mismatch, E_in should be complex64 or complex128"
-        Z = np.arange(
-            self.delta_z, z + self.delta_z, step=self.delta_z, dtype=E_in.real.dtype
-        )
-        A, A_sq = self._prepare_output_array(E_in, normalize)
-        self.plans = self._build_fft_plan(A)
         # define propagator if not already done
         if self.propagator is None:
             self.propagator = self._build_propagator()
@@ -482,19 +500,33 @@ class NLSE:
             V = self.V
         else:
             V = self.V.copy()
+        A, A_sq = self._prepare_output_array(E_in, normalize)
+        self.plans = self._build_fft_plan(A)
         if verbose:
-            pbar = tqdm.tqdm(total=len(Z), position=4, desc="Iteration", leave=False)
+            pbar = tqdm.tqdm(
+                total=z,
+                position=4,
+                desc="Propagation",
+                leave=False,
+                unit="m",
+                unit_scale=True,
+            )
         n2_old = self.n2
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             start_gpu = cp.cuda.Event()
             end_gpu = cp.cuda.Event()
             start_gpu.record()
         t0 = time.perf_counter()
-        for i, z in enumerate(Z):
+        # TODO(Tangui) : Switch to a while loop and compute delta_z at runtime
+        # based on a delta_n map computed from the initial state normalization.
+        # The while loop would also allow to adapt the step size mid solve for optimal
+        # efficiency.
+        # We could include a set of default callbacks, one of them to adapt delta_z ?
+        z_prop = 0
+        i = 0
+        while z_prop < z:
             if z > self.L:
                 self.n2 = 0
-            if verbose:
-                pbar.update(1)
             self.split_step(A, A_sq, V, self.propagator, self.plans, precision)
             if callback is not None:
                 if isinstance(callback, Callable):
@@ -506,6 +538,10 @@ class NLSE:
                     raise ValueError(
                         "callbacks should be a callable or a list of callables"
                     )
+            if verbose:
+                pbar.update(self.delta_z)
+            z_prop += self.delta_z
+            i += 1
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

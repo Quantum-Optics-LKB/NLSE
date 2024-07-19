@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="NLSE",
-    version="2.2.0",
+    version="2.3.0",
     description="A package for solving the Nonlinear Schrödinger Equation"
     " (NLSE) using the Split-Step Fourier method.",
     url="https://github.com/Quantum-Optics-LKB/NLSE",

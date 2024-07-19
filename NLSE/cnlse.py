@@ -79,7 +79,7 @@ class CNLSE(NLSE):
         # wavenumbers
         self.k2 = self.k
         # powers
-        self.puiss2 = self.power
+        self.power2 = self.power
         # waists
         self.propagator1 = None
         self.propagator2 = None
@@ -99,11 +99,11 @@ class CNLSE(NLSE):
             A = cp.zeros_like(E)
             A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
-            puiss_arr = cp.array([self.power, self.puiss2], dtype=E.dtype)
+            puiss_arr = cp.array([self.power, self.power2], dtype=E.dtype)
         else:
             A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
             A_sq = np.zeros_like(A, dtype=A.real.dtype)
-            puiss_arr = np.array([self.power, self.puiss2], dtype=E.dtype)
+            puiss_arr = np.array([self.power, self.power2], dtype=E.dtype)
         if normalize:
             # normalization of the field
             integral = (
@@ -369,7 +369,7 @@ class CNLSE(NLSE):
                 )
             if self.omega is not None:
                 self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
-                
+
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.
 

@@ -53,7 +53,7 @@ def test_prepare_output_array() -> None:
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
-            np.array([simu.power, simu.puiss2]),
+            np.array([simu.power, simu.power2]),
             rtol=1e-4,
         ), f"Normalization failed. (Backend {backend})"
         assert out.shape == (
@@ -265,5 +265,5 @@ def test_out_field() -> None:
             axis=simu._last_axes,
         )
         assert np.allclose(
-            norm, [simu.power, simu.puiss2], rtol=1e-4
+            norm, [simu.power, simu.power2], rtol=1e-4
         ), "Norm not conserved."

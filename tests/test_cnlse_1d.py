@@ -69,7 +69,7 @@ def test_prepare_output_array() -> None:
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
-            np.array([simu.power, simu.puiss2]),
+            np.array([simu.power, simu.power2]),
             rtol=1e-4,
         ), f"Normalization failed. (Backend {backend})"
         assert out.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
@@ -135,5 +135,5 @@ def test_out_field() -> None:
         integral *= c * epsilon_0 / 2
         assert A.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
-            integral, [simu.power, simu.puiss2], rtol=1e-4
+            integral, [simu.power, simu.power2], rtol=1e-4
         ), f"Normalization failed. (Backend {backend})"

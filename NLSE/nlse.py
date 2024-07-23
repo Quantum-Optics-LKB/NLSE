@@ -524,7 +524,9 @@ class NLSE:
         # We could include a set of default callbacks, one of them to adapt delta_z ?
         z_prop = 0
         i = 0
-        while z_prop < z:
+        if type(self.delta_z) is complex:
+            print("Warning: imaginary time evolution !")
+        while abs(z_prop) < z:
             if z > self.L:
                 self.n2 = 0
             self.split_step(A, A_sq, V, self.propagator, self.plans, precision)
@@ -539,7 +541,7 @@ class NLSE:
                         "callbacks should be a callable or a list of callables"
                     )
             if verbose:
-                pbar.update(self.delta_z)
+                pbar.update(abs(self.delta_z))
             z_prop += self.delta_z
             i += 1
         t_cpu = time.perf_counter() - t0

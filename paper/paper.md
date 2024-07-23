@@ -65,9 +65,9 @@ The typical output of a simulation run is presented in \autoref{fig:output}.
 
 This code was initially developed in @aladjidiFullOpticalControl2023 and used as the main simulation tool for several publications like @glorieuxHotAtomicVapors2023 and @bakerrasooliTurbulentDynamicsTwodimensional2023.
 
-![Example of an output of the solver. A shearing layer is observed nucleating vortices, that are attracted towards the center due to an attractive potential. The density and phase of the field are represented as well as the momentum distribution  get a quick overview of the state of the field.\label{fig:output}](../img/output.png)
-
 ![Left: CPU vs GPU vs NumPy benchmark for 1 cm of propagation (200 evolution steps). Right: Comparison versus the `JuliaGPE.jl` package on the study of vortex precession. \label{fig:bench}](../img/benchmarks.png)
+
+![Example of an output of the solver. A shearing layer is observed nucleating vortices, that are attracted towards the center due to an attractive potential. The density and phase of the field are represented as well as the momentum distribution  get a quick overview of the state of the field.\label{fig:output}](../img/output.png)
 
 # Reproducibility
 

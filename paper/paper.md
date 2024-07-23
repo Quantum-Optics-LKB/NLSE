@@ -26,7 +26,7 @@ bibliography: paper.bib
 
 # Summary
 
-The non-linear Schrödinger equation (NLSE) is a general non-linear equation used to model the propagation of light in non-linear media.
+The nonlinear Schrödinger equation (NLSE) is a general nonlinear equation used to model the propagation of light in nonlinear media.
 This equation is mathematically isomorphic to the Gross-Pitaevskii equation (GPE) [@pitaevskij_bose-einstein_2016] describing the evolution of cold atomic ensembles.
 Recently, the growing field of quantum fluids of light [@carusotto_quantum_2013] has proven a fruitful testbed for several fundamental quantum and classical phenomena such as superfluidity [@michel_superfluid_2018] or turbulence [@bakerrasooliTurbulentDynamicsTwodimensional2023].
 Providing a flexible, modern and performant framework to solve these equations is crucial to model realistic experimental scenarios.
@@ -57,8 +57,8 @@ It also heavily uses just-in-time compilation using [`Numba`](https://numba.pyda
 Compared to naive NumPy-based CPU implementations, this package provides a 100 to 10000 times speedup for typical sizes \autoref{fig:bench}.
 While optimized for the use with GPU, NLSE also provides a performant CPU fallback layer.
 
-The goal of this package is to provide a natural framework to model the propagation of light in non-linear media or the temporal evolution of Bose gases. It can also be used to model the propagation of light in general.
-It supports lossy, non-linear and non-local media.
+The goal of this package is to provide a natural framework to model the propagation of light in nonlinear media or the temporal evolution of Bose gases. It can also be used to model the propagation of light in general.
+It supports lossy, nonlinear and nonlocal media.
 
 It provides several classes to model 1D, 2D or 3D propagation, and leverages the array functionalities of `NumPy` like broadcasting to allow scans of physical parameters to most faithfully replicate experimental setups.
 The typical output of a simulation run is presented in \autoref{fig:output}.

@@ -1,0 +1,44 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Aladjidi
+  given-names: Tangui
+  orcid: "https://orcid.org/0000-0002-3109-9723"
+- family-names: Piekarski
+  given-names: Clara
+  orcid: "https://orcid.org/0000-0001-6871-6003"
+- family-names: Glorieux
+  given-names: Quentin
+  orcid: "https://orcid.org/0000-0003-0903-0233"
+contact:
+- family-names: Aladjidi
+  given-names: Tangui
+  orcid: "https://orcid.org/0000-0002-3109-9723"
+doi: 10.5281/zenodo.12795395
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Aladjidi
+    given-names: Tangui
+    orcid: "https://orcid.org/0000-0002-3109-9723"
+  - family-names: Piekarski
+    given-names: Clara
+    orcid: "https://orcid.org/0000-0001-6871-6003"
+  - family-names: Glorieux
+    given-names: Quentin
+    orcid: "https://orcid.org/0000-0003-0903-0233"
+  date-published: 2024-07-23
+  doi: 10.21105/joss.06607
+  issn: 2475-9066
+  issue: 99
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6607
+  title: "NLSE: A Python package to solve the nonlinear Schrödinger
+    equation"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06607"
+  volume: 9
+title: "NLSE: A Python package to solve the nonlinear Schrödinger
+  equation"

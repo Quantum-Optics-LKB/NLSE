@@ -462,6 +462,11 @@ class NLSE:
         This function propagates the field E_in over a distance z by
         calling the split step function in a loop.
 
+        This function supports imaginary time evolution provided you set
+        the delta_z to a complex number.
+        This allows to find the ground state of the system.
+        Warning: this is still experimental !
+
         Args:
             E_in (np.ndarray): Normalized input field (between 0 and 1).
             z (float): propagation distance in m.

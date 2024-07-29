@@ -11,6 +11,7 @@ setup(
     author="Tangui Aladjidi",
     author_email="tangui.aladjidi@lkb.upmc.fr",
     license="GPLv3",
+    license_files=["LICENSE"],
     packages=["NLSE"],
     install_requires=[
         "numpy",

@@ -10,7 +10,7 @@ setup(
     url="https://github.com/Quantum-Optics-LKB/NLSE",
     author="Tangui Aladjidi",
     author_email="tangui.aladjidi@lkb.upmc.fr",
-    license="MIT",
+    license="GPLv3",
     packages=["NLSE"],
     install_requires=[
         "numpy",

@@ -22,7 +22,7 @@ Here, the constants are defined as followed :
 - $n$ is the linear [index of refraction](https://en.wikipedia.org/wiki/Refractive_index). In our case 1.
 - $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
 
-In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$.
+In all generality, the interaction term can be _non-local_ i.e $n_2=n_2(\mathbf{r})$.
 This means usually that the response will be described as a convolution by some non-local kernel:
 
 $$

@@ -117,7 +117,7 @@ Here, the constants are defined as followed :
 - $n$ is the linear [index of refraction](https://en.wikipedia.org/wiki/Refractive_index). In our case 1.
 - $c,\epsilon_0$ : the speed of light and electric permittivity of vacuum.
 
-In all generality, the interaction term can be *non-local* i.e $n_2=n_2(\mathbf{r})$.
+In all generality, the interaction term can be _non-local_ i.e $n_2=n_2(\mathbf{r})$.
 This means usually that the response will be described as a convolution by some non-local kernel:
 
 $$
@@ -139,7 +139,6 @@ i\partial_{z}E = -\frac{1}{2k_0}\nabla_{\perp}^2 E +
 -\frac{k_0}{2}\delta n(r) E - n_2 \frac{k_0}{2n}c\epsilon_0|E|^2E
 $$
 
-
 #### Initialization
 
 The physical parameters listed above are defined at the instantiation of the `NLSE` class (`__init__` function).
@@ -148,7 +147,7 @@ The backend (GPU or CPU) is tested when the library is imported, but you can the
 #### Broadcasting
 
 Since `numpy` / `cupy` allow for natural broadcasting of arrays of compatible size, one can leverage this in order to run parallel realizations. For instance, if we wish to propagate various initial state with the same physical parameters,
-we simply have to initialize a *tensor* of fields of dimensions `(N_real, Ny, Nx)` where `N_real` is the number of initial states we wish to propagate.
+we simply have to initialize a _tensor_ of fields of dimensions `(N_real, Ny, Nx)` where `N_real` is the number of initial states we wish to propagate.
 
 Similarly, one can broadcast over the physical parameters by setting some parameters to be tensors as well. If we wish for instance to study the effect of the variation of $n_2$, one can set the `n2` attribute to be a `(N_real, 1, 1)` tensor.
 The field should then be initialized to a `(N_real, Ny, Nx)` tensor of identical fields and each slice over the first dimension will represent the same field propagated with different parameters.
@@ -193,13 +192,14 @@ The `out_field` method is the main function of the code that propagates the fiel
 The `precision` argument allows to switch between applicating the nonlinear terms in a single multiplication (`"single"`), or applying a "half" nonlinear term before and after computing the effect of losses, potential and interactions (`"double"`). The numerical error is $\mathcal{O}(\delta z)$ in the first case and $\mathcal{O}(\delta z^3)$ in the second case at the expense of two additional FFT's and another matrix multiplication (essentially doubling the runtime).\
 The propagation step $\delta z$ is chosen to be the minimum between `1e-5` the Rayleigh length of the beam or `2.5e-2` $z_{NL}=\frac{1}{k_0 n_2 I}$, but this can be hand tuned to reach desired speed or precision by setting the `delta_z` attribute.
 
-### Inheritance 
+### Inheritance
 
 In order to minimize duplication, all classes inherit from the main `NLSE` class according to the following graph:
 ![inheritance](img/inheritance_graph.png)
+
 ### The `NLSE_1d` class
 
-`NLSE_1d` is a 1D specialization of `NLSE` for performance. 
+`NLSE_1d` is a 1D specialization of `NLSE` for performance.
 It supports all of the features of the main `NLSE` class.
 
 The propagation equation is:
@@ -263,33 +263,34 @@ It follows exactly the same conventions as the other classes a part from the fac
 
 ### The `DDGPE` class
 
-The DDGPE class allows to solve the temporal evolution of two coupled fields in a driven-dissipative context. 
+The DDGPE class allows to solve the temporal evolution of two coupled fields in a driven-dissipative context.
 
-It was designed to study problems like the evolution of exciton polaritons in microcavities. 
+It was designed to study problems like the evolution of exciton polaritons in microcavities.
 
 The equation solved in this context is the following:
 
 $$
 \begin{split}
 i\hbar \partial_t\psi_X(\textbf{r}, t)&=
-(\frac{\hbar^2}{2m_X}\nabla^2 + 
-V_X(\textbf{r}) + 
-\hbar g_X|\psi_X(\textbf{r}, t)|^2 - 
-i\hbar\frac{\Gamma_X}{2})\psi_X(\textbf{r}, t)+ 
+(\frac{\hbar^2}{2m_X}\nabla^2 +
+V_X(\textbf{r}) +
+\hbar g_X|\psi_X(\textbf{r}, t)|^2 -
+i\hbar\frac{\Gamma_X}{2})\psi_X(\textbf{r}, t)+
 \hbar\Omega_R\psi_C(\textbf{r}, t) \\
 i\hbar \partial_t \psi_C(\textbf{r}, t)&=
-(\frac{\hbar^2}{2m_C}\nabla^2 + 
-V_C(\textbf{r})  - 
-i\hbar\frac{\Gamma_C}{2})\psi_C(\textbf{r}, t) + 
-\hbar\Omega_R\psi_X(\textbf{r}, t) + 
+(\frac{\hbar^2}{2m_C}\nabla^2 +
+V_C(\textbf{r})  -
+i\hbar\frac{\Gamma_C}{2})\psi_C(\textbf{r}, t) +
+\hbar\Omega_R\psi_X(\textbf{r}, t) +
 \hbar F_p(\textbf{r},t)
 \end{split}
 $$
 
-where 
+where
+
 - $\psi_X$ is the exciton field
 - $\psi_C$ is the cavity field
-- $V_X$ is the exciton potential 
+- $V_X$ is the exciton potential
 - $V_C$ is the cavity potential
 - $g_X$ is the exciton interaction energy
 - $\Gamma_X$ is the exciton losses coefficient

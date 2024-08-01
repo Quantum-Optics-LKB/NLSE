@@ -836,10 +836,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>NLSE/nlse.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 37</span>
-<span class="normal"> 38</span>
-<span class="normal"> 39</span>
-<span class="normal"> 40</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 40</span>
 <span class="normal"> 41</span>
 <span class="normal"> 42</span>
 <span class="normal"> 43</span>
@@ -1427,7 +1424,33 @@
 <span class="normal">625</span>
 <span class="normal">626</span>
 <span class="normal">627</span>
-<span class="normal">628</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE</span><span class="p">:</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NLSE</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to solve NLSE&quot;&quot;&quot;</span>
 
     <span class="n">__CUPY_AVAILABLE__</span> <span class="o">=</span> <span class="n">__CUPY_AVAILABLE__</span>
@@ -1437,7 +1460,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">window</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">window</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
         <span class="n">n2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">V</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
         <span class="n">L</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1447,16 +1470,18 @@
         <span class="n">nl_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
         <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
 
-<span class="sd">        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +</span>
-<span class="sd">          k0 n2 psi**2 psi</span>
+<span class="sd">        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +</span>
+<span class="sd">          k0 dn psi + k0 n2 psi**2 psi</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            alpha (float): alpha</span>
 <span class="sd">            power (float): Power in W</span>
-<span class="sd">            window (float): Computational window in the transverse plane in m.</span>
+<span class="sd">            window (float, list or tuple): Computational window in the</span>
+<span class="sd">                transverse plane in m.</span>
+<span class="sd">                Can be different in x and y.</span>
 <span class="sd">            n2 (float): Non linear coeff in m^2/W</span>
 <span class="sd">            V (np.ndarray): Potential.</span>
 <span class="sd">            L (float): Length in m of the nonlinear medium</span>
@@ -1477,7 +1502,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_convolution</span> <span class="o">=</span> <span class="n">signal_cp</span><span class="o">.</span><span class="n">oaconvolve</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;CL&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__PYOPENCL_AVAILABLE__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_kernels</span> <span class="o">=</span> <span class="n">kernels_cl</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_cl_queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">create_some_context</span><span class="p">(</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cl_queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span>
+                <span class="n">cl</span><span class="o">.</span><span class="n">create_some_context</span><span class="p">(</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;GPU&quot;</span><span class="p">,</span> <span class="s2">&quot;CL&quot;</span><span class="p">]:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Backend not available, switching to CPU&quot;</span><span class="p">)</span>
@@ -1495,11 +1522,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="n">power</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">I_sat</span> <span class="o">=</span> <span class="n">Isat</span>
-        <span class="c1"># number of grid points in X (even, best is power of 2 or low prime factors)</span>
+        <span class="c1"># number of grid points in X (even, best is power of 2 or low prime</span>
+        <span class="c1"># factors)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">NX</span> <span class="o">=</span> <span class="n">NX</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">NY</span> <span class="o">=</span> <span class="n">NY</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">window</span>
-        <span class="n">Dn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">**</span><span class="mi">2</span>
+        <span class="c1"># self.window = window</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="p">[</span><span class="n">window</span><span class="p">,</span> <span class="n">window</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">window</span>
+        <span class="n">Dn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
         <span class="n">z_nl</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">Dn</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_nl</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__CUPY_AVAILABLE__</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_nl</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
@@ -1508,16 +1540,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span> <span class="o">=</span> <span class="mf">5e-3</span> <span class="o">*</span> <span class="n">z_nl</span>
         <span class="c1"># transverse coordinate</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
             <span class="n">num</span><span class="o">=</span><span class="n">NX</span><span class="p">,</span>
             <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">retstep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
             <span class="n">num</span><span class="o">=</span><span class="n">NY</span><span class="p">,</span>
             <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">retstep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1543,7 +1575,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span> <span class="o">=</span> <span class="n">special</span><span class="o">.</span><span class="n">kn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span> <span class="o">/</span> <span class="n">d</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">))])</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">))]</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">NY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">NX</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
@@ -1617,7 +1651,9 @@
                 <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">wisdom</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">plan_fft</span><span class="p">,</span> <span class="n">plan_ifft</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_prepare_output_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">E_in</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_prepare_output_array</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">E_in</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">Any</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the output arrays depending on __BACKEND__.</span>
 
 <span class="sd">        Prepares the A and A_sq arrays to store the field and its modulus.</span>
@@ -1850,25 +1886,32 @@
 <span class="sd">        This function propagates the field E_in over a distance z by</span>
 <span class="sd">        calling the split step function in a loop.</span>
 
+<span class="sd">        This function supports imaginary time evolution provided you set</span>
+<span class="sd">        the delta_z to a complex number.</span>
+<span class="sd">        This allows to find the ground state of the system.</span>
+<span class="sd">        Warning: this is still experimental !</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            E_in (np.ndarray): Normalized input field (between 0 and 1).</span>
 <span class="sd">            z (float): propagation distance in m.</span>
 <span class="sd">            plot (bool, optional): Plots the results. Defaults to False.</span>
 <span class="sd">            precision (str, optional): Does a &quot;double&quot; or a &quot;single&quot; application</span>
-<span class="sd">                of the nonlinear term. This leads to a dz (single) or dz^3 (double)</span>
-<span class="sd">                precision. Defaults to &quot;single&quot;.</span>
-<span class="sd">            verbose (bool, optional): Prints progress and time. Defaults to True.</span>
+<span class="sd">                of the nonlinear term. This leads to a dz (single) or dz^3</span>
+<span class="sd">                (double)precision. Defaults to &quot;single&quot;.</span>
+<span class="sd">            verbose (bool, optional): Prints progress and time.</span>
+<span class="sd">                Defaults to True.</span>
 <span class="sd">            normalize (bool, optional): Normalize the field to the total power.</span>
 <span class="sd">                Defaults to True.</span>
 <span class="sd">            callback (callable, optional): Callback function.</span>
 <span class="sd">                Defaults to None.</span>
-<span class="sd">            callback_args (tuple, optional): Additional arguments for the callback</span>
-<span class="sd">                function.</span>
+<span class="sd">            callback_args (tuple, optional): Additional arguments for the</span>
+<span class="sd">                callback function.</span>
 <span class="sd">        Returns:</span>
 <span class="sd">            np.ndarray: Propagated field in proper units V/m</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">E_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">XX</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span>
+            <span class="n">E_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span>
+            <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">XX</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span>
         <span class="p">),</span> <span class="s2">&quot;Shape mismatch&quot;</span>
         <span class="k">assert</span> <span class="n">E_in</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span>
             <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span>
@@ -1905,21 +1948,20 @@
             <span class="n">end_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
             <span class="n">start_gpu</span><span class="o">.</span><span class="n">record</span><span class="p">()</span>
         <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-        <span class="c1"># TODO(Tangui) : Switch to a while loop and compute delta_z at runtime</span>
-        <span class="c1"># based on a delta_n map computed from the initial state normalization.</span>
-        <span class="c1"># The while loop would also allow to adapt the step size mid solve for optimal</span>
-        <span class="c1"># efficiency.</span>
-        <span class="c1"># We could include a set of default callbacks, one of them to adapt delta_z ?</span>
         <span class="n">z_prop</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">while</span> <span class="n">z_prop</span> <span class="o">&lt;</span> <span class="n">z</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">complex</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: imaginary time evolution !&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z_prop</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">z</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">split_step</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plans</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
                     <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">*</span><span class="n">callback_args</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Callable</span><span class="p">):</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">callback</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Callable</span>
+                <span class="p">):</span>
                     <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">ca</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">callback_args</span><span class="p">):</span>
                         <span class="n">c</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">*</span><span class="n">ca</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1927,7 +1969,7 @@
                         <span class="s2">&quot;callbacks should be a callable or a list of callables&quot;</span>
                     <span class="p">)</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span><span class="p">)</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span><span class="p">))</span>
             <span class="n">z_prop</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">t_cpu</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
@@ -1941,8 +1983,8 @@
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__CUPY_AVAILABLE__</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time spent to solve : </span><span class="si">{</span><span class="n">t_gpu</span><span class="o">*</span><span class="mf">1e-3</span><span class="si">}</span><span class="s2"> s (GPU) /&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="si">}</span><span class="s2"> s (CPU)</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time spent to solve : </span><span class="si">{</span><span class="n">t_gpu</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e-3</span><span class="si">}</span><span class="s2"> s (GPU) /&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="si">}</span><span class="s2"> s (CPU)</span><span class="se">\n</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time spent to solve : </span><span class="si">{</span><span class="n">t_cpu</span><span class="si">}</span><span class="s2"> s (CPU)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2003,7 +2045,11 @@
         <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;y (mm)&quot;</span><span class="p">)</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;Intensity ($W/cm^2$)&quot;</span><span class="p">)</span>
         <span class="n">im1</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
-            <span class="n">phi</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">ext_real</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;twilight_shifted&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+            <span class="n">phi</span><span class="p">,</span>
+            <span class="n">extent</span><span class="o">=</span><span class="n">ext_real</span><span class="p">,</span>
+            <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;twilight_shifted&quot;</span><span class="p">,</span>
+            <span class="n">vmin</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+            <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Phase&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;x (mm)&quot;</span><span class="p">)</span>
@@ -2049,8 +2095,8 @@
 
 
 <details class="solves-an-equation-" open>
-  <summary>d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +</summary>
-  <p>k0 n2 psi**2 psi</p>
+  <summary>d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +</summary>
+  <p>k0 dn psi + k0 n2 psi**2 psi</p>
 </details>
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2095,11 +2141,13 @@
           <tr class="doc-section-item">
             <td><code>window</code></td>
             <td>
-                  <code>float</code>
+                  <code>(float, list or tuple)</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Computational window in the transverse plane in m.</p>
+                <p>Computational window in the
+transverse plane in m.
+Can be different in x and y.</p>
               </div>
             </td>
             <td>
@@ -2240,10 +2288,7 @@ Defaults to <strong>BACKEND</strong>.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 43</span>
-<span class="normal"> 44</span>
-<span class="normal"> 45</span>
-<span class="normal"> 46</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 46</span>
 <span class="normal"> 47</span>
 <span class="normal"> 48</span>
 <span class="normal"> 49</span>
@@ -2353,11 +2398,25 @@ Defaults to <strong>BACKEND</strong>.</p>
 <span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
-<span class="normal">156</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">window</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
     <span class="n">n2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="n">V</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span>
     <span class="n">L</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -2367,16 +2426,18 @@ Defaults to <strong>BACKEND</strong>.</p>
     <span class="n">nl_length</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">wvl</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">780e-9</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">__BACKEND__</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Instantiate the simulation.</span>
 
-<span class="sd">    Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +</span>
-<span class="sd">      k0 n2 psi**2 psi</span>
+<span class="sd">    Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +</span>
+<span class="sd">      k0 dn psi + k0 n2 psi**2 psi</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        alpha (float): alpha</span>
 <span class="sd">        power (float): Power in W</span>
-<span class="sd">        window (float): Computational window in the transverse plane in m.</span>
+<span class="sd">        window (float, list or tuple): Computational window in the</span>
+<span class="sd">            transverse plane in m.</span>
+<span class="sd">            Can be different in x and y.</span>
 <span class="sd">        n2 (float): Non linear coeff in m^2/W</span>
 <span class="sd">        V (np.ndarray): Potential.</span>
 <span class="sd">        L (float): Length in m of the nonlinear medium</span>
@@ -2397,7 +2458,9 @@ Defaults to <strong>BACKEND</strong>.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convolution</span> <span class="o">=</span> <span class="n">signal_cp</span><span class="o">.</span><span class="n">oaconvolve</span>
     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;CL&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__PYOPENCL_AVAILABLE__</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kernels</span> <span class="o">=</span> <span class="n">kernels_cl</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cl_queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span><span class="n">cl</span><span class="o">.</span><span class="n">create_some_context</span><span class="p">(</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cl_queue</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="n">CommandQueue</span><span class="p">(</span>
+            <span class="n">cl</span><span class="o">.</span><span class="n">create_some_context</span><span class="p">(</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">backend</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;GPU&quot;</span><span class="p">,</span> <span class="s2">&quot;CL&quot;</span><span class="p">]:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Backend not available, switching to CPU&quot;</span><span class="p">)</span>
@@ -2415,11 +2478,16 @@ Defaults to <strong>BACKEND</strong>.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="n">power</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">I_sat</span> <span class="o">=</span> <span class="n">Isat</span>
-    <span class="c1"># number of grid points in X (even, best is power of 2 or low prime factors)</span>
+    <span class="c1"># number of grid points in X (even, best is power of 2 or low prime</span>
+    <span class="c1"># factors)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">NX</span> <span class="o">=</span> <span class="n">NX</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">NY</span> <span class="o">=</span> <span class="n">NY</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">window</span>
-    <span class="n">Dn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="o">**</span><span class="mi">2</span>
+    <span class="c1"># self.window = window</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="p">[</span><span class="n">window</span><span class="p">,</span> <span class="n">window</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">=</span> <span class="n">window</span>
+    <span class="n">Dn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
     <span class="n">z_nl</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">Dn</span><span class="p">))</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_nl</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__CUPY_AVAILABLE__</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_nl</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
@@ -2428,16 +2496,16 @@ Defaults to <strong>BACKEND</strong>.</p>
     <span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span> <span class="o">=</span> <span class="mf">5e-3</span> <span class="o">*</span> <span class="n">z_nl</span>
     <span class="c1"># transverse coordinate</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-        <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
         <span class="n">num</span><span class="o">=</span><span class="n">NX</span><span class="p">,</span>
         <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">retstep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
-        <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">window</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
         <span class="n">num</span><span class="o">=</span><span class="n">NY</span><span class="p">,</span>
         <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">retstep</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -2463,7 +2531,9 @@ Defaults to <strong>BACKEND</strong>.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span> <span class="o">=</span> <span class="n">special</span><span class="o">.</span><span class="n">kn</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">R</span> <span class="o">/</span> <span class="n">d</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">))])</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="p">))]</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nl_profile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">NY</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">NX</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
@@ -2487,6 +2557,10 @@ Defaults to <strong>BACKEND</strong>.</p>
       <p>Propagate the field at a distance z.</p>
 <p>This function propagates the field E_in over a distance z by
 calling the split step function in a loop.</p>
+<p>This function supports imaginary time evolution provided you set
+the delta_z to a complex number.
+This allows to find the ground state of the system.
+Warning: this is still experimental !</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2550,8 +2624,8 @@ calling the split step function in a loop.</p>
             <td>
               <div class="doc-md-description">
                 <p>Does a "double" or a "single" application
-of the nonlinear term. This leads to a dz (single) or dz^3 (double)
-precision. Defaults to "single".</p>
+of the nonlinear term. This leads to a dz (single) or dz^3
+(double)precision. Defaults to "single".</p>
               </div>
             </td>
             <td>
@@ -2565,7 +2639,8 @@ precision. Defaults to "single".</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Prints progress and time. Defaults to True.</p>
+                <p>Prints progress and time.
+Defaults to True.</p>
               </div>
             </td>
             <td>
@@ -2609,8 +2684,8 @@ Defaults to None.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Additional arguments for the callback
-function.</p>
+                <p>Additional arguments for the
+callback function.</p>
               </div>
             </td>
             <td>
@@ -2624,23 +2699,7 @@ function.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">460</span>
 <span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
@@ -2750,7 +2809,29 @@ function.</p>
 <span class="normal">567</span>
 <span class="normal">568</span>
 <span class="normal">569</span>
-<span class="normal">570</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">out_field</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">E_in</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -2766,25 +2847,32 @@ function.</p>
 <span class="sd">    This function propagates the field E_in over a distance z by</span>
 <span class="sd">    calling the split step function in a loop.</span>
 
+<span class="sd">    This function supports imaginary time evolution provided you set</span>
+<span class="sd">    the delta_z to a complex number.</span>
+<span class="sd">    This allows to find the ground state of the system.</span>
+<span class="sd">    Warning: this is still experimental !</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        E_in (np.ndarray): Normalized input field (between 0 and 1).</span>
 <span class="sd">        z (float): propagation distance in m.</span>
 <span class="sd">        plot (bool, optional): Plots the results. Defaults to False.</span>
 <span class="sd">        precision (str, optional): Does a &quot;double&quot; or a &quot;single&quot; application</span>
-<span class="sd">            of the nonlinear term. This leads to a dz (single) or dz^3 (double)</span>
-<span class="sd">            precision. Defaults to &quot;single&quot;.</span>
-<span class="sd">        verbose (bool, optional): Prints progress and time. Defaults to True.</span>
+<span class="sd">            of the nonlinear term. This leads to a dz (single) or dz^3</span>
+<span class="sd">            (double)precision. Defaults to &quot;single&quot;.</span>
+<span class="sd">        verbose (bool, optional): Prints progress and time.</span>
+<span class="sd">            Defaults to True.</span>
 <span class="sd">        normalize (bool, optional): Normalize the field to the total power.</span>
 <span class="sd">            Defaults to True.</span>
 <span class="sd">        callback (callable, optional): Callback function.</span>
 <span class="sd">            Defaults to None.</span>
-<span class="sd">        callback_args (tuple, optional): Additional arguments for the callback</span>
-<span class="sd">            function.</span>
+<span class="sd">        callback_args (tuple, optional): Additional arguments for the</span>
+<span class="sd">            callback function.</span>
 <span class="sd">    Returns:</span>
 <span class="sd">        np.ndarray: Propagated field in proper units V/m</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="p">(</span>
-        <span class="n">E_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">XX</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span>
+        <span class="n">E_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span>
+        <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">XX</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:]</span>
     <span class="p">),</span> <span class="s2">&quot;Shape mismatch&quot;</span>
     <span class="k">assert</span> <span class="n">E_in</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span>
         <span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span>
@@ -2821,21 +2909,20 @@ function.</p>
         <span class="n">end_gpu</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
         <span class="n">start_gpu</span><span class="o">.</span><span class="n">record</span><span class="p">()</span>
     <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-    <span class="c1"># TODO(Tangui) : Switch to a while loop and compute delta_z at runtime</span>
-    <span class="c1"># based on a delta_n map computed from the initial state normalization.</span>
-    <span class="c1"># The while loop would also allow to adapt the step size mid solve for optimal</span>
-    <span class="c1"># efficiency.</span>
-    <span class="c1"># We could include a set of default callbacks, one of them to adapt delta_z ?</span>
     <span class="n">z_prop</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">z_prop</span> <span class="o">&lt;</span> <span class="n">z</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">complex</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: imaginary time evolution !&quot;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z_prop</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">z</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">n2</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">split_step</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A_sq</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">propagator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plans</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
                 <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">*</span><span class="n">callback_args</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Callable</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">callback</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Callable</span>
+            <span class="p">):</span>
                 <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">ca</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">callback_args</span><span class="p">):</span>
                     <span class="n">c</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">*</span><span class="n">ca</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -2843,7 +2930,7 @@ function.</p>
                     <span class="s2">&quot;callbacks should be a callable or a list of callables&quot;</span>
                 <span class="p">)</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span><span class="p">)</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span><span class="p">))</span>
         <span class="n">z_prop</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_z</span>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="n">t_cpu</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
@@ -2857,8 +2944,8 @@ function.</p>
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__CUPY_AVAILABLE__</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time spent to solve : </span><span class="si">{</span><span class="n">t_gpu</span><span class="o">*</span><span class="mf">1e-3</span><span class="si">}</span><span class="s2"> s (GPU) /&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="si">}</span><span class="s2"> s (CPU)</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time spent to solve : </span><span class="si">{</span><span class="n">t_gpu</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1e-3</span><span class="si">}</span><span class="s2"> s (GPU) /&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="si">}</span><span class="s2"> s (CPU)</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time spent to solve : </span><span class="si">{</span><span class="n">t_cpu</span><span class="si">}</span><span class="s2"> s (CPU)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -2941,29 +3028,7 @@ function.</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
-<span class="normal">594</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">594</span>
 <span class="normal">595</span>
 <span class="normal">596</span>
 <span class="normal">597</span>
@@ -2997,7 +3062,33 @@ function.</p>
 <span class="normal">625</span>
 <span class="normal">626</span>
 <span class="normal">627</span>
-<span class="normal">628</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">plot_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_plot</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot a field for monitoring.</span>
 
 <span class="sd">    Args:</span>
@@ -3038,7 +3129,11 @@ function.</p>
     <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;y (mm)&quot;</span><span class="p">)</span>
     <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;Intensity ($W/cm^2$)&quot;</span><span class="p">)</span>
     <span class="n">im1</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
-        <span class="n">phi</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="n">ext_real</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;twilight_shifted&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">phi</span><span class="p">,</span>
+        <span class="n">extent</span><span class="o">=</span><span class="n">ext_real</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;twilight_shifted&quot;</span><span class="p">,</span>
+        <span class="n">vmin</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+        <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Phase&quot;</span><span class="p">)</span>
     <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;x (mm)&quot;</span><span class="p">)</span>
@@ -3177,23 +3272,7 @@ the nonlinear propagation step. Defaults to "single".</p>
 
             <details class="quote">
               <summary>Source code in <code>NLSE/nlse.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">343</span>
 <span class="normal">344</span>
 <span class="normal">345</span>
 <span class="normal">346</span>
@@ -3292,7 +3371,23 @@ the nonlinear propagation step. Defaults to "single".</p>
 <span class="normal">439</span>
 <span class="normal">440</span>
 <span class="normal">441</span>
-<span class="normal">442</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">split_step</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">A_sq</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>

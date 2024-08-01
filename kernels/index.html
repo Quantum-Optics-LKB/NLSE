@@ -1217,10 +1217,11 @@
 
 <h2 id="cpu">CPU</h2>
 <p>CPU kernels in the <code>NLSE</code> package are responsible for solving the nonlinear Schrödinger equation using CPU resources.</p>
-<p>It uses the popular <a href="https://numba.readthedocs.io/en/stable/user/index.html">Numba</a> library to just-in-time compile array functions.</p>
+<p>We use the popular <a href="https://numba.readthedocs.io/en/stable/user/index.html">Numba</a> library to just-in-time compile array functions.</p>
 <p>These functions are not meant to be called directly and instead work as the backend specific implementations for the main classes methods.</p>
 <p>Due to the manual indexing involved in the implementations, these kernels <strong>do not support broadcasting</strong> (<em>for now</em>).</p>
-<p>CPU kernels are suitable for small to medium-sized problems or when GPU resources are not available. As it uses multithreading internally, they will benefit from higher core counts.</p>
+<p>CPU kernels are suitable for small to medium-sized problems or when GPU resources are not available.
+As it uses multithreading internally, they will benefit from higher core counts.</p>
 
 
 <div class="doc doc-object doc-module">
@@ -2251,7 +2252,7 @@ It exchanges density between the two components.</p>
     </div>
 
 </div><h2 id="gpu-cuda">GPU (CUDA)</h2>
-<p>GPU kernels in the <code>NLSE</code> package are responsible for solving the nonlinear Schrödinger equation using GPU resources. 
+<p>GPU kernels in the <code>NLSE</code> package are responsible for solving the nonlinear Schrödinger equation using GPU resources.
 They utilize the computational power of the graphics processing unit (GPU) to perform the necessary calculations.</p>
 <p>These kernels use the <a href="https://docs.cupy.dev/en/stable/reference/generated/cupy.fuse.html"><code>cupy.fuse</code></a> API to just-in-time compile the array operations to
 a single kernel.</p>

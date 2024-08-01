@@ -6,27 +6,30 @@
 import multiprocessing
 import pickle
 import time
-import tqdm
+from typing import Callable, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pyfftw
+import tqdm
+from scipy import signal, special
 from scipy.constants import c, epsilon_0
-from scipy import signal
-from scipy import special
+
 from . import kernels_cpu
 from .utils import __BACKEND__, __CUPY_AVAILABLE__, __PYOPENCL_AVAILABLE__
-from typing import Union, Callable
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
-    from pyvkfft.cuda import VkFFTApp as VkFFTApp_cuda
     import cupyx.scipy.signal as signal_cp
+    from pyvkfft.cuda import VkFFTApp as VkFFTApp_cuda
+
     from . import kernels_gpu
 
 if __PYOPENCL_AVAILABLE__:
     import pyopencl as cl
     from pyopencl import array as cla
     from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
+
     from . import kernels_cl
 
 pyfftw.config.NUM_THREADS = multiprocessing.cpu_count()
@@ -54,7 +57,7 @@ class NLSE:
         nl_length: float = 0,
         wvl: float = 780e-9,
         backend: str = __BACKEND__,
-    ) -> object:
+    ) -> None:
         """Instantiate the simulation.
 
         Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +

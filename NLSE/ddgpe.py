@@ -1,8 +1,10 @@
-from .cnlse import CNLSE
-import numpy as np
-import matplotlib.pyplot as plt
-import pyfftw
 from typing import Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pyfftw
+
+from .cnlse import CNLSE
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:

@@ -1,8 +1,9 @@
-from .cnlse import CNLSE
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy.constants import c, epsilon_0
+import numpy as np
 import pyfftw
+from scipy.constants import c, epsilon_0
+
+from .cnlse import CNLSE
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:

@@ -1,6 +1,7 @@
 import numpy as np
-from .nlse import NLSE
 from scipy.constants import c, epsilon_0
+
+from .nlse import NLSE
 
 
 def sample(

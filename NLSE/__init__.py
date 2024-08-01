@@ -13,11 +13,11 @@ __email__ = "tangui.aladjidi@lkb.upmc.fr"
 
 
 from . import utils
+from .callbacks import *
+from .cnlse import CNLSE
+from .cnlse_1d import CNLSE_1d
+from .ddgpe import DDGPE
+from .gpe import GPE
 from .nlse import NLSE
 from .nlse_1d import NLSE_1d
 from .nlse_3d import NLSE_3d
-from .cnlse import CNLSE
-from .cnlse_1d import CNLSE_1d
-from .gpe import GPE
-from .ddgpe import DDGPE
-from .callbacks import *

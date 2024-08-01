@@ -1,9 +1,11 @@
-from .nlse import NLSE
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.constants import c, epsilon_0, atomic_mass, hbar
-import pyfftw
 from typing import Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pyfftw
+from scipy.constants import atomic_mass, c, epsilon_0, hbar
+
+from .nlse import NLSE
 from .utils import __BACKEND__, __CUPY_AVAILABLE__
 
 if __CUPY_AVAILABLE__:

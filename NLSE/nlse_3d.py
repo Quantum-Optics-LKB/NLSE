@@ -96,7 +96,9 @@ class NLSE_3d(NLSE):
         self.D0 = D0
         self.vg = vg
         self.XX, self.YY, self.TT = np.meshgrid(self.X, self.Y, self.T)
-        self.Kxx, self.Kyy, self.Omega = np.meshgrid(self.Kx, self.Ky, self.omega)
+        self.Kxx, self.Kyy, self.Omega = np.meshgrid(
+            self.Kx, self.Ky, self.omega
+        )
         self._last_axes = (-3, -2, -1)  # Axes are x, y, t
 
     def _build_propagator(self) -> np.ndarray:
@@ -110,7 +112,9 @@ class NLSE_3d(NLSE):
         # prop_t *= np.exp(1 / self.vg * self.Omega)
         return prop_2d * prop_t
 
-    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+    def _prepare_output_array(
+        self, E_in: np.ndarray, normalize: bool
+    ) -> np.ndarray:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
@@ -185,7 +189,11 @@ class NLSE_3d(NLSE):
         ax[0, 0].set_ylabel("y (mm)")
         fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label="Intensity (W/cm^2)")
         im1 = ax[0, 1].imshow(
-            phi_xy, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi_xy,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[0, 1].set_title(r"Phase in $xy$ plane at $t$=0")
         ax[0, 1].set_xlabel("x (mm)")

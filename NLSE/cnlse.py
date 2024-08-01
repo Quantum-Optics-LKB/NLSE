@@ -53,7 +53,9 @@ class CNLSE(NLSE):
             object: CNLSE class instance
         """
         if backend == "CL":
-            raise NotImplementedError("OpenCL backend is not yet supported for CNLSE.")
+            raise NotImplementedError(
+                "OpenCL backend is not yet supported for CNLSE."
+            )
         super().__init__(
             alpha=alpha,
             power=power,
@@ -86,7 +88,9 @@ class CNLSE(NLSE):
         self.propagator1 = None
         self.propagator2 = None
 
-    def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
+    def _prepare_output_array(
+        self, E: np.ndarray, normalize: bool
+    ) -> np.ndarray:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
@@ -103,13 +107,17 @@ class CNLSE(NLSE):
             E = cp.asarray(E)
             puiss_arr = cp.array([self.power, self.power2], dtype=E.dtype)
         else:
-            A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
+            A = pyfftw.zeros_aligned(
+                E.shape, dtype=E.dtype, n=pyfftw.simd_alignment
+            )
             A_sq = np.zeros_like(A, dtype=A.real.dtype)
             puiss_arr = np.array([self.power, self.power2], dtype=E.dtype)
         if normalize:
             # normalization of the field
             integral = (
-                (E.real * E.real + E.imag * E.imag) * self.delta_X * self.delta_Y
+                (E.real * E.real + E.imag * E.imag)
+                * self.delta_X
+                * self.delta_Y
             ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
@@ -370,7 +378,9 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
-                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(
+                    A1, A2, self.delta_z, self.omega / 2
+                )
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.
@@ -402,9 +412,15 @@ class CNLSE(NLSE):
         ax[0, 0].set_title(r"$|\psi_1|^2$")
         ax[0, 0].set_xlabel("x (mm)")
         ax[0, 0].set_ylabel("y (mm)")
-        fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
+        fig.colorbar(
+            im0, ax=ax[0, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$"
+        )
         im1 = ax[0, 1].imshow(
-            phi0, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi0,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[0, 1].set_title(r"Phase $\mathrm{arg}(\psi_1)$")
         ax[0, 1].set_xlabel("x (mm)")
@@ -414,9 +430,15 @@ class CNLSE(NLSE):
         ax[1, 0].set_title(r"$|\psi_2|^2$")
         ax[1, 0].set_xlabel("x (mm)")
         ax[1, 0].set_ylabel("y (mm)")
-        fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
+        fig.colorbar(
+            im2, ax=ax[1, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$"
+        )
         im3 = ax[1, 1].imshow(
-            phi1, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi1,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[1, 1].set_title(r"Phase $\mathrm{arg}(\psi_2)$")
         ax[1, 1].set_xlabel("x (mm)")

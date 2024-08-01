@@ -5,7 +5,12 @@ from .nlse import NLSE
 
 
 def sample(
-    simu: NLSE, A: np.ndarray, z: float, i: int, save_every: int, E_samples: np.ndarray
+    simu: NLSE,
+    A: np.ndarray,
+    z: float,
+    i: int,
+    save_every: int,
+    E_samples: np.ndarray,
 ) -> None:
     """Save samples of the field.
 
@@ -25,7 +30,12 @@ def sample(
 
 
 def norm(
-    simu: NLSE, A: np.ndarray, z: float, i: int, save_every: int, norms: np.ndarray
+    simu: NLSE,
+    A: np.ndarray,
+    z: float,
+    i: int,
+    save_every: int,
+    norms: np.ndarray,
 ) -> None:
     """Save the norm of the field.
 
@@ -45,7 +55,12 @@ def norm(
 
 
 def evaluate_delta_n(
-    simu: NLSE, A: np.ndarray, z: float, i: int, save_every: int, delta_n: np.ndarray
+    simu: NLSE,
+    A: np.ndarray,
+    z: float,
+    i: int,
+    save_every: int,
+    delta_n: np.ndarray,
 ) -> None:
     """Evaluate the non-linear refractive index change.
 
@@ -68,7 +83,12 @@ def evaluate_delta_n(
 
 
 def adapt_delta_z(
-    simu: NLSE, A: np.ndarray, z: float, i: int, update_every: int, delta_z: list
+    simu: NLSE,
+    A: np.ndarray,
+    z: float,
+    i: int,
+    update_every: int,
+    delta_z: list,
 ) -> None:
     """Update the simulation step size.
 

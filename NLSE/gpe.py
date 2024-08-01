@@ -83,11 +83,18 @@ class GPE(NLSE):
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(
-            -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / self.m * self.delta_t
+            -1j
+            * 0.5
+            * hbar
+            * (self.Kxx**2 + self.Kyy**2)
+            / self.m
+            * self.delta_t
         ).astype(np.complex64)
         return propagator
 
-    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+    def _prepare_output_array(
+        self, E_in: np.ndarray, normalize: bool
+    ) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__.
 
         Args:
@@ -152,7 +159,11 @@ class GPE(NLSE):
         ax[0].set_ylabel("y (mm)")
         fig.colorbar(im0, ax=ax[0], shrink=0.6, label="Density (at/m^2)")
         im1 = ax[1].imshow(
-            phi, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[1].set_title("Phase")
         ax[1].set_xlabel("x (mm)")

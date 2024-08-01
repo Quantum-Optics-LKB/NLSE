@@ -109,15 +109,23 @@ class DDGPE(CNLSE):
         """
         rand1 = simu._random(
             loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-        ) + 1j * simu._random(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
+        ) + 1j * simu._random(
+            loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+        )
         rand2 = simu._random(
             loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
-        ) + 1j * simu._random(loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX))
+        ) + 1j * simu._random(
+            loc=0, scale=simu.delta_z, size=(simu.NY, simu.NX)
+        )
         A[..., 0, :, :] += (
-            noise * np.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y))) * rand1
+            noise
+            * np.sqrt(simu.gamma / (4 * (simu.delta_X * simu.delta_Y)))
+            * rand1
         )
         A[..., 1, :, :] += (
-            noise * np.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y))) * rand2
+            noise
+            * np.sqrt((simu.gamma2) / (4 * (simu.delta_X * simu.delta_Y)))
+            * rand2
         )
 
     @staticmethod
@@ -211,7 +219,8 @@ class DDGPE(CNLSE):
         propagator2 = np.exp(
             -1j
             * (
-                self.omega_cav * np.sqrt(1 + (self.Kxx**2 + self.Kyy**2) / self.k_z**2)
+                self.omega_cav
+                * np.sqrt(1 + (self.Kxx**2 + self.Kyy**2) / self.k_z**2)
                 - self.omega_pump
             )
             * self.delta_z
@@ -219,7 +228,9 @@ class DDGPE(CNLSE):
         return np.array([propagator1, propagator2])
         pass
 
-    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+    def _prepare_output_array(
+        self, E_in: np.ndarray, normalize: bool
+    ) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__.
 
         Args:
@@ -450,7 +461,9 @@ class DDGPE(CNLSE):
                     self.I_sat2,
                 )
             if self.omega is not None:
-                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
+                self._kernels.rabi_coupling(
+                    A1, A2, self.delta_z, self.omega / 2
+                )
 
     def plot_field(self, A_plot: np.ndarray, t: float) -> None:
         """Plot the field for monitoring.
@@ -484,7 +497,11 @@ class DDGPE(CNLSE):
         ax[0, 0].set_ylabel("y (mm)")
         fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label=r"Density")
         im1 = ax[0, 1].imshow(
-            phi0, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi0,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[0, 1].set_title(r"Phase $\mathrm{arg}(\psi_x)$")
         ax[0, 1].set_xlabel("x (mm)")
@@ -496,7 +513,11 @@ class DDGPE(CNLSE):
         ax[1, 0].set_ylabel("y (mm)")
         fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label=r"Density")
         im3 = ax[1, 1].imshow(
-            phi1, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi1,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[1, 1].set_title(r"Phase $\mathrm{arg}(\psi_c)$")
         ax[1, 1].set_xlabel("x (mm)")

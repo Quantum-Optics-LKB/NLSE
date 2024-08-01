@@ -6,7 +6,7 @@
 import multiprocessing
 import pickle
 import time
-from typing import Callable, Union
+from typing import Any, Callable, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,14 +60,15 @@ class NLSE:
     ) -> None:
         """Instantiate the simulation.
 
-        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi + k0 dn psi +
-          k0 n2 psi**2 psi
+        Solves an equation : d/dz psi = -1/2k0(d2/dx2 + d2/dy2) psi +
+          k0 dn psi + k0 n2 psi**2 psi
 
         Args:
             alpha (float): alpha
             power (float): Power in W
-            window (float, list or tuple): Computational window in the transverse plane in m.
-                Can be different in x and y.
+            window (float, list or tuple): Computational window in the
+              transverse plane in m.
+              Can be different in x and y.
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray): Potential.
             L (float): Length in m of the nonlinear medium
@@ -88,7 +89,9 @@ class NLSE:
             self._convolution = signal_cp.oaconvolve
         elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
             self._kernels = kernels_cl
-            self._cl_queue = cl.CommandQueue(cl.create_some_context(interactive=False))
+            self._cl_queue = cl.CommandQueue(
+                cl.create_some_context(interactive=False)
+            )
         else:
             if backend in ["GPU", "CL"]:
                 print("Backend not available, switching to CPU")
@@ -106,7 +109,8 @@ class NLSE:
         self.alpha = alpha
         self.power = power
         self.I_sat = Isat
-        # number of grid points in X (even, best is power of 2 or low prime factors)
+        # number of grid points in X (even, best is power of 2 or low prime
+        # factors)
         self.NX = NX
         self.NY = NY
         # self.window = window
@@ -158,7 +162,9 @@ class NLSE:
             self.nl_profile = special.kn(0, R / d)
             self.nl_profile[
                 self.nl_profile.shape[0] // 2, self.nl_profile.shape[1] // 2
-            ] = np.nanmax(self.nl_profile[np.logical_not(np.isinf(self.nl_profile))])
+            ] = np.nanmax(
+                self.nl_profile[np.logical_not(np.isinf(self.nl_profile))]
+            )
             self.nl_profile /= self.nl_profile.sum()
         else:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
@@ -232,7 +238,9 @@ class NLSE:
                 pickle.dump(wisdom, file)
             return [plan_fft, plan_ifft]
 
-    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
+    def _prepare_output_array(
+        self, E_in: np.ndarray, normalize: bool
+    ) -> tuple[np.ndarray | Any, np.ndarray | Any]:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
@@ -475,20 +483,22 @@ class NLSE:
             z (float): propagation distance in m.
             plot (bool, optional): Plots the results. Defaults to False.
             precision (str, optional): Does a "double" or a "single" application
-                of the nonlinear term. This leads to a dz (single) or dz^3 (double)
-                precision. Defaults to "single".
-            verbose (bool, optional): Prints progress and time. Defaults to True.
+                of the nonlinear term. This leads to a dz (single) or dz^3
+                (double)precision. Defaults to "single".
+            verbose (bool, optional): Prints progress and time.
+              Defaults to True.
             normalize (bool, optional): Normalize the field to the total power.
                 Defaults to True.
             callback (callable, optional): Callback function.
                 Defaults to None.
-            callback_args (tuple, optional): Additional arguments for the callback
-                function.
+            callback_args (tuple, optional): Additional arguments for the
+              callback function.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
         assert (
-            E_in.shape[self._last_axes[0] :] == self.XX.shape[self._last_axes[0] :]
+            E_in.shape[self._last_axes[0] :]
+            == self.XX.shape[self._last_axes[0] :]
         ), "Shape mismatch"
         assert E_in.dtype in [
             np.complex64,
@@ -527,9 +537,10 @@ class NLSE:
         t0 = time.perf_counter()
         # TODO(Tangui) : Switch to a while loop and compute delta_z at runtime
         # based on a delta_n map computed from the initial state normalization.
-        # The while loop would also allow to adapt the step size mid solve for optimal
-        # efficiency.
-        # We could include a set of default callbacks, one of them to adapt delta_z ?
+        # The while loop would also allow to adapt the step size mid solve for
+        # optimal efficiency.
+        # We could include a set of default callbacks, one of them to adapt
+        # delta_z ?
         z_prop = 0
         i = 0
         if type(self.delta_z) is complex:
@@ -541,7 +552,9 @@ class NLSE:
             if callback is not None:
                 if isinstance(callback, Callable):
                     callback(self, A, z, i, *callback_args)
-                elif isinstance(callback, list) and isinstance(callback[0], Callable):
+                elif isinstance(callback, list) and isinstance(
+                    callback[0], Callable
+                ):
                     for c, ca in zip(callback, callback_args):
                         c(self, A, z, i, *ca)
                 else:
@@ -563,8 +576,8 @@ class NLSE:
         if verbose:
             if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
                 print(
-                    f"\nTime spent to solve : {t_gpu*1e-3} s (GPU) /"
-                    f" {time.perf_counter()-t0} s (CPU)\n"
+                    f"\nTime spent to solve : {t_gpu * 1e-3} s (GPU) /"
+                    f" {time.perf_counter() - t0} s (CPU)\n"
                 )
             else:
                 print(f"\nTime spent to solve : {t_cpu} s (CPU)\n")
@@ -625,7 +638,11 @@ class NLSE:
         ax[0].set_ylabel("y (mm)")
         fig.colorbar(im0, ax=ax[0], shrink=0.6, label=r"Intensity ($W/cm^2$)")
         im1 = ax[1].imshow(
-            phi, extent=ext_real, cmap="twilight_shifted", vmin=-np.pi, vmax=np.pi
+            phi,
+            extent=ext_real,
+            cmap="twilight_shifted",
+            vmin=-np.pi,
+            vmax=np.pi,
         )
         ax[1].set_title("Phase")
         ax[1].set_xlabel("x (mm)")

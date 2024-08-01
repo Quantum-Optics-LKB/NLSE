@@ -67,8 +67,8 @@ class NLSE:
             alpha (float): alpha
             power (float): Power in W
             window (float, list or tuple): Computational window in the
-              transverse plane in m.
-              Can be different in x and y.
+                transverse plane in m.
+                Can be different in x and y.
             n2 (float): Non linear coeff in m^2/W
             V (np.ndarray): Potential.
             L (float): Length in m of the nonlinear medium
@@ -486,13 +486,13 @@ class NLSE:
                 of the nonlinear term. This leads to a dz (single) or dz^3
                 (double)precision. Defaults to "single".
             verbose (bool, optional): Prints progress and time.
-              Defaults to True.
+                Defaults to True.
             normalize (bool, optional): Normalize the field to the total power.
                 Defaults to True.
             callback (callable, optional): Callback function.
                 Defaults to None.
             callback_args (tuple, optional): Additional arguments for the
-              callback function.
+                callback function.
         Returns:
             np.ndarray: Propagated field in proper units V/m
         """
@@ -535,12 +535,6 @@ class NLSE:
             end_gpu = cp.cuda.Event()
             start_gpu.record()
         t0 = time.perf_counter()
-        # TODO(Tangui) : Switch to a while loop and compute delta_z at runtime
-        # based on a delta_n map computed from the initial state normalization.
-        # The while loop would also allow to adapt the step size mid solve for
-        # optimal efficiency.
-        # We could include a set of default callbacks, one of them to adapt
-        # delta_z ?
         z_prop = 0
         i = 0
         if type(self.delta_z) is complex:

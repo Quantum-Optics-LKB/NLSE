@@ -2,19 +2,20 @@
 
 CPU kernels in the `NLSE` package are responsible for solving the nonlinear Schrödinger equation using CPU resources.
 
-It uses the popular [Numba](https://numba.readthedocs.io/en/stable/user/index.html) library to just-in-time compile array functions.
+We use the popular [Numba](https://numba.readthedocs.io/en/stable/user/index.html) library to just-in-time compile array functions.
 
 These functions are not meant to be called directly and instead work as the backend specific implementations for the main classes methods.
 
-Due to the manual indexing involved in the implementations, these kernels **do not support broadcasting** (*for now*).
+Due to the manual indexing involved in the implementations, these kernels **do not support broadcasting** (_for now_).
 
-CPU kernels are suitable for small to medium-sized problems or when GPU resources are not available. As it uses multithreading internally, they will benefit from higher core counts.
+CPU kernels are suitable for small to medium-sized problems or when GPU resources are not available.
+As it uses multithreading internally, they will benefit from higher core counts.
 
 ::: NLSE.kernels_cpu
 
 ## GPU (CUDA)
 
-GPU kernels in the `NLSE` package are responsible for solving the nonlinear Schrödinger equation using GPU resources. 
+GPU kernels in the `NLSE` package are responsible for solving the nonlinear Schrödinger equation using GPU resources.
 They utilize the computational power of the graphics processing unit (GPU) to perform the necessary calculations.
 
 These kernels use the [`cupy.fuse`](https://docs.cupy.dev/en/stable/reference/generated/cupy.fuse.html) API to just-in-time compile the array operations to
@@ -24,6 +25,7 @@ The strategy here is to maximize GPU occupancy by grouping operations to a compl
 As with the CPU kernels, the paradigm is to try and mutate arrays in place as much as possible to avoid costly memory transfers.
 
 To this end, most of these kernels have the following signature:
+
 ```python
 @cp.fuse
 def kernel(A: cp.ndarray, *args):

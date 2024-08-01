@@ -1,5 +1,6 @@
-from NLSE import CNLSE_1d
 import numpy as np
+
+from NLSE import CNLSE_1d
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
@@ -36,7 +37,7 @@ def main() -> None:
     simu_c.k2 = 2 * np.pi / 795e-9
     E_0 = np.exp(-(simu_c.X**2) / waist**2).astype(PRECISION_COMPLEX)
     V = np.exp(-(simu_c.X**2) / waist2**2).astype(PRECISION_COMPLEX)
-    E, V = simu_c.out_field(
+    simu_c.out_field(
         np.array([E_0, V]),
         L,
         verbose=True,

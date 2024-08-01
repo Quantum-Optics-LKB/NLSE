@@ -1,6 +1,6 @@
-from NLSE import NLSE_1d
 import numpy as np
 
+from NLSE import NLSE_1d
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
@@ -16,7 +16,9 @@ alpha = 20
 
 
 def main() -> None:
-    simu = NLSE_1d(alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend="GPU")
+    simu = NLSE_1d(
+        alpha, puiss, window, n2, None, L, NX=N, Isat=Isat, backend="GPU"
+    )
     simu.delta_z = 1e-5
     simu.puiss2 = 10e-3
     simu.n22 = 1e-10

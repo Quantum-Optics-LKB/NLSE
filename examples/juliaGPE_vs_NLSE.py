@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from cycler import cycler
-import matplotlib.pyplot as plt
 
 # for plots
 tab_colors = [

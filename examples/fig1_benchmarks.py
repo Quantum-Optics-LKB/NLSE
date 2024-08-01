@@ -1,8 +1,10 @@
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
-from NLSE import NLSE
-import time
 import tqdm
+
+from NLSE import NLSE
 
 PRECISION = "single"
 if PRECISION == "double":
@@ -47,9 +49,9 @@ for i, size in enumerate(sizes):
         simu0.I_sat = Isat
         simu0.delta_z = 1e-4
         if j == 0:
-            E_0 = np.exp(-(np.hypot(simu0.XX, simu0.YY) ** 2) / waist**2).astype(
-                PRECISION_COMPLEX
-            )
+            E_0 = np.exp(
+                -(np.hypot(simu0.XX, simu0.YY) ** 2) / waist**2
+            ).astype(PRECISION_COMPLEX)
         for k in range(N_avg):
             t0 = time.perf_counter()
             simu0.out_field(E_0, L, verbose=False)
@@ -75,9 +77,15 @@ for i, size in enumerate(sizes):
         times[i, 2, k] = time.perf_counter() - t0
         pbar.update(1)
 pbar.close()
-err_gpu = np.vstack([np.min(times[:, 0, :], axis=-1), np.max(times[:, 0, :], axis=-1)])
-err_cpu = np.vstack([np.min(times[:, 1, :], axis=-1), np.max(times[:, 1, :], axis=-1)])
-err_np = np.vstack([np.min(times[:, 2, :], axis=-1), np.max(times[:, 2, :], axis=-1)])
+err_gpu = np.vstack(
+    [np.min(times[:, 0, :], axis=-1), np.max(times[:, 0, :], axis=-1)]
+)
+err_cpu = np.vstack(
+    [np.min(times[:, 1, :], axis=-1), np.max(times[:, 1, :], axis=-1)]
+)
+err_np = np.vstack(
+    [np.min(times[:, 2, :], axis=-1), np.max(times[:, 2, :], axis=-1)]
+)
 fig, ax = plt.subplots()
 ax.errorbar(
     np.log2(sizes).astype(int),

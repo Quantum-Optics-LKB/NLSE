@@ -1,7 +1,8 @@
-from NLSE import DDGPE
-import numpy as np
 import cupy as cp
 import matplotlib.pyplot as plt
+import numpy as np
+
+from NLSE import DDGPE
 
 
 def turn_on(
@@ -12,9 +13,12 @@ def turn_on(
     """A function to turn on the pump more or less adiabatically
 
     Args:
-        F_laser_t (np.ndarray): self.F_pump_t as defined in class ggpe, cp.ones((int(self.t_max//self.dt)), dtype=cp.complex64)
-        time (np.ndarray):  array with the value of the time at each discretized step
-        t_up (int, optional): time taken to reach the maximum intensity (=F). Defaults to 200.
+        F_laser_t (np.ndarray): self.F_pump_t as defined in class ggpe,
+          cp.ones((int(self.t_max//self.dt)), dtype=cp.complex64)
+        time (np.ndarray):  array with the value of the time at each discretized
+          step
+        t_up (int, optional): time taken to reach the maximum intensity (=F).
+          Defaults to 200.
     """
     F_laser_t[time < t_up] = np.exp(
         -1 * (time[time < t_up] - t_up) ** 2 / (t_up / 2) ** 2
@@ -72,15 +76,17 @@ def main():
     )
 
     dd.delta_z = 0.1 / 32  # need to be adjusted automatically
-    time = np.arange(0, T+dd.delta_z, step=dd.delta_z, dtype=np.float32)
+    time = np.arange(0, T + dd.delta_z, step=dd.delta_z, dtype=np.float32)
     save_every = 1  # np.argwhere(time == 1)[0][0]
     sample1 = np.zeros(time.size // save_every, dtype=np.float32)
     sample2 = np.zeros(time.size // save_every, dtype=np.float32)
     sample3 = np.zeros(time.size // save_every, dtype=np.float32)
     E0 = np.zeros((2, dd.NY, dd.NX), dtype=np.complex64)
-    
+
     F_pump = 0
-    F_pump_r = F_pump * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(np.complex64)
+    F_pump_r = F_pump * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(
+        np.complex64
+    )
     F_pump_t = np.zeros(time.shape, dtype=np.complex64)
     F_probe = 0
     F_probe_r = F_probe * np.exp(-((dd.XX**2 + dd.YY**2) / waist**2)).astype(

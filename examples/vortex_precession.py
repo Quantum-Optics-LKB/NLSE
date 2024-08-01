@@ -1,8 +1,8 @@
-from NLSE import NLSE
-import numpy as np
 import time
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+
+import numpy as np
+
+from NLSE import NLSE
 
 
 def vortex(x, y, xi=10e-6, ell=1):
@@ -100,19 +100,21 @@ for i, n in enumerate(sizes):
         #     callback=callback_samples,
         # )
         ts[i, _] = time.perf_counter() - t0
-    print(
-        f"Average time: {np.mean(ts[i]):.2f} s (min: {np.min(ts[i]):.2f} s, max: {np.max(ts[i]):.2f} s)"
-    )
+    timing_string = f"Average time: {np.mean(ts[i]):.2f} s "
+    timing_string += f"(min: {np.min(ts[i]):.2f} s, max: {np.max(ts[i]):.2f} s)"
+    print(timing_string)
 np.save(f"python_vortex_precession_{simu.backend}_times.npy", ts)
 np.save(f"python_vortex_precession_{simu.backend}_sizes.npy", sizes)
 # to plot the animation at the end
 # fig, ax = plt.subplots(1, 2, figsize=(10, 5), layout="constrained")
 # rho = np.abs(E_samples) ** 2
 # phi = np.angle(E_samples)
-# ext = [simu.X.min() * 1e3, simu.X.max() * 1e3, simu.Y.min() * 1e3, simu.Y.max() * 1e3]
+# ext = [simu.X.min() * 1e3, simu.X.max() * 1e3,
+#        simu.Y.min() * 1e3, simu.Y.max() * 1e3]
 # im0 = ax[0].imshow(rho[0], cmap="viridis", interpolation="none", extent=ext)
 # ax[0].set_title("Density")
-# im1 = ax[1].imshow(phi[0], cmap="twilight_shifted", interpolation="none", extent=ext)
+# im1 = ax[1].imshow(phi[0], cmap="twilight_shifted", interpolation="none",
+#                    extent=ext)
 # ax[1].set_title("Phase")
 # for a in ax:
 #     a.set_xlabel("x in mm")

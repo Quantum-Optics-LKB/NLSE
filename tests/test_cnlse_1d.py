@@ -1,6 +1,7 @@
-from NLSE import CNLSE_1d
 import numpy as np
 from scipy.constants import c, epsilon_0
+
+from NLSE import CNLSE_1d
 
 if CNLSE_1d.__CUPY_AVAILABLE__:
     import cupy as cp
@@ -21,7 +22,16 @@ alpha = 20
 def test_build_propagator() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(
-            alpha, power, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+            alpha,
+            power,
+            window,
+            n2,
+            n12,
+            None,
+            L,
+            NX=N,
+            Isat=Isat,
+            backend=backend,
         )
         prop = simu._build_propagator()
         prop1 = np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
@@ -63,16 +73,19 @@ def test_prepare_output_array() -> None:
             assert (
                 out_sq.flags.aligned
             ), f"Output array is not aligned. (Backend {backend})"
-        integral = ((out.real * out.real + out.imag * out.imag) * simu.delta_X**2).sum(
-            axis=simu._last_axes
-        )
+        integral = (
+            (out.real * out.real + out.imag * out.imag) * simu.delta_X**2
+        ).sum(axis=simu._last_axes)
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
             np.array([simu.power, simu.power2]),
             rtol=1e-4,
         ), f"Normalization failed. (Backend {backend})"
-        assert out.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
+        assert out.shape == (
+            2,
+            N,
+        ), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(
                 out, np.ndarray
@@ -96,7 +109,16 @@ def test_prepare_output_array() -> None:
 def test_split_step() -> None:
     for backend in ["CPU", "GPU"]:
         simu = CNLSE_1d(
-            alpha, power, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
+            alpha,
+            power,
+            window,
+            n2,
+            n12,
+            None,
+            L,
+            NX=N,
+            Isat=Isat,
+            backend=backend,
         )
         simu.delta_z = 0
         simu.propagator = simu._build_propagator()
@@ -133,7 +155,10 @@ def test_out_field() -> None:
         print(rho)
         integral = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         integral *= c * epsilon_0 / 2
-        assert A.shape == (2, N), f"Output array has wrong shape. (Backend {backend})"
+        assert A.shape == (
+            2,
+            N,
+        ), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
             integral, [simu.power, simu.power2], rtol=1e-4
         ), f"Normalization failed. (Backend {backend})"

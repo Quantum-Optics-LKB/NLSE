@@ -1,6 +1,7 @@
-from NLSE import NLSE_1d
 import numpy as np
 from scipy.constants import c, epsilon_0
+
+from NLSE import NLSE_1d
 
 if NLSE_1d.__CUPY_AVAILABLE__:
     import cupy as cp
@@ -64,7 +65,9 @@ def test_prepare_output_array() -> None:
         assert np.allclose(
             integral, simu.power
         ), f"Normalization failed. (Backend {backend})"
-        assert out.shape == (N,), f"Output array has wrong shape. (Backend {backend})"
+        assert out.shape == (
+            N,
+        ), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
             assert isinstance(
                 out, np.ndarray
@@ -114,7 +117,9 @@ def test_split_step() -> None:
 
 def test_out_field() -> None:
     for backend in ["CPU", "GPU"]:
-        simu = NLSE_1d(0, power, window, n2, None, L, NX=N, Isat=Isat, backend=backend)
+        simu = NLSE_1d(
+            0, power, window, n2, None, L, NX=N, Isat=Isat, backend=backend
+        )
         E0 = np.ones(N, dtype=PRECISION_COMPLEX)
         A = simu.out_field(
             E0, simu.delta_z, verbose=False, plot=False, precision="single"
@@ -122,7 +127,9 @@ def test_out_field() -> None:
         rho = A.real * A.real + A.imag * A.imag
         norm = (rho * simu.delta_X**2).sum(axis=simu._last_axes)
         norm *= c * epsilon_0 / 2
-        assert A.shape == (N,), f"Output array has wrong shape. (Backend {backend})"
+        assert A.shape == (
+            N,
+        ), f"Output array has wrong shape. (Backend {backend})"
         assert np.allclose(
             norm, power, rtol=1e-4
         ), f"Normalization failed. (Backend {backend})"

@@ -1,7 +1,8 @@
-from NLSE import NLSE_3d
 import numpy as np
 import pyfftw
 from scipy.constants import c, epsilon_0
+
+from NLSE import NLSE_3d
 
 if NLSE_3d.__CUPY_AVAILABLE__:
     import cupy as cp
@@ -18,7 +19,9 @@ vg = 1e-1 * c
 waist = 2.23e-3
 duration = 2e-6
 waist2 = 70e-6
-window = np.array([4 * waist, 8 * duration])  # 4*waist transverse, 10e-6 s temporal
+window = np.array(
+    [4 * waist, 8 * duration]
+)  # 4*waist transverse, 10e-6 s temporal
 energy = 1.05 * duration
 Isat = 10e4  # saturation intensity in W/m^2
 L = 1e-2
@@ -76,7 +79,9 @@ def test_build_fft_plan() -> None:
             A = cp.random.random((N, N, NZ)) + 1j * cp.random.random((N, N, NZ))
         plans = simu._build_fft_plan(A)
         if backend == "CPU":
-            assert len(plans) == 2, f"Number of plans is wrong. (Backend {backend})"
+            assert (
+                len(plans) == 2
+            ), f"Number of plans is wrong. (Backend {backend})"
             assert isinstance(
                 plans[0], pyfftw.FFTW
             ), f"Plan type is wrong. (Backend {backend})"
@@ -86,7 +91,9 @@ def test_build_fft_plan() -> None:
                 NZ,
             ), f"Plan shape is wrong. (Backend {backend})"
         elif backend == "GPU" and NLSE_3d.__CUPY_AVAILABLE__:
-            assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
+            assert (
+                len(plans) == 1
+            ), f"Number of plans is wrong. (Backend {backend})"
             assert isinstance(
                 plans[0], VkFFTApp
             ), f"Plan type is wrong. (Backend {backend})"
@@ -199,11 +206,15 @@ def test_send_arrays_to_gpu() -> None:
         assert isinstance(
             simu.propagator, cp.ndarray
         ), "propagator is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.V, cp.ndarray
+        ), "V is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.alpha, cp.ndarray
         ), "alpha is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(simu.n2, cp.ndarray), "n2 is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.n2, cp.ndarray
+        ), "n2 is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.I_sat, cp.ndarray
         ), "I_sat is not a cp.ndarray. (Backend GPU)"
@@ -244,11 +255,15 @@ def test_retrieve_arrays_from_gpu() -> None:
         assert isinstance(
             simu.propagator, np.ndarray
         ), "propagator is not a np.ndarray. (Backend GPU)"
-        assert isinstance(simu.V, np.ndarray), "V is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.V, np.ndarray
+        ), "V is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.alpha, np.ndarray
         ), "alpha is not a np.ndarray. (Backend GPU)"
-        assert isinstance(simu.n2, np.ndarray), "n2 is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.n2, np.ndarray
+        ), "n2 is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.I_sat, np.ndarray
         ), "I_sat is not a np.ndarray. (Backend GPU)"
@@ -295,7 +310,8 @@ def test_split_step() -> None:
             ), f"Split step is not unitary. (Backend {backend})"
 
 
-# tests for convergence of the solver : the norm of the field should be conserved
+# tests for convergence of the solver : the norm of the field should be
+# conserved
 def test_out_field() -> None:
     for backend in ["CPU", "GPU"]:
         simu = NLSE_3d(
@@ -317,7 +333,9 @@ def test_out_field() -> None:
         E = simu.out_field(
             E0, simu.delta_z, verbose=False, plot=False, precision="single"
         )
-        norm = np.sum(np.abs(E) ** 2 * simu.delta_X * simu.delta_Y * simu.delta_T)
+        norm = np.sum(
+            np.abs(E) ** 2 * simu.delta_X * simu.delta_Y * simu.delta_T
+        )
         norm *= c * epsilon_0 / 2
         assert E.shape == (
             N,

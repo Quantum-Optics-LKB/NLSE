@@ -1,5 +1,6 @@
-from NLSE import DDGPE
 import numpy as np
+
+from NLSE import DDGPE
 
 if DDGPE.__CUPY_AVAILABLE__:
     import cupy as cp
@@ -116,11 +117,15 @@ def test_send_arrays_to_gpu() -> None:
         assert isinstance(
             simu.propagator, cp.ndarray
         ), "propagator is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.V, cp.ndarray
+        ), "V is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.gamma, cp.ndarray
         ), "gamma is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(simu.g, cp.ndarray), "g is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.g, cp.ndarray
+        ), "g is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.omega, cp.ndarray
         ), "omega is not a cp.ndarray. (Backend GPU)"
@@ -179,7 +184,9 @@ def test_retrieve_arrays_from_gpu() -> None:
         assert isinstance(
             simu.gamma, np.ndarray
         ), "gamma is not a np.ndarray. (Backend GPU)"
-        assert isinstance(simu.g, np.ndarray), "g is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.g, np.ndarray
+        ), "g is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.omega, np.ndarray
         ), "omega is not a np.ndarray. (Backend GPU)"
@@ -259,8 +266,12 @@ def test_take_components() -> None:
         assert (
             A1.shape == A2.shape
         ), f"A1 and A2 have different shapes. (Backend {backend})"
-        assert A1.shape[0] == 3, f"A1 has wrong first dimensions. (Backend {backend})"
-        assert A2.shape[0] == 3, f"A2 has wrong first dimensions. (Backend {backend})"
+        assert (
+            A1.shape[0] == 3
+        ), f"A1 has wrong first dimensions. (Backend {backend})"
+        assert (
+            A2.shape[0] == 3
+        ), f"A2 has wrong first dimensions. (Backend {backend})"
 
 
 def callback_sample(
@@ -290,9 +301,12 @@ def turn_on(
     """A function to turn on the pump more or less adiabatically
 
     Args:
-        F_laser_t (np.ndarray): self.F_pump_t as defined in class ggpe, cp.ones((int(self.t_max//self.dt)), dtype=cp.complex64)
-        time (np.ndarray):  array with the value of the time at each discretized step
-        t_up (int, optional): time taken to reach the maximum intensity (=F). Defaults to 10.
+        F_laser_t (np.ndarray): self.F_pump_t as defined in class ggpe,
+          cp.ones((int(self.t_max//self.dt)), dtype=cp.complex64)
+        time (np.ndarray):  array with the value of the time at each discretized
+          step.
+        t_up (int, optional): time taken to reach the maximum intensity (=F).
+          Defaults to 10.
     """
     F_laser_t[time < t_up] = np.exp(
         -1 * (time[time < t_up] - t_up) ** 2 / (t_up / 2) ** 2
@@ -318,21 +332,23 @@ def test_out_field() -> None:
             backend=backend,
         )
         simu.delta_z = 0.1 / 32  # need to be adjusted automatically
-        time = np.arange(0, T + simu.delta_z, step=simu.delta_z, dtype=np.float32)
+        time = np.arange(
+            0, T + simu.delta_z, step=simu.delta_z, dtype=np.float32
+        )
         save_every = 1  # np.argwhere(time == 1)[0][0]
         sample1 = np.zeros(time.size // save_every, dtype=np.float32)
         sample2 = np.zeros(time.size // save_every, dtype=np.float32)
         sample3 = np.zeros(time.size // save_every, dtype=np.float32)
         E0 = np.zeros((2, simu.NY, simu.NX), dtype=np.complex64)
         F_pump = 0
-        F_pump_r = F_pump * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(
-            np.complex64
-        )
+        F_pump_r = F_pump * np.exp(
+            -((simu.XX**2 + simu.YY**2) / waist**2)
+        ).astype(np.complex64)
         F_pump_t = np.zeros(time.shape, dtype=np.complex64)
         F_probe = 0
-        F_probe_r = F_probe * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(
-            np.complex64
-        )
+        F_probe_r = F_probe * np.exp(
+            -((simu.XX**2 + simu.YY**2) / waist**2)
+        ).astype(np.complex64)
         F_probe_t = np.zeros(time.shape, dtype=np.complex64)
         turn_on(F_pump_t, time, t_up=20)
         callback = [callback_sample]
@@ -356,7 +372,7 @@ def test_out_field() -> None:
                 ],
                 [save_every, sample1, sample2, sample3],
             ]
-        E = simu.out_field(
+        simu.out_field(
             E0,
             T,
             simu.laser_excitation,

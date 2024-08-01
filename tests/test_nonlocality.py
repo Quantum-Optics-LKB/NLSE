@@ -1,6 +1,7 @@
-from NLSE import CNLSE, CNLSE_1d, NLSE, NLSE_1d, GPE
 import numpy as np
 from scipy.constants import c, epsilon_0
+
+from NLSE import CNLSE, GPE, NLSE, CNLSE_1d, NLSE_1d
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
@@ -102,7 +103,7 @@ def test_nonlocality():
         V0 = np.exp(-(simu_c_2d.XX**2 + simu_c_2d.YY**2) / waist2**2).astype(
             PRECISION_COMPLEX
         )
-        E, V = simu_c_1d.out_field(
+        E, _ = simu_c_1d.out_field(
             np.array([E_0[N // 2, :], V0[N // 2, :]]),
             L,
             verbose=True,
@@ -128,7 +129,7 @@ def test_nonlocality():
         assert np.allclose(
             norm, simu_1d.power, rtol=1e-3
         ), f"NLSE_1d : Norm is not conserved ! (Backend {backend})"
-        E, V = simu_c_2d.out_field(
+        E, _ = simu_c_2d.out_field(
             np.array([E_0, V0]),
             L,
             verbose=True,

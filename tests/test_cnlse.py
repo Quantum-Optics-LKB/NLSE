@@ -1,6 +1,7 @@
-from NLSE import CNLSE
 import numpy as np
 from scipy.constants import c, epsilon_0
+
+from NLSE import CNLSE
 
 if CNLSE.__CUPY_AVAILABLE__:
     import cupy as cp
@@ -48,7 +49,9 @@ def test_prepare_output_array() -> None:
             out_sq.flags.c_contiguous
         ), f"Output array is not C-contiguous. (Backend {backend})"
         integral = (
-            (out.real * out.real + out.imag * out.imag) * simu.delta_X * simu.delta_Y
+            (out.real * out.real + out.imag * out.imag)
+            * simu.delta_X
+            * simu.delta_Y
         ).sum(axis=simu._last_axes)
         integral *= c * epsilon_0 / 2
         assert np.allclose(
@@ -114,11 +117,15 @@ def test_send_arrays_to_gpu() -> None:
         assert isinstance(
             simu.propagator, cp.ndarray
         ), "propagator is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.V, cp.ndarray
+        ), "V is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.alpha, cp.ndarray
         ), "alpha is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(simu.n2, cp.ndarray), "n2 is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.n2, cp.ndarray
+        ), "n2 is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.n12, cp.ndarray
         ), "n12 is not a cp.ndarray. (Backend GPU)"
@@ -163,11 +170,15 @@ def test_retrieve_arrays_from_gpu() -> None:
         assert isinstance(
             simu.propagator, np.ndarray
         ), "propagator is not a np.ndarray. (Backend GPU)"
-        assert isinstance(simu.V, np.ndarray), "V is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.V, np.ndarray
+        ), "V is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.alpha, np.ndarray
         ), "alpha is not a np.ndarray. (Backend GPU)"
-        assert isinstance(simu.n2, np.ndarray), "n2 is not a np.ndarray. (Backend GPU)"
+        assert isinstance(
+            simu.n2, np.ndarray
+        ), "n2 is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.n12, np.ndarray
         ), "n12 is not a np.ndarray. (Backend GPU)"
@@ -207,8 +218,12 @@ def test_take_components() -> None:
         assert (
             A1.shape == A2.shape
         ), f"A1 and A2 have different shapes. (Backend {backend})"
-        assert A1.shape[0] == 3, f"A1 has wrong first dimensions. (Backend {backend})"
-        assert A2.shape[0] == 3, f"A2 has wrong first dimensions. (Backend {backend})"
+        assert (
+            A1.shape[0] == 3
+        ), f"A1 has wrong first dimensions. (Backend {backend})"
+        assert (
+            A2.shape[0] == 3
+        ), f"A2 has wrong first dimensions. (Backend {backend})"
 
 
 def test_split_step() -> None:
@@ -252,12 +267,23 @@ def test_split_step() -> None:
             ), f"Split-step is not unitary. (Backend {backend})"
 
 
-# tests for convergence of the solver : the norm of the field should be conserved
+# tests for convergence of the solver : the norm of the field should be
+# conserved
 def test_out_field() -> None:
     E = np.ones((2, N, N), dtype=PRECISION_COMPLEX)
     for backend in ["CPU", "GPU"]:
         simu = CNLSE(
-            0, power, window, n2, n12, None, L, NX=N, NY=N, Isat=Isat, backend=backend
+            0,
+            power,
+            window,
+            n2,
+            n12,
+            None,
+            L,
+            NX=N,
+            NY=N,
+            Isat=Isat,
+            backend=backend,
         )
         E = simu.out_field(E, L, verbose=False, plot=False, precision="single")
         norm = np.sum(

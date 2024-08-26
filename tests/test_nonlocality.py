@@ -88,11 +88,11 @@ def test_nonlocality():
             backend=backend,
         )
         simu_c_1d.delta_z = 1e-5
-        simu_c_1d.puiss2 = 10e-3
+        simu_c_1d.power2 = 10e-3
         simu_c_1d.n22 = 1e-10
         simu_c_1d.k2 = 2 * np.pi / 795e-9
         simu_c_2d.delta_z = simu_c_1d.delta_z
-        simu_c_2d.puiss2 = simu_c_1d.puiss2
+        simu_c_2d.power2 = simu_c_1d.power2
         simu_c_2d.n22 = simu_c_1d.n22
         simu_c_2d.k2 = simu_c_1d.k2
         simu_1d.delta_z = simu_c_1d.delta_z

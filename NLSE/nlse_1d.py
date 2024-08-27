@@ -41,7 +41,10 @@ class NLSE_1d(NLSE):
             V (np.ndarray) : Potential
             L (float): Length of the medium.
             Isat (float): Saturation intensity in W/m^2
-            nl_length (float, optional): Non-local length in m. Defaults to 0.
+            nl_length (float): Non local length in m.
+                The non-local kernel is the instantiated as a Bessel function
+                to model a diffusive non-locality stored in the nl_profile
+                attribute.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """

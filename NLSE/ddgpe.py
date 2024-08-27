@@ -46,8 +46,12 @@ class DDGPE(CNLSE):
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
-            nl_length (float, optional): Nonlocal length. Defaults to 0.
+            Isat (float, optional): Saturation intensity, assumed to be the same
+                for both components. Defaults to infinity.
+            nl_length (float): Non local length in m.
+                The non-local kernel is the instantiated as a Bessel function
+                to model a diffusive non-locality stored in the nl_profile
+                attribute.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             omega (float, optional): Rabi coupling. Defaults to None.
             backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.

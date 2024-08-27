@@ -59,7 +59,10 @@ class NLSE_3d(NLSE):
             NZ (int, optional): Number of points in the t direction.
                 Defaults to 1024.
             Isat (float): Saturation intensity in W/m^2
-            nl_length (float): Non local length in m
+            nl_length (float): Non local length in m.
+                The non-local kernel is the instantiated as a Bessel function
+                to model a diffusive non-locality stored in the nl_profile
+                attribute.
             wvl (float): Wavelength in m
             backend (str, optional): "GPU" or "CPU".
                 Defaults to __BACKEND__.

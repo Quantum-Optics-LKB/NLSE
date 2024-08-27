@@ -44,8 +44,12 @@ class CNLSE(NLSE):
             L (float): Length of the cell in m
             NX (int, optional): Number of points along x. Defaults to 1024.
             NY (int, optional): Number of points along y. Defaults to 1024.
-            Isat (float, optional): Saturation intensity, assumed to be the same for both components. Defaults to infinity.
-            nl_length (float, optional): Nonlocal length. Defaults to 0.
+            Isat (float, optional): Saturation intensity, assumed to be the same
+                for both components. Defaults to infinity.
+            nl_length (float): Non local length in m.
+                The non-local kernel is the instantiated as a Bessel function
+                to model a diffusive non-locality stored in the nl_profile
+                attribute.
             wvl (float, optional): Wavelength in m. Defaults to 780 nm.
             omega (float, optional): Rabi coupling. Defaults to None.
             backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
@@ -188,9 +192,13 @@ class CNLSE(NLSE):
             A (np.ndarray): Fields to propagate of shape (2, NY, NX)
             A_sq (np.ndarray): Intensity of the fields.
             V (np.ndarray): Potential field (can be None).
-            propagator (np.ndarray): Propagator matrix for both fields [propagator1, propagator2].
-            plans (list): List of FFT plan objects. Either a single FFT plan for both directions (GPU case) or distinct FFT and IFFT plans for FFTW.
-            precision (str, optional): Single or double application of the nonlinear propagation step. Defaults to "single".
+            propagator (np.ndarray): Propagator matrix for both fields
+                [propagator1, propagator2].
+            plans (list): List of FFT plan objects. Either a single FFT plan for
+                both directions (GPU case) or distinct FFT and IFFT plans for
+                FFTW.
+            precision (str, optional): Single or double application of the
+                nonlinear propagation step. Defaults to "single".
         Returns:
             None
         """

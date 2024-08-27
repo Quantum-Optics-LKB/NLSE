@@ -47,8 +47,10 @@ class GPE(NLSE):
             NY (int, optional): Number of points in y.
                 Defaults to 1024.
             sat (float): Saturation parameter in Hz/m^2.
-            nl_length (float, optional): Non local length scale in m.
-                Defaults to 0.
+            nl_length (float): Non local length in m.
+                The non-local kernel is the instantiated as a Bessel function
+                to model a diffusive non-locality stored in the nl_profile
+                attribute.
             backend (str, optional): "GPU" or "CPU". Defaults to __BACKEND__.
         """
         super().__init__(

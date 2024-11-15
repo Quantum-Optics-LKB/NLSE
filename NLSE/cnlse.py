@@ -88,6 +88,8 @@ class CNLSE(NLSE):
         self.k2 = self.k
         # powers
         self.power2 = self.power
+        # potential
+        self.V2 = V
         # waists
         self.propagator1 = None
         self.propagator2 = None
@@ -249,7 +251,7 @@ class CNLSE(NLSE):
                     A_sq_2,
                     self.delta_z / 2,
                     self.alpha / 2,
-                    self.k / 2 * V,
+                    self.k / 2 * self.V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -261,7 +263,7 @@ class CNLSE(NLSE):
                     A_sq_1,
                     self.delta_z / 2,
                     self.alpha2 / 2,
-                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.V2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -318,7 +320,7 @@ class CNLSE(NLSE):
                     A_sq_2,
                     self.delta_z / 2,
                     self.alpha / 2,
-                    self.k / 2 * V,
+                    self.k / 2 * self.V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -330,7 +332,7 @@ class CNLSE(NLSE):
                     A_sq_1,
                     self.delta_z / 2,
                     self.alpha2 / 2,
-                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.V2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),
@@ -367,7 +369,7 @@ class CNLSE(NLSE):
                     A_sq_2,
                     self.delta_z,
                     self.alpha / 2,
-                    self.k / 2 * V,
+                    self.k / 2 * self.V,
                     self.k / 2 * self.n2 * c * epsilon_0,
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
@@ -379,7 +381,7 @@ class CNLSE(NLSE):
                     A_sq_1,
                     self.delta_z,
                     self.alpha2 / 2,
-                    self.k2 / 2 * V,
+                    self.k2 / 2 * self.V2,
                     self.k2 / 2 * self.n22 * c * epsilon_0,
                     self.k2 / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat2 / (epsilon_0 * c),

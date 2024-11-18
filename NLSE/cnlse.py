@@ -221,7 +221,7 @@ class CNLSE(NLSE):
                     A_sq_2, self.nl_profile, mode="same", axes=self._last_axes
                 )
 
-            if V is None:
+            if self.V is None:
                 self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
@@ -232,17 +232,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                     2 * self.I_sat2 / (epsilon_0 * c),
-                )
-                self._kernels.nl_prop_without_V_c(
-                    A2,
-                    A_sq_2,
-                    A_sq_1,
-                    self.delta_z / 2,
-                    self.alpha2 / 2,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                    2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -257,6 +246,19 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.V2 is None:
+                self._kernels.nl_prop_without_V_c(
+                    A2,
+                    A_sq_2,
+                    A_sq_1,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+            else:
                 self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
@@ -290,7 +292,7 @@ class CNLSE(NLSE):
                 A_sq_2, self.nl_profile, mode="same", axes=self._last_axes
             )
         if precision == "double":
-            if V is None:
+            if self.V is None:
                 self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
@@ -301,17 +303,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                     2 * self.I_sat2 / (epsilon_0 * c),
-                )
-                self._kernels.nl_prop_without_V_c(
-                    A2,
-                    A_sq_2,
-                    A_sq_1,
-                    self.delta_z / 2,
-                    self.alpha2 / 2,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                    2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -326,6 +317,19 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.V2 is None:
+                self._kernels.nl_prop_without_V_c(
+                    A2,
+                    A_sq_2,
+                    A_sq_1,
+                    self.delta_z / 2,
+                    self.alpha2 / 2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+            else:
                 self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,
@@ -339,7 +343,7 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                 )
         else:
-            if V is None:
+            if self.V is None:
                 self._kernels.nl_prop_without_V_c(
                     A1,
                     A_sq_1,
@@ -350,17 +354,6 @@ class CNLSE(NLSE):
                     self.k / 2 * self.n12 * c * epsilon_0,
                     2 * self.I_sat / (epsilon_0 * c),
                     2 * self.I_sat2 / (epsilon_0 * c),
-                )
-                self._kernels.nl_prop_without_V_c(
-                    A2,
-                    A_sq_2,
-                    A_sq_1,
-                    self.delta_z,
-                    self.alpha2 / 2,
-                    self.k2 / 2 * self.n22 * c * epsilon_0,
-                    self.k2 / 2 * self.n12 * c * epsilon_0,
-                    2 * self.I_sat2 / (epsilon_0 * c),
-                    2 * self.I_sat / (epsilon_0 * c),
                 )
             else:
                 self._kernels.nl_prop_c(
@@ -375,6 +368,19 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                     2 * self.I_sat2 / (epsilon_0 * c),
                 )
+            if self.V2 is None:
+                self._kernels.nl_prop_without_V_c(
+                    A2,
+                    A_sq_2,
+                    A_sq_1,
+                    self.delta_z,
+                    self.alpha2 / 2,
+                    self.k2 / 2 * self.n22 * c * epsilon_0,
+                    self.k2 / 2 * self.n12 * c * epsilon_0,
+                    2 * self.I_sat2 / (epsilon_0 * c),
+                    2 * self.I_sat / (epsilon_0 * c),
+                )
+            else:
                 self._kernels.nl_prop_c(
                     A2,
                     A_sq_2,

@@ -85,18 +85,11 @@ class GPE(NLSE):
             propagator (np.ndarray): the propagator matrix
         """
         propagator = np.exp(
-            -1j
-            * 0.5
-            * hbar
-            * (self.Kxx**2 + self.Kyy**2)
-            / self.m
-            * self.delta_t
+            -1j * 0.5 * hbar * (self.Kxx**2 + self.Kyy**2) / self.m * self.delta_t
         ).astype(np.complex64)
         return propagator
 
-    def _prepare_output_array(
-        self, E_in: np.ndarray, normalize: bool
-    ) -> np.ndarray:
+    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__.
 
         Args:

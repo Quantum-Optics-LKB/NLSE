@@ -6,10 +6,14 @@ import pyfftw
 from scipy.constants import c, epsilon_0
 
 from .nlse import NLSE
-from .utils import __BACKEND__, __CUPY_AVAILABLE__
+from .utils import __BACKEND__, __CUPY_AVAILABLE__, __PYOPENCL_AVAILABLE__
 
 if __CUPY_AVAILABLE__:
     import cupy as cp
+
+if __PYOPENCL_AVAILABLE__:
+    from pyopencl import array as cla
+    from pyopencl import clmath
 
 
 class CNLSE(NLSE):
@@ -56,10 +60,10 @@ class CNLSE(NLSE):
         Returns:
             object: CNLSE class instance
         """
-        if backend == "CL":
-            raise NotImplementedError(
-                "OpenCL backend is not yet supported for CNLSE."
-            )
+        # if backend == "CL":
+        #     raise NotImplementedError(
+        #         "OpenCL backend is not yet supported for CNLSE."
+        #     )
         super().__init__(
             alpha=alpha,
             power=power,
@@ -92,9 +96,7 @@ class CNLSE(NLSE):
         self.propagator1 = None
         self.propagator2 = None
 
-    def _prepare_output_array(
-        self, E: np.ndarray, normalize: bool
-    ) -> np.ndarray:
+    def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
@@ -105,27 +107,42 @@ class CNLSE(NLSE):
             A (np.ndarray): Output field array
             A_sq (np.ndarray): Output field modulus squared array
         """
+        puiss_arr = np.array([self.power, self.power2], dtype=E.dtype)
         if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
             A = cp.zeros_like(E)
             A_sq = cp.zeros_like(A, dtype=A.real.dtype)
             E = cp.asarray(E)
-            puiss_arr = cp.array([self.power, self.power2], dtype=E.dtype)
+            puiss_arr = cp.array(puiss_arr)
+        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
+            A = cla.zeros(self._cl_queue, E.shape, E.dtype)
+            A_sq = cla.zeros(self._cl_queue, E.shape, E.real.dtype)
+            E = cla.to_device(self._cl_queue, E)
+            puiss_arr = cla.to_device(self._cl_queue, puiss_arr)
         else:
-            A = pyfftw.zeros_aligned(
-                E.shape, dtype=E.dtype, n=pyfftw.simd_alignment
-            )
+            A = pyfftw.zeros_aligned(E.shape, dtype=E.dtype, n=pyfftw.simd_alignment)
             A_sq = np.zeros_like(A, dtype=A.real.dtype)
-            puiss_arr = np.array([self.power, self.power2], dtype=E.dtype)
         if normalize:
             # normalization of the field
-            integral = (
-                (E.real * E.real + E.imag * E.imag)
-                * self.delta_X
-                * self.delta_Y
-            ).sum(axis=self._last_axes)
-            integral *= c * epsilon_0 / 2
-            E_00 = (puiss_arr / integral) ** 0.5
-            A[:] = (E_00.T * E.T).T
+            match self.backend:
+                case "GPU" | "CPU":
+                    integral = (
+                        (E.real * E.real + E.imag * E.imag)
+                        * self.delta_X
+                        * self.delta_Y
+                    ).sum(axis=self._last_axes)
+                    integral = integral * c * epsilon_0 / 2
+                    E_00 = (puiss_arr / integral) ** 0.5
+                case "CL":
+                    integral = cla.sum(
+                        (E.real * E.real + E.imag * E.imag)
+                        * self.delta_X
+                        * self.delta_Y,
+                        queue=self._cl_queue,
+                    )
+                    integral = integral * c * epsilon_0 / 2
+                    E_00 = clmath.sqrt(puiss_arr / integral)
+            A[0] = E_00[0] * E[0]
+            A[1] = E_00[1] * E[1]
         else:
             A[:] = E
         return A, A_sq
@@ -147,10 +164,17 @@ class CNLSE(NLSE):
         Retrieve arrays from GPU.
         """
         super()._retrieve_arrays_from_gpu()
-        if isinstance(self.n2, cp.ndarray):
-            self.n22 = self.n22.get()
-        if isinstance(self.n12, cp.ndarray):
-            self.n12 = self.n12.get()
+        match self.backend:
+            case "GPU":
+                if isinstance(self.n22, cp.ndarray):
+                    self.n22 = self.n22.get()
+                if isinstance(self.n12, cp.ndarray):
+                    self.n12 = self.n12.get()
+            case "CL":
+                if isinstance(self.n22, cla.Array):
+                    self.n22 = self.n22.get()
+                if isinstance(self.n12, cla.Array):
+                    self.n12 = self.n12.get()
 
     def _build_propagator(self) -> np.ndarray:
         """Build the propagators.
@@ -202,7 +226,12 @@ class CNLSE(NLSE):
         Returns:
             None
         """
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+        if (
+            self.backend == "GPU"
+            and self.__CUPY_AVAILABLE__
+            or self.backend == "CL"
+            and self.__PYOPENCL_AVAILABLE__
+        ):
             # on GPU, only one plan for both FFT directions
             plan_fft = plans[0]
         else:
@@ -267,10 +296,15 @@ class CNLSE(NLSE):
                     2 * self.I_sat2 / (epsilon_0 * c),
                     2 * self.I_sat / (epsilon_0 * c),
                 )
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
+        if (
+            self.backend == "GPU"
+            and self.__CUPY_AVAILABLE__
+            or self.backend == "CL"
+            and self.__PYOPENCL_AVAILABLE__
+        ):
             plan_fft.fft(A, A)
             # linear step in Fourier domain (shifted)
-            cp.multiply(A, propagator, out=A)
+            A *= propagator
             plan_fft.ifft(A, A)
         else:
             plan_fft, plan_ifft = plans
@@ -386,9 +420,7 @@ class CNLSE(NLSE):
                     2 * self.I_sat / (epsilon_0 * c),
                 )
             if self.omega is not None:
-                self._kernels.rabi_coupling(
-                    A1, A2, self.delta_z, self.omega / 2
-                )
+                self._kernels.rabi_coupling(A1, A2, self.delta_z, self.omega / 2)
 
     def plot_field(self, A_plot: np.ndarray, z: float) -> None:
         """Plot the field.
@@ -420,9 +452,7 @@ class CNLSE(NLSE):
         ax[0, 0].set_title(r"$|\psi_1|^2$")
         ax[0, 0].set_xlabel("x (mm)")
         ax[0, 0].set_ylabel("y (mm)")
-        fig.colorbar(
-            im0, ax=ax[0, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$"
-        )
+        fig.colorbar(im0, ax=ax[0, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
         im1 = ax[0, 1].imshow(
             phi0,
             extent=ext_real,
@@ -438,9 +468,7 @@ class CNLSE(NLSE):
         ax[1, 0].set_title(r"$|\psi_2|^2$")
         ax[1, 0].set_xlabel("x (mm)")
         ax[1, 0].set_ylabel("y (mm)")
-        fig.colorbar(
-            im2, ax=ax[1, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$"
-        )
+        fig.colorbar(im2, ax=ax[1, 0], shrink=0.6, label=r"Intensity $(W/cm^2)$")
         im3 = ax[1, 1].imshow(
             phi1,
             extent=ext_real,

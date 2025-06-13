@@ -72,9 +72,7 @@ class CNLSE_1d(CNLSE):
         self.nl_profile = self.nl_profile[0]
         self.nl_profile /= self.nl_profile.sum()
 
-    def _prepare_output_array(
-        self, E: np.ndarray, normalize: bool
-    ) -> np.ndarray:
+    def _prepare_output_array(self, E: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output arrays depending on __BACKEND__.
 
         Prepares the A and A_sq arrays to store the field and its modulus.
@@ -96,9 +94,9 @@ class CNLSE_1d(CNLSE):
             puiss_arr = np.array([self.power, self.power2], dtype=E.dtype)
         if normalize:
             # normalization of the field
-            integral = (
-                (E.real * E.real + E.imag * E.imag) * self.delta_X**2
-            ).sum(axis=self._last_axes)
+            integral = ((E.real * E.real + E.imag * E.imag) * self.delta_X**2).sum(
+                axis=self._last_axes
+            )
             integral *= c * epsilon_0 / 2
             E_00 = (puiss_arr / integral) ** 0.5
             A[:] = (E_00.T * E.T).T
@@ -150,26 +148,18 @@ class CNLSE_1d(CNLSE):
         fig, ax = plt.subplots(2, 2, layout="constrained", figsize=(10, 10))
         fig.suptitle(rf"Field at $z$ = {z:.2e} m")
         # plot amplitudes and phases
-        ax[0, 0].plot(
-            self.X * 1e3, np.abs(A_1_plot) ** 2 * epsilon_0 * c / 2 * 1e-4
-        )
+        ax[0, 0].plot(self.X * 1e3, np.abs(A_1_plot) ** 2 * epsilon_0 * c / 2 * 1e-4)
         ax[0, 0].set_title(r"$|\psi_1|^2$")
         ax[0, 0].set_xlabel("x in mm")
-        ax[0, 0].set_ylabel(
-            r"Intensity $\frac{\epsilon_0 c}{2}|\psi_1|^2$ in $W/cm^2$"
-        )
+        ax[0, 0].set_ylabel(r"Intensity $\frac{\epsilon_0 c}{2}|\psi_1|^2$ in $W/cm^2$")
         ax[0, 1].plot(self.X * 1e3, np.unwrap(np.angle(A_1_plot)))
         ax[0, 1].set_title(r"$\mathrm{arg}(\psi_1)$")
         ax[0, 1].set_xlabel("x in mm")
         ax[0, 1].set_ylabel(r"Phase in rad")
-        ax[1, 0].plot(
-            self.X * 1e3, np.abs(A_2_plot) ** 2 * epsilon_0 * c / 2 * 1e-4
-        )
+        ax[1, 0].plot(self.X * 1e3, np.abs(A_2_plot) ** 2 * epsilon_0 * c / 2 * 1e-4)
         ax[1, 0].set_title(r"$|\psi_2|^2$")
         ax[1, 0].set_xlabel("x in mm")
-        ax[1, 0].set_ylabel(
-            r"Intensity $\frac{\epsilon_0 c}{2}|\psi_1|^2$ in $W/cm^2$"
-        )
+        ax[1, 0].set_ylabel(r"Intensity $\frac{\epsilon_0 c}{2}|\psi_1|^2$ in $W/cm^2$")
         ax[1, 1].plot(self.X * 1e3, np.unwrap(np.angle(A_2_plot)))
         ax[1, 1].set_title(r"$\mathrm{arg}(\psi_2)$")
         ax[1, 1].set_xlabel("x in mm")

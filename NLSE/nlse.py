@@ -28,6 +28,7 @@ if __CUPY_AVAILABLE__:
 if __PYOPENCL_AVAILABLE__:
     import pyopencl as cl
     from pyopencl import array as cla
+    from pyopencl import clmath
     from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
 
     from . import kernels_cl
@@ -85,23 +86,8 @@ class NLSE:
             backend (str, optional): Will run using the "GPU" or "CPU".
                 Defaults to __BACKEND__.
         """
-        # listof physical parameters
+        # list of physical parameters
         self.backend = backend
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            self._kernels = kernels_gpu
-            self._convolution = signal_cp.oaconvolve
-        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
-            self._kernels = kernels_cl
-            self._cl_queue = cl.CommandQueue(cl.create_some_context(interactive=False))
-        else:
-            if backend in ["GPU", "CL"]:
-                print("Backend not available, switching to CPU")
-            if backend != "CPU":
-                print("Available backends are GPU, CPU or CL, switching to CPU")
-            self.backend = "CPU"
-            self._kernels = kernels_cpu
-            self._convolution = signal.oaconvolve
-
         self.n2 = n2
         self.V = V
         self.wl = wvl
@@ -167,6 +153,37 @@ class NLSE:
             self.nl_profile /= self.nl_profile.sum()
         else:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
+
+    @property
+    def backend(self) -> str:
+        """Return the backend used for the simulation."""
+        return self.__backend
+
+    @backend.setter
+    def backend(self, value: str) -> None:
+        """Set the backend for the simulation."""
+        if value not in ["CPU", "GPU", "CL"]:
+            raise ValueError("Backend must be 'CPU', 'GPU' or 'CL'")
+        match value:
+            case "GPU":
+                if not self.__CUPY_AVAILABLE__:
+                    raise ImportError("Cupy is not available.")
+                self.__backend = "GPU"
+                self._kernels = kernels_gpu
+                self._convolution = signal_cp.oaconvolve
+            case "CL":
+                if not self.__PYOPENCL_AVAILABLE__:
+                    raise ImportError("PyOpenCL is not available.")
+                self.__backend = "CL"
+                self._kernels = kernels_cl
+                self._cl_queue = cl.CommandQueue(
+                    cl.create_some_context(interactive=False)
+                )
+                # FIXME: no convolution kernel for CL backend yet ??
+            case "CPU":
+                self.__backend = "CPU"
+                self._kernels = kernels_cpu
+                self._convolution = signal.oaconvolve
 
     def _build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.
@@ -268,20 +285,22 @@ class NLSE:
             # normalization of the field
             if self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
                 arr = E_in.real * E_in.real + E_in.imag * E_in.imag
-                arr *= self.delta_X * self.delta_Y
+                arr = arr * self.delta_X * self.delta_Y
                 integral = cla.sum(
                     arr,
                     dtype=arr.dtype,
                     queue=self._cl_queue,
                 )
+                integral = integral * c * epsilon_0 / 2
+                E_00 = clmath.sqrt(self.power / integral)
             else:
                 integral = (
                     (E_in.real * E_in.real + E_in.imag * E_in.imag)
                     * self.delta_X
                     * self.delta_Y
                 ).sum(axis=self._last_axes)
-            integral *= c * epsilon_0 / 2
-            E_00 = (self.power / integral) ** 0.5
+                integral = integral * c * epsilon_0 / 2
+                E_00 = (self.power / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in

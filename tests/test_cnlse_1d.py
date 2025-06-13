@@ -7,6 +7,13 @@ if CNLSE_1d.__CUPY_AVAILABLE__:
     import cupy as cp
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
+AVAILABLE_BACKENDS = ["CPU"]
+if CNLSE_1d.__CUPY_AVAILABLE__:
+    AVAILABLE_BACKENDS.append("GPU")
+# TODO: Write OpenCL tests
+# if CNLSE.__PYOPENCL_AVAILABLE__:
+#     AVAILABLE_BACKENDS.append("CL")
+
 N = 2048
 n2 = -1.6e-9
 n12 = -1e-10
@@ -20,7 +27,7 @@ alpha = 20
 
 
 def test_build_propagator() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = CNLSE_1d(
             alpha,
             power,
@@ -42,7 +49,7 @@ def test_build_propagator() -> None:
 
 
 def test_prepare_output_array() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = CNLSE_1d(
             alpha,
             power,
@@ -73,9 +80,9 @@ def test_prepare_output_array() -> None:
             assert (
                 out_sq.flags.aligned
             ), f"Output array is not aligned. (Backend {backend})"
-        integral = (
-            (out.real * out.real + out.imag * out.imag) * simu.delta_X**2
-        ).sum(axis=simu._last_axes)
+        integral = ((out.real * out.real + out.imag * out.imag) * simu.delta_X**2).sum(
+            axis=simu._last_axes
+        )
         integral *= c * epsilon_0 / 2
         assert np.allclose(
             integral,
@@ -107,7 +114,7 @@ def test_prepare_output_array() -> None:
 
 
 def test_split_step() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = CNLSE_1d(
             alpha,
             power,
@@ -143,7 +150,7 @@ def test_split_step() -> None:
 
 
 def test_out_field() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = CNLSE_1d(
             0, power, window, n2, n12, None, L, NX=N, Isat=Isat, backend=backend
         )

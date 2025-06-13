@@ -7,6 +7,12 @@ if GPE.__CUPY_AVAILABLE__:
     import cupy as cp
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
+AVAILABLE_BACKENDS = ["CPU"]
+if GPE.__CUPY_AVAILABLE__:
+    AVAILABLE_BACKENDS.append("GPU")
+# TODO: Write OpenCL tests
+# if CNLSE.__PYOPENCL_AVAILABLE__:
+#     AVAILABLE_BACKENDS.append("CL")
 
 N = 2048
 N_at = 1e6
@@ -17,7 +23,7 @@ m = 87 * atomic_mass
 
 
 def test_build_propagator() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu_gpe = GPE(
             gamma=0,
             N=N_at,
@@ -44,7 +50,7 @@ def test_build_propagator() -> None:
 
 
 def test_prepare_output_array() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = GPE(
             gamma=0,
             N=N_at,
@@ -68,9 +74,7 @@ def test_prepare_output_array() -> None:
             A_sq.flags.c_contiguous
         ), f"Output array is not C-contiguous. (Backend {backend})"
         if backend == "CPU":
-            assert (
-                A.flags.aligned
-            ), f"Output array is not aligned. (Backend {backend})"
+            assert A.flags.aligned, f"Output array is not aligned. (Backend {backend})"
             assert (
                 A_sq.flags.aligned
             ), f"Output array is not aligned. (Backend {backend})"
@@ -101,7 +105,7 @@ def test_prepare_output_array() -> None:
 
 
 def test_out_field() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = GPE(
             gamma=0,
             N=N_at,
@@ -114,12 +118,8 @@ def test_out_field() -> None:
             backend=backend,
         )
         simu.delta_t = 1e-8
-        psi_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2).astype(
-            PRECISION_COMPLEX
-        )
-        psi = simu.out_field(
-            psi_0, 1e-6, verbose=True, plot=False, precision="single"
-        )
+        psi_0 = np.exp(-(simu.XX**2 + simu.YY**2) / waist**2).astype(PRECISION_COMPLEX)
+        psi = simu.out_field(psi_0, 1e-6, verbose=True, plot=False, precision="single")
         norm = np.sum(np.abs(psi) ** 2 * simu.delta_X * simu.delta_Y)
         assert np.allclose(
             norm, simu.N, rtol=1e-4

@@ -7,6 +7,12 @@ if DDGPE.__CUPY_AVAILABLE__:
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
+AVAILABLE_BACKENDS = ["CPU"]
+if DDGPE.__CUPY_AVAILABLE__:
+    AVAILABLE_BACKENDS.append("GPU")
+# TODO: Write OpenCL tests
+# if CNLSE.__PYOPENCL_AVAILABLE__:
+#     AVAILABLE_BACKENDS.append("CL")
 
 N = 256
 T = 1
@@ -24,7 +30,7 @@ puiss = detuning / g
 
 
 def test_prepare_output_array() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = DDGPE(
             gamma,
             puiss,
@@ -117,15 +123,11 @@ def test_send_arrays_to_gpu() -> None:
         assert isinstance(
             simu.propagator, cp.ndarray
         ), "propagator is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.V, cp.ndarray
-        ), "V is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.gamma, cp.ndarray
         ), "gamma is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.g, cp.ndarray
-        ), "g is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.g, cp.ndarray), "g is not a cp.ndarray. (Backend GPU)"
         assert isinstance(
             simu.omega, cp.ndarray
         ), "omega is not a cp.ndarray. (Backend GPU)"
@@ -184,9 +186,7 @@ def test_retrieve_arrays_from_gpu() -> None:
         assert isinstance(
             simu.gamma, np.ndarray
         ), "gamma is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.g, np.ndarray
-        ), "g is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.g, np.ndarray), "g is not a np.ndarray. (Backend GPU)"
         assert isinstance(
             simu.omega, np.ndarray
         ), "omega is not a np.ndarray. (Backend GPU)"
@@ -201,7 +201,7 @@ def test_retrieve_arrays_from_gpu() -> None:
 
 
 def test_build_propagator() -> None:
-    for backend in ["GPU", "CPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = DDGPE(
             gamma,
             puiss,
@@ -236,7 +236,7 @@ def test_build_propagator() -> None:
 
 
 def test_take_components() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = DDGPE(
             gamma,
             puiss,
@@ -250,7 +250,7 @@ def test_take_components() -> None:
             k_z,
             NX=N,
             NY=N,
-            backend="GPU",
+            backend=backend,
         )
         # create a larger array to test the fancy indexing
         A = np.ones((3, 2, N, N), dtype=PRECISION_COMPLEX)
@@ -266,12 +266,8 @@ def test_take_components() -> None:
         assert (
             A1.shape == A2.shape
         ), f"A1 and A2 have different shapes. (Backend {backend})"
-        assert (
-            A1.shape[0] == 3
-        ), f"A1 has wrong first dimensions. (Backend {backend})"
-        assert (
-            A2.shape[0] == 3
-        ), f"A2 has wrong first dimensions. (Backend {backend})"
+        assert A1.shape[0] == 3, f"A1 has wrong first dimensions. (Backend {backend})"
+        assert A2.shape[0] == 3, f"A2 has wrong first dimensions. (Backend {backend})"
 
 
 def callback_sample(
@@ -315,7 +311,7 @@ def turn_on(
 
 
 def test_out_field() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = DDGPE(
             gamma,
             puiss,
@@ -332,23 +328,21 @@ def test_out_field() -> None:
             backend=backend,
         )
         simu.delta_z = 0.1 / 32  # need to be adjusted automatically
-        time = np.arange(
-            0, T + simu.delta_z, step=simu.delta_z, dtype=np.float32
-        )
+        time = np.arange(0, T + simu.delta_z, step=simu.delta_z, dtype=np.float32)
         save_every = 1  # np.argwhere(time == 1)[0][0]
         sample1 = np.zeros(time.size // save_every, dtype=np.float32)
         sample2 = np.zeros(time.size // save_every, dtype=np.float32)
         sample3 = np.zeros(time.size // save_every, dtype=np.float32)
         E0 = np.zeros((2, simu.NY, simu.NX), dtype=np.complex64)
         F_pump = 0
-        F_pump_r = F_pump * np.exp(
-            -((simu.XX**2 + simu.YY**2) / waist**2)
-        ).astype(np.complex64)
+        F_pump_r = F_pump * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(
+            np.complex64
+        )
         F_pump_t = np.zeros(time.shape, dtype=np.complex64)
         F_probe = 0
-        F_probe_r = F_probe * np.exp(
-            -((simu.XX**2 + simu.YY**2) / waist**2)
-        ).astype(np.complex64)
+        F_probe_r = F_probe * np.exp(-((simu.XX**2 + simu.YY**2) / waist**2)).astype(
+            np.complex64
+        )
         F_probe_t = np.zeros(time.shape, dtype=np.complex64)
         turn_on(F_pump_t, time, t_up=20)
         callback = [callback_sample]

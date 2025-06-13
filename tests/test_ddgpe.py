@@ -51,35 +51,35 @@ def test_prepare_output_array() -> None:
         elif backend == "GPU" and DDGPE.__CUPY_AVAILABLE__:
             A = cp.ones((2, N, N), dtype=PRECISION_COMPLEX)
         out, out_sq = simu._prepare_output_array(A, normalize=False)
-        assert (
-            out.flags.c_contiguous
-        ), f"Output array is not C-contiguous. (Backend {backend})"
-        assert (
-            out_sq.flags.c_contiguous
-        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert out.flags.c_contiguous, (
+            f"Output array is not C-contiguous. (Backend {backend})"
+        )
+        assert out_sq.flags.c_contiguous, (
+            f"Output array is not C-contiguous. (Backend {backend})"
+        )
         assert out.shape == (
             2,
             N,
             N,
         ), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
-            assert isinstance(
-                out, np.ndarray
-            ), f"Ouptut array type does not match backend. (Backend {backend})"
+            assert isinstance(out, np.ndarray), (
+                f"Ouptut array type does not match backend. (Backend {backend})"
+            )
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
-            assert np.allclose(
-                out, A
-            ), f"Output array does not match input array. (Backend {backend})"
+            assert np.allclose(out, A), (
+                f"Output array does not match input array. (Backend {backend})"
+            )
         elif backend == "GPU" and DDGPE.__CUPY_AVAILABLE__:
-            assert isinstance(
-                out, cp.ndarray
-            ), f"Ouptut array type does not match backend. (Backend {backend})"
+            assert isinstance(out, cp.ndarray), (
+                f"Ouptut array type does not match backend. (Backend {backend})"
+            )
             out /= cp.max(cp.abs(out))
             A /= cp.max(cp.abs(A))
-            assert cp.allclose(
-                out, A
-            ), f"Output array does not match input array. (Backend {backend})"
+            assert cp.allclose(out, A), (
+                f"Output array does not match input array. (Backend {backend})"
+            )
 
 
 def test_send_arrays_to_gpu() -> None:
@@ -120,23 +120,23 @@ def test_send_arrays_to_gpu() -> None:
         )
         simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
-        assert isinstance(
-            simu.propagator, cp.ndarray
-        ), "propagator is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.propagator, cp.ndarray), (
+            "propagator is not a cp.ndarray. (Backend GPU)"
+        )
         assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.gamma, cp.ndarray
-        ), "gamma is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.gamma, cp.ndarray), (
+            "gamma is not a cp.ndarray. (Backend GPU)"
+        )
         assert isinstance(simu.g, cp.ndarray), "g is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.omega, cp.ndarray
-        ), "omega is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.omega_cav, cp.ndarray
-        ), "omega cav is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.omega_exc, cp.ndarray
-        ), "omega exc is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.omega, cp.ndarray), (
+            "omega is not a cp.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.omega_cav, cp.ndarray), (
+            "omega cav is not a cp.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.omega_exc, cp.ndarray), (
+            "omega exc is not a cp.ndarray. (Backend GPU)"
+        )
     else:
         pass
 
@@ -180,22 +180,22 @@ def test_retrieve_arrays_from_gpu() -> None:
         simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
         simu._retrieve_arrays_from_gpu()
-        assert isinstance(
-            simu.propagator, np.ndarray
-        ), "propagator is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.gamma, np.ndarray
-        ), "gamma is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.propagator, np.ndarray), (
+            "propagator is not a np.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.gamma, np.ndarray), (
+            "gamma is not a np.ndarray. (Backend GPU)"
+        )
         assert isinstance(simu.g, np.ndarray), "g is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.omega, np.ndarray
-        ), "omega is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.omega_cav, np.ndarray
-        ), "omega cav is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.omega_exc, np.ndarray
-        ), "omega exc is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.omega, np.ndarray), (
+            "omega is not a np.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.omega_cav, np.ndarray), (
+            "omega cav is not a np.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.omega_exc, np.ndarray), (
+            "omega exc is not a np.ndarray. (Backend GPU)"
+        )
     else:
         pass
 
@@ -263,9 +263,9 @@ def test_take_components() -> None:
             N,
             N,
         ), f"A2 has wrong last dimensions. (Backend {backend})"
-        assert (
-            A1.shape == A2.shape
-        ), f"A1 and A2 have different shapes. (Backend {backend})"
+        assert A1.shape == A2.shape, (
+            f"A1 and A2 have different shapes. (Backend {backend})"
+        )
         assert A1.shape[0] == 3, f"A1 has wrong first dimensions. (Backend {backend})"
         assert A2.shape[0] == 3, f"A2 has wrong first dimensions. (Backend {backend})"
 

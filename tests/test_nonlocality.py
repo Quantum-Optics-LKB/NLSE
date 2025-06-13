@@ -5,6 +5,12 @@ from NLSE import CNLSE, GPE, NLSE, CNLSE_1d, NLSE_1d
 
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
+AVAILABLE_BACKENDS = ["CPU"]
+if NLSE.__CUPY_AVAILABLE__:
+    AVAILABLE_BACKENDS.append("GPU")
+# TODO
+# if NLSE.__PYOPENCL_AVAILABLE__:
+#     AVAILABLE_BACKENDS.append("CL")
 
 # TODO: Add assertions to check the norm
 
@@ -21,7 +27,7 @@ def test_nonlocality():
     L = 1e-3
     alpha = 0
     nl_length = 60e-6
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu_c_1d = CNLSE_1d(
             alpha,
             power,
@@ -113,9 +119,9 @@ def test_nonlocality():
         arr = E.real * E.real + E.imag * E.imag
         arr *= c * epsilon_0 / 2 * simu_c_1d.delta_X**2
         norm = arr.sum(simu_c_1d._last_axes)
-        assert np.allclose(
-            norm, simu_c_1d.power, rtol=1e-3
-        ), f"CNLSE_1d : Norm is not conserved ! (Backend {backend})"
+        assert np.allclose(norm, simu_c_1d.power, rtol=1e-3), (
+            f"CNLSE_1d : Norm is not conserved ! (Backend {backend})"
+        )
         E = simu_1d.out_field(
             E_0[N // 2, :],
             L,
@@ -126,9 +132,9 @@ def test_nonlocality():
         arr = E.real * E.real + E.imag * E.imag
         arr *= c * epsilon_0 / 2 * simu_1d.delta_X**2
         norm = arr.sum(simu_c_1d._last_axes)
-        assert np.allclose(
-            norm, simu_1d.power, rtol=1e-3
-        ), f"NLSE_1d : Norm is not conserved ! (Backend {backend})"
+        assert np.allclose(norm, simu_1d.power, rtol=1e-3), (
+            f"NLSE_1d : Norm is not conserved ! (Backend {backend})"
+        )
         E, _ = simu_c_2d.out_field(
             np.array([E_0, V0]),
             L,
@@ -139,9 +145,9 @@ def test_nonlocality():
         arr = E.real * E.real + E.imag * E.imag
         arr *= c * epsilon_0 / 2 * simu_c_2d.delta_X * simu_c_2d.delta_Y
         norm = arr.sum(simu_c_2d._last_axes)
-        assert np.allclose(
-            norm, simu_c_2d.power, rtol=1e-3
-        ), f"CNLSE : Norm is not conserved ! (Backend {backend})"
+        assert np.allclose(norm, simu_c_2d.power, rtol=1e-3), (
+            f"CNLSE : Norm is not conserved ! (Backend {backend})"
+        )
         E = simu_2d.out_field(
             E_0,
             L,
@@ -152,9 +158,9 @@ def test_nonlocality():
         arr = E.real * E.real + E.imag * E.imag
         arr *= c * epsilon_0 / 2 * simu_2d.delta_X * simu_2d.delta_Y
         norm = arr.sum(simu_2d._last_axes)
-        assert np.allclose(
-            norm, simu_2d.power, rtol=1e-3
-        ), f"NLSE : Norm is not conserved ! (Backend {backend})"
+        assert np.allclose(norm, simu_2d.power, rtol=1e-3), (
+            f"NLSE : Norm is not conserved ! (Backend {backend})"
+        )
         E = simu_gpe.out_field(
             E_0,
             L,
@@ -165,6 +171,6 @@ def test_nonlocality():
         arr = E.real * E.real + E.imag * E.imag
         arr *= simu_gpe.delta_X * simu_gpe.delta_Y
         norm = arr.sum(simu_gpe._last_axes)
-        assert np.allclose(
-            norm, simu_gpe.N, rtol=1e-3
-        ), f"CNLSE : Norm is not conserved ! (Backend {backend})"
+        assert np.allclose(norm, simu_gpe.N, rtol=1e-3), (
+            f"CNLSE : Norm is not conserved ! (Backend {backend})"
+        )

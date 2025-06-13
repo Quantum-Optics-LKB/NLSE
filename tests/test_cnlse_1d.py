@@ -43,9 +43,9 @@ def test_build_propagator() -> None:
         prop = simu._build_propagator()
         prop1 = np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k * simu.delta_z)
         prop2 = np.exp(-1j * 0.5 * (simu.Kx**2) / simu.k2 * simu.delta_z)
-        assert np.allclose(
-            prop, np.array([prop1, prop2])
-        ), f"Propagator is wrong. (Backend {backend})"
+        assert np.allclose(prop, np.array([prop1, prop2])), (
+            f"Propagator is wrong. (Backend {backend})"
+        )
 
 
 def test_prepare_output_array() -> None:
@@ -67,19 +67,19 @@ def test_prepare_output_array() -> None:
         elif backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
             A = cp.ones((2, N), dtype=PRECISION_COMPLEX)
         out, out_sq = simu._prepare_output_array(A, normalize=True)
-        assert (
-            out.flags.c_contiguous
-        ), f"Output array is not C-contiguous. (Backend {backend})"
-        assert (
-            out_sq.flags.c_contiguous
-        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert out.flags.c_contiguous, (
+            f"Output array is not C-contiguous. (Backend {backend})"
+        )
+        assert out_sq.flags.c_contiguous, (
+            f"Output array is not C-contiguous. (Backend {backend})"
+        )
         if backend == "CPU":
-            assert (
-                out.flags.aligned
-            ), f"Output array is not aligned. (Backend {backend})"
-            assert (
-                out_sq.flags.aligned
-            ), f"Output array is not aligned. (Backend {backend})"
+            assert out.flags.aligned, (
+                f"Output array is not aligned. (Backend {backend})"
+            )
+            assert out_sq.flags.aligned, (
+                f"Output array is not aligned. (Backend {backend})"
+            )
         integral = ((out.real * out.real + out.imag * out.imag) * simu.delta_X**2).sum(
             axis=simu._last_axes
         )
@@ -94,23 +94,23 @@ def test_prepare_output_array() -> None:
             N,
         ), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
-            assert isinstance(
-                out, np.ndarray
-            ), f"Ouptut array type does not match backend. (Backend {backend})"
+            assert isinstance(out, np.ndarray), (
+                f"Ouptut array type does not match backend. (Backend {backend})"
+            )
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
-            assert np.allclose(
-                out, A
-            ), f"Output array does not match input array. (Backend {backend})"
+            assert np.allclose(out, A), (
+                f"Output array does not match input array. (Backend {backend})"
+            )
         elif backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
-            assert isinstance(
-                out, cp.ndarray
-            ), f"Ouptut array type does not match backend. (Backend {backend})"
+            assert isinstance(out, cp.ndarray), (
+                f"Ouptut array type does not match backend. (Backend {backend})"
+            )
             out /= cp.max(cp.abs(out))
             A /= cp.max(cp.abs(A))
-            assert cp.allclose(
-                out, A
-            ), f"Output array does not match input array. (Backend {backend})"
+            assert cp.allclose(out, A), (
+                f"Output array does not match input array. (Backend {backend})"
+            )
 
 
 def test_split_step() -> None:
@@ -140,13 +140,13 @@ def test_split_step() -> None:
             E, A_sq, simu.V, simu.propagator, simu.plans, precision="double"
         )
         if backend == "CPU":
-            assert np.allclose(
-                E, np.ones((2, N), dtype=PRECISION_COMPLEX)
-            ), f"Split step is not unitary. (Backend {backend})"
+            assert np.allclose(E, np.ones((2, N), dtype=PRECISION_COMPLEX)), (
+                f"Split step is not unitary. (Backend {backend})"
+            )
         elif backend == "GPU" and CNLSE_1d.__CUPY_AVAILABLE__:
-            assert cp.allclose(
-                E, cp.ones((2, N), dtype=PRECISION_COMPLEX)
-            ), f"Split step is not unitary. (Backend {backend})"
+            assert cp.allclose(E, cp.ones((2, N), dtype=PRECISION_COMPLEX)), (
+                f"Split step is not unitary. (Backend {backend})"
+            )
 
 
 def test_out_field() -> None:
@@ -166,6 +166,6 @@ def test_out_field() -> None:
             2,
             N,
         ), f"Output array has wrong shape. (Backend {backend})"
-        assert np.allclose(
-            integral, [simu.power, simu.power2], rtol=1e-4
-        ), f"Normalization failed. (Backend {backend})"
+        assert np.allclose(integral, [simu.power, simu.power2], rtol=1e-4), (
+            f"Normalization failed. (Backend {backend})"
+        )

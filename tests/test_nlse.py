@@ -12,7 +12,11 @@ if NLSE.__PYOPENCL_AVAILABLE__:
     from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
 PRECISION_COMPLEX = np.complex64
 PRECISION_REAL = np.float32
-
+AVAILABLE_BACKENDS = ["CPU"]
+if NLSE.__CUPY_AVAILABLE__:
+    AVAILABLE_BACKENDS.append("GPU")
+if NLSE.__PYOPENCL_AVAILABLE__:
+    AVAILABLE_BACKENDS.append("CL")
 
 N = 2048
 n2 = -1.6e-9
@@ -26,7 +30,7 @@ alpha = 20
 
 
 def test_build_propagator() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = NLSE(
             alpha,
             power,
@@ -42,14 +46,12 @@ def test_build_propagator() -> None:
         prop = simu._build_propagator()
         assert np.allclose(
             prop,
-            np.exp(
-                -1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z
-            ),
+            np.exp(-1j * 0.5 * (simu.Kxx**2 + simu.Kyy**2) / simu.k * simu.delta_z),
         ), f"Propagator is wrong. (Backend {backend})"
 
 
 def test_build_fft_plan() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = NLSE(
             alpha,
             power,
@@ -69,34 +71,28 @@ def test_build_fft_plan() -> None:
         A = A.astype(PRECISION_COMPLEX)
         plans = simu._build_fft_plan(A)
         if backend == "CPU":
-            assert (
-                len(plans) == 2
-            ), f"Number of plans is wrong. (Backend {backend})"
-            assert isinstance(
-                plans[0], pyfftw.FFTW
-            ), f"Plan type is wrong. (Backend {backend})"
+            assert len(plans) == 2, f"Number of plans is wrong. (Backend {backend})"
+            assert isinstance(plans[0], pyfftw.FFTW), (
+                f"Plan type is wrong. (Backend {backend})"
+            )
             assert plans[0].output_shape == (
                 N,
                 N,
             ), f"Plan shape is wrong. (Backend {backend})"
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
-            assert (
-                len(plans) == 1
-            ), f"Number of plans is wrong. (Backend {backend})"
-            assert isinstance(
-                plans[0], VkFFTApp_cuda
-            ), f"Plan type is wrong. (Backend {backend})"
+            assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
+            assert isinstance(plans[0], VkFFTApp_cuda), (
+                f"Plan type is wrong. (Backend {backend})"
+            )
             assert plans[0].shape0 == (
                 N,
                 N,
             ), f"Plan shape is wrong. (Backend {backend})"
         elif backend == "CL" and NLSE.__PYOPENCL_AVAILABLE__:
-            assert (
-                len(plans) == 1
-            ), f"Number of plans is wrong. (Backend {backend})"
-            assert isinstance(
-                plans[0], VkFFTApp_cl
-            ), f"Plan type is wrong. (Backend {backend})"
+            assert len(plans) == 1, f"Number of plans is wrong. (Backend {backend})"
+            assert isinstance(plans[0], VkFFTApp_cl), (
+                f"Plan type is wrong. (Backend {backend})"
+            )
             assert plans[0].shape0 == (
                 N,
                 N,
@@ -104,7 +100,7 @@ def test_build_fft_plan() -> None:
 
 
 def test_prepare_output_array() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = NLSE(
             alpha,
             power,
@@ -123,24 +119,20 @@ def test_prepare_output_array() -> None:
             A = cp.random.random((N, N)) + 1j * cp.random.random((N, N))
         A = A.astype(PRECISION_COMPLEX)
         out, out_sq = simu._prepare_output_array(A, normalize=True)
-        assert (
-            out.flags.c_contiguous
-        ), f"Output array is not C-contiguous. (Backend {backend})"
-        assert (
-            out_sq.flags.c_contiguous
-        ), f"Output array is not C-contiguous. (Backend {backend})"
+        assert out.flags.c_contiguous, (
+            f"Output array is not C-contiguous. (Backend {backend})"
+        )
+        assert out_sq.flags.c_contiguous, (
+            f"Output array is not C-contiguous. (Backend {backend})"
+        )
         if backend == "CPU":
-            assert (
-                out.flags.aligned
-            ), f"Output array is not aligned. (Backend {backend})"
-            assert (
-                out_sq.flags.aligned
-            ), f"Output array is not aligned. (Backend {backend})"
-        if (
-            simu.backend == "GPU"
-            and NLSE.__CUPY_AVAILABLE__
-            or simu.backend == "CPU"
-        ):
+            assert out.flags.aligned, (
+                f"Output array is not aligned. (Backend {backend})"
+            )
+            assert out_sq.flags.aligned, (
+                f"Output array is not aligned. (Backend {backend})"
+            )
+        if simu.backend == "GPU" and NLSE.__CUPY_AVAILABLE__ or simu.backend == "CPU":
             integral = (
                 (out.real * out.real + out.imag * out.imag)
                 * simu.delta_X
@@ -148,14 +140,14 @@ def test_prepare_output_array() -> None:
             ).sum(axis=simu._last_axes)
         if backend == "CL" and NLSE.__PYOPENCL_AVAILABLE__:
             arr = out.real * out.real + out.imag * out.imag
-            arr *= simu.delta_X * simu.delta_Y
+            arr = arr * simu.delta_X * simu.delta_Y
             integral = cla.sum(
                 arr,
                 dtype=arr.dtype,
                 queue=simu._cl_queue,
             )
             integral = integral.get()
-        integral *= c * epsilon_0 / 2
+        integral = integral * c * epsilon_0 / 2
         error_string = f"Normalization failed. (Backend {backend})"
         error_string += f" : {integral} != {simu.power}"
         assert np.allclose(integral, simu.power), error_string
@@ -164,23 +156,23 @@ def test_prepare_output_array() -> None:
             N,
         ), f"Output array has wrong shape. (Backend {backend})"
         if backend == "CPU":
-            assert isinstance(
-                out, np.ndarray
-            ), f"Output array type does not match backend. (Backend {backend})"
+            assert isinstance(out, np.ndarray), (
+                f"Output array type does not match backend. (Backend {backend})"
+            )
             out /= np.max(np.abs(out))
             A /= np.max(np.abs(A))
-            assert np.allclose(
-                out, A
-            ), f"Output array does not match input array. (Backend {backend})"
+            assert np.allclose(out, A), (
+                f"Output array does not match input array. (Backend {backend})"
+            )
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
-            assert isinstance(
-                out, cp.ndarray
-            ), f"Output array type does not match backend. (Backend {backend})"
+            assert isinstance(out, cp.ndarray), (
+                f"Output array type does not match backend. (Backend {backend})"
+            )
             out /= cp.max(cp.abs(out))
             A /= cp.max(cp.abs(A))
-            assert cp.allclose(
-                out, A
-            ), f"Output array does not match input array. (Backend {backend})"
+            assert cp.allclose(out, A), (
+                f"Output array does not match input array. (Backend {backend})"
+            )
 
 
 def test_send_arrays_to_gpu() -> None:
@@ -200,21 +192,17 @@ def test_send_arrays_to_gpu() -> None:
         )
         simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
-        assert isinstance(
-            simu.propagator, cp.ndarray
-        ), "propagator is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.V, cp.ndarray
-        ), "V is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.alpha, cp.ndarray
-        ), "alpha is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.n2, cp.ndarray
-        ), "n2 is not a cp.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.I_sat, cp.ndarray
-        ), "I_sat is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.propagator, cp.ndarray), (
+            "propagator is not a cp.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.V, cp.ndarray), "V is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.alpha, cp.ndarray), (
+            "alpha is not a cp.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.n2, cp.ndarray), "n2 is not a cp.ndarray. (Backend GPU)"
+        assert isinstance(simu.I_sat, cp.ndarray), (
+            "I_sat is not a cp.ndarray. (Backend GPU)"
+        )
     else:
         pass
 
@@ -237,27 +225,23 @@ def test_retrieve_arrays_from_gpu() -> None:
         simu.propagator = simu._build_propagator()
         simu._send_arrays_to_gpu()
         simu._retrieve_arrays_from_gpu()
-        assert isinstance(
-            simu.propagator, np.ndarray
-        ), "propagator is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.V, np.ndarray
-        ), "V is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.alpha, np.ndarray
-        ), "alpha is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.n2, np.ndarray
-        ), "n2 is not a np.ndarray. (Backend GPU)"
-        assert isinstance(
-            simu.I_sat, np.ndarray
-        ), "I_sat is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.propagator, np.ndarray), (
+            "propagator is not a np.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.V, np.ndarray), "V is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.alpha, np.ndarray), (
+            "alpha is not a np.ndarray. (Backend GPU)"
+        )
+        assert isinstance(simu.n2, np.ndarray), "n2 is not a np.ndarray. (Backend GPU)"
+        assert isinstance(simu.I_sat, np.ndarray), (
+            "I_sat is not a np.ndarray. (Backend GPU)"
+        )
     else:
         pass
 
 
 def test_split_step() -> None:
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = NLSE(
             alpha,
             power,
@@ -289,20 +273,20 @@ def test_split_step() -> None:
             A, A_sq, simu.V, simu.propagator, simu.plans, precision="double"
         )
         if backend == "CPU":
-            assert np.allclose(
-                A, np.ones((N, N), dtype=PRECISION_COMPLEX)
-            ), f"Split step is not unitary. (Backend {backend})"
+            assert np.allclose(A, np.ones((N, N), dtype=PRECISION_COMPLEX)), (
+                f"Split step is not unitary. (Backend {backend})"
+            )
         elif backend == "GPU" and NLSE.__CUPY_AVAILABLE__:
-            assert cp.allclose(
-                A, cp.ones((N, N), dtype=PRECISION_COMPLEX)
-            ), f"Split step is not unitary. (Backend {backend})"
+            assert cp.allclose(A, cp.ones((N, N), dtype=PRECISION_COMPLEX)), (
+                f"Split step is not unitary. (Backend {backend})"
+            )
 
 
 # tests for convergence of the solver : the norm of the field should be
 #  conserved
 def test_out_field() -> None:
     E = np.ones((N, N), dtype=PRECISION_COMPLEX)
-    for backend in ["CPU", "GPU"]:
+    for backend in AVAILABLE_BACKENDS:
         simu = NLSE(
             0,
             power,
@@ -322,6 +306,6 @@ def test_out_field() -> None:
             N,
             N,
         ), f"Output array has wrong shape. (Backend {backend})"
-        assert np.allclose(
-            norm, simu.power, rtol=1e-4
-        ), f"Norm not conserved. (Backend {backend})"
+        assert np.allclose(norm, simu.power, rtol=1e-4), (
+            f"Norm not conserved. (Backend {backend})"
+        )

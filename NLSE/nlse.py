@@ -28,6 +28,7 @@ if __CUPY_AVAILABLE__:
 if __PYOPENCL_AVAILABLE__:
     import pyopencl as cl
     from pyopencl import array as cla
+    from pyopencl import clmath
     from pyvkfft.opencl import VkFFTApp as VkFFTApp_cl
 
     from . import kernels_cl
@@ -85,25 +86,8 @@ class NLSE:
             backend (str, optional): Will run using the "GPU" or "CPU".
                 Defaults to __BACKEND__.
         """
-        # listof physical parameters
+        # list of physical parameters
         self.backend = backend
-        if self.backend == "GPU" and self.__CUPY_AVAILABLE__:
-            self._kernels = kernels_gpu
-            self._convolution = signal_cp.oaconvolve
-        elif self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
-            self._kernels = kernels_cl
-            self._cl_queue = cl.CommandQueue(
-                cl.create_some_context(interactive=False)
-            )
-        else:
-            if backend in ["GPU", "CL"]:
-                print("Backend not available, switching to CPU")
-            if backend != "CPU":
-                print("Available backends are GPU, CPU or CL, switching to CPU")
-            self.backend = "CPU"
-            self._kernels = kernels_cpu
-            self._convolution = signal.oaconvolve
-
         self.n2 = n2
         self.V = V
         self.wl = wvl
@@ -165,12 +149,41 @@ class NLSE:
             self.nl_profile = special.kn(0, R / d)
             self.nl_profile[
                 self.nl_profile.shape[0] // 2, self.nl_profile.shape[1] // 2
-            ] = np.nanmax(
-                self.nl_profile[np.logical_not(np.isinf(self.nl_profile))]
-            )
+            ] = np.nanmax(self.nl_profile[np.logical_not(np.isinf(self.nl_profile))])
             self.nl_profile /= self.nl_profile.sum()
         else:
             self.nl_profile = np.ones((self.NY, self.NX), dtype=np.float32)
+
+    @property
+    def backend(self) -> str:
+        """Return the backend used for the simulation."""
+        return self.__backend
+
+    @backend.setter
+    def backend(self, value: str) -> None:
+        """Set the backend for the simulation."""
+        if value not in ["CPU", "GPU", "CL"]:
+            raise ValueError("Backend must be 'CPU', 'GPU' or 'CL'")
+        match value:
+            case "GPU":
+                if not self.__CUPY_AVAILABLE__:
+                    raise ImportError("Cupy is not available.")
+                self.__backend = "GPU"
+                self._kernels = kernels_gpu
+                self._convolution = signal_cp.oaconvolve
+            case "CL":
+                if not self.__PYOPENCL_AVAILABLE__:
+                    raise ImportError("PyOpenCL is not available.")
+                self.__backend = "CL"
+                self._kernels = kernels_cl
+                self._cl_queue = cl.CommandQueue(
+                    cl.create_some_context(interactive=False)
+                )
+                # FIXME: no convolution kernel for CL backend yet ??
+            case "CPU":
+                self.__backend = "CPU"
+                self._kernels = kernels_cpu
+                self._convolution = signal.oaconvolve
 
     def _build_propagator(self) -> np.ndarray:
         """Build the linear propagation matrix.
@@ -272,20 +285,22 @@ class NLSE:
             # normalization of the field
             if self.backend == "CL" and self.__PYOPENCL_AVAILABLE__:
                 arr = E_in.real * E_in.real + E_in.imag * E_in.imag
-                arr *= self.delta_X * self.delta_Y
+                arr = arr * self.delta_X * self.delta_Y
                 integral = cla.sum(
                     arr,
                     dtype=arr.dtype,
                     queue=self._cl_queue,
                 )
+                integral = integral * c * epsilon_0 / 2
+                E_00 = clmath.sqrt(self.power / integral)
             else:
                 integral = (
                     (E_in.real * E_in.real + E_in.imag * E_in.imag)
                     * self.delta_X
                     * self.delta_Y
                 ).sum(axis=self._last_axes)
-            integral *= c * epsilon_0 / 2
-            E_00 = (self.power / integral) ** 0.5
+                integral = integral * c * epsilon_0 / 2
+                E_00 = (self.power / integral) ** 0.5
             A[:] = (E_00.T * E_in.T).T
         else:
             A[:] = E_in
@@ -334,14 +349,25 @@ class NLSE:
             self.V = self.V.get()
         self.nl_profile = self.nl_profile.get()
         self.propagator = self.propagator.get()
-        if isinstance(self.power, cp.ndarray):
-            self.power = self.power.get()
-        if isinstance(self.n2, cp.ndarray):
-            self.n2 = self.n2.get()
-        if isinstance(self.alpha, cp.ndarray):
-            self.alpha = self.alpha.get()
-        if isinstance(self.I_sat, cp.ndarray):
-            self.I_sat = self.I_sat.get()
+        match self.backend:
+            case "GPU":
+                if isinstance(self.power, cp.ndarray):
+                    self.power = self.power.get()
+                if isinstance(self.n2, cp.ndarray):
+                    self.n2 = self.n2.get()
+                if isinstance(self.alpha, cp.ndarray):
+                    self.alpha = self.alpha.get()
+                if isinstance(self.I_sat, cp.ndarray):
+                    self.I_sat = self.I_sat.get()
+            case "CL":
+                if isinstance(self.power, cla.Array):
+                    self.power = self.power.get()
+                if isinstance(self.n2, cla.Array):
+                    self.n2 = self.n2.get()
+                if isinstance(self.alpha, cla.Array):
+                    self.alpha = self.alpha.get()
+                if isinstance(self.I_sat, cla.Array):
+                    self.I_sat = self.I_sat.get()
 
     def split_step(
         self,
@@ -500,8 +526,7 @@ class NLSE:
             np.ndarray: Propagated field in proper units V/m
         """
         assert (
-            E_in.shape[self._last_axes[0] :]
-            == self.XX.shape[self._last_axes[0] :]
+            E_in.shape[self._last_axes[0] :] == self.XX.shape[self._last_axes[0] :]
         ), "Shape mismatch"
         assert E_in.dtype in [
             np.complex64,
@@ -525,11 +550,11 @@ class NLSE:
         self.plans = self._build_fft_plan(A)
         if verbose:
             pbar = tqdm.tqdm(
-                total=z,
+                total=100,
                 position=4,
                 desc="Propagation",
                 leave=False,
-                unit="m",
+                unit="%",
                 unit_scale=True,
             )
         n2_old = self.n2
@@ -549,19 +574,18 @@ class NLSE:
             if callback is not None:
                 if isinstance(callback, Callable):
                     callback(self, A, z, i, *callback_args)
-                elif isinstance(callback, list) and isinstance(
-                    callback[0], Callable
-                ):
+                elif isinstance(callback, list) and isinstance(callback[0], Callable):
                     for c, ca in zip(callback, callback_args):
                         c(self, A, z, i, *ca)
                 else:
                     raise ValueError(
                         "callbacks should be a callable or a list of callables"
                     )
-            if verbose:
-                pbar.update(abs(self.delta_z))
             z_prop += self.delta_z
             i += 1
+            if verbose:
+                pbar.n = abs(z_prop) / z * 100
+                pbar.refresh()
         t_cpu = time.perf_counter() - t0
         if verbose:
             pbar.close()

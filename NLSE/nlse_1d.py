@@ -65,9 +65,7 @@ class NLSE_1d(NLSE):
         self.nl_profile = self.nl_profile[0]
         self.nl_profile /= self.nl_profile.sum()
 
-    def _prepare_output_array(
-        self, E_in: np.ndarray, normalize: bool
-    ) -> np.ndarray:
+    def _prepare_output_array(self, E_in: np.ndarray, normalize: bool) -> np.ndarray:
         """Prepare the output array depending on __BACKEND__.
 
         Args:
@@ -88,8 +86,7 @@ class NLSE_1d(NLSE):
         if normalize:
             # normalization of the field
             integral = (
-                (E_in.real * E_in.real + E_in.imag * E_in.imag)
-                * self.delta_X**2
+                (E_in.real * E_in.real + E_in.imag * E_in.imag) * self.delta_X**2
             ).sum(axis=self._last_axes)
             integral *= c * epsilon_0 / 2
             E_00 = (self.power / integral) ** 0.5
@@ -124,14 +121,10 @@ class NLSE_1d(NLSE):
                 )
                 ax[1].plot(self.X * 1e3, np.unwrap(np.angle(A_plot[i, :])))
         elif A_plot.ndim == 1:
-            ax[0].plot(
-                self.X * 1e3, 1e-4 * c / 2 * epsilon_0 * np.abs(A_plot) ** 2
-            )
+            ax[0].plot(self.X * 1e3, 1e-4 * c / 2 * epsilon_0 * np.abs(A_plot) ** 2)
             ax[1].plot(self.X * 1e3, np.unwrap(np.angle(A_plot)))
         ax[0].set_title(r"$|\psi|^2$")
-        ax[0].set_ylabel(
-            r"Intensity $\frac{\epsilon_0 c}{2}|\psi|^2$ in $W/cm^2$"
-        )
+        ax[0].set_ylabel(r"Intensity $\frac{\epsilon_0 c}{2}|\psi|^2$ in $W/cm^2$")
         ax[1].set_title(r"Phase $\mathrm{arg}(\psi)$")
         ax[1].set_ylabel(r"Phase arg$(\psi)$")
         for a in ax:

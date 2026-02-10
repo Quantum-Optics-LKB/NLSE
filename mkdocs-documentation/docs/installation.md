@@ -13,6 +13,22 @@ Then pip install the package:
 pip install .
 ```
 
+If you are using an environement:
+# 1) Create a dedicated env (example)
+```
+conda create -n nlse -c conda-forge python=3.11 pip -y
+```
+
+# 2) Activate it
+```
+conda activate nlse
+```
+
+# 3) Install your project
+```
+pip install .
+```
+
 ## Requirements
 
 ### Supported platforms

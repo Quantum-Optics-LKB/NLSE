@@ -13,7 +13,7 @@ Then pip install the package:
 pip install .
 ```
 
-If you are using an environement:
+#### If you are using an environement (for example on a shared GPU machine):
 1) Create a dedicated env (example)
 ```
 conda create -n nlse -c conda-forge python=3.11 pip -y
